@@ -1,0 +1,322 @@
+[workspace.package]
+name = "algotrader-rs"
+version = "1.0.0"
+edition = "2024"
+rust-version = "1.92"
+license = "Proprietary"
+homepage = "https://fuzing.github.io/algotrader-rs"
+repository = "https://github.com/fuzing/algotrader-rs"
+exclude = [".github/"]
+authors = ["Peter Beresford", "Fuzing, LLC"]
+keywords = ["pdl", "pipelines" ]
+
+[workspace]
+members = [
+    #    "crates/pdl-lib",
+    #    "crates/pdl-error",
+    #    "crates/kcl-error",
+    "bin/downloader",
+#    "bin/mnist-inference-web",
+#    "bin/text-train",
+    #    "bin/dynamic-test",
+    #    "bin/wgpu-test",
+    #    "bin/pdl-engine",
+    #    "bin/pdl-language-server",
+    #    "crates/pdl-parser",
+    #    "crates/pdl-pest-parser",
+]
+# add to this for bins/crates that need testing/benching
+#default-members = [
+#    "bin/order-matcher",
+#    "bin/order-matcher-exerciser",
+#    "bin/broker-terminal",
+#    "bin/udp-client",
+#    "bin/udp-server",
+#    "crates/order-book",
+#    "crates/tcp-packet",
+#]
+#exclude = ["book/sources", "book/cli"]
+
+# Explicitly set the resolver to version 2, which is the default for packages with edition >= 2021, but 2024 moved to "3"
+# https://doc.rust-lang.org/edition-guide/rust-2021/default-cargo-resolver.html
+resolver = "3"
+
+
+[workspace.lints.rust]
+# TODO - PMB - warn on dead_code once ready for production
+dead_code = "allow"
+missing_debug_implementations = "warn"
+missing_docs = "allow"
+#rust_2018_idioms = { level = "deny", priority = -1 }
+#rust_2024_idioms = { level = "deny", priority = -1 }
+# TODO - PMB - warn on unreachable_pub once ready for production
+unreachable_pub = "allow"
+# TODO - PMB - warn on unused_imports once ready for production
+unused_imports = "warn"
+# TODO - PMB - warn on unused_variables once ready for production
+unused_variables = "allow"
+
+unused_must_use = "deny"
+# rust.unnameable-types = "warn"
+
+[workspace.lints.rustdoc]
+all = "warn"
+
+
+
+[workspace.lints.clippy]
+# These are some of clippy's nursery (i.e., experimental) lints that we like.
+# By default, nursery lints are allowed. Some of the lints below have made good
+# suggestions which we fixed. The others didn't have any findings, so we can
+# assume they don't have that many false positives. Let's enable them to
+# prevent future problems.
+borrow_as_ptr = "warn"
+branches_sharing_code = "warn"
+clear_with_drain = "warn"
+cloned_instead_of_copied = "warn"
+collection_is_never_read = "warn"
+dbg_macro = "warn"
+derive_partial_eq_without_eq = "warn"
+doc_markdown = "warn"
+empty_line_after_doc_comments = "warn"
+empty_line_after_outer_attr = "warn"
+enum_glob_use = "warn"
+equatable_if_let = "warn"
+explicit_into_iter_loop = "warn"
+explicit_iter_loop = "warn"
+flat_map_option = "warn"
+from_iter_instead_of_collect = "warn"
+if_not_else = "warn"
+if_then_some_else_none = "warn"
+implicit_clone = "warn"
+imprecise_flops = "warn"
+iter_on_empty_collections = "warn"
+iter_on_single_items = "warn"
+iter_with_drain = "warn"
+iter_without_into_iter = "warn"
+large_stack_frames = "warn"
+manual_assert = "warn"
+manual_clamp = "warn"
+manual_is_variant_and = "warn"
+manual_string_new = "warn"
+match_same_arms = "warn"
+missing-const-for-fn = "warn"
+mutex_integer = "warn"
+naive_bytecount = "warn"
+needless_bitwise_bool = "warn"
+needless_continue = "warn"
+needless_for_each = "warn"
+needless_pass_by_ref_mut = "warn"
+nonstandard_macro_braces = "warn"
+option_as_ref_cloned = "warn"
+or_fun_call = "warn"
+path_buf_push_overwrite = "warn"
+read_zero_byte_vec = "warn"
+result_large_err = "allow"
+redundant_clone = "warn"
+redundant_else = "warn"
+single_char_pattern = "warn"
+string_lit_as_bytes = "warn"
+string_lit_chars_any = "warn"
+suboptimal_flops = "warn"
+suspicious_operation_groupings = "warn"
+trailing_empty_array = "warn"
+trait_duplication_in_bounds = "warn"
+transmute_undefined_repr = "warn"
+trivial_regex = "warn"
+tuple_array_conversions = "warn"
+type_repetition_in_bounds = "warn"
+uninhabited_references = "warn"
+unnecessary_self_imports = "warn"
+unnecessary_struct_initialization = "warn"
+unnested_or_patterns = "warn"
+unused_peekable = "warn"
+unused_rounding = "warn"
+use_self = "warn"
+useless_let_if_seq = "warn"
+while_float = "warn"
+zero_sized_map_values = "warn"
+
+# These are nursery lints which have findings. Allow them for now. Some are not
+# quite mature enough for use in our codebase and some we don't really want.
+# Explicitly listing should make it easier to fix in the future.
+as_ptr_cast_mut = "allow"
+cognitive_complexity = "allow"
+debug_assert_with_mut_call = "allow"
+fallible_impl_from = "allow"
+future_not_send = "allow"
+needless_collect = "allow"
+non_send_fields_in_send_ty = "allow"
+redundant_pub_crate = "allow"
+significant_drop_in_scrutinee = "allow"
+significant_drop_tightening = "allow"
+too_long_first_doc_paragraph = "allow"
+
+# Speed up compilation time for dev builds by reducing emitted debug info.
+# NOTE: Debuggers may provide less useful information with this setting.
+# Uncomment this section if you're using a debugger.
+[profile.dev]
+# https://davidlattimore.github.io/posts/2024/02/04/speeding-up-the-rust-edit-build-run-cycle.html
+opt-level = 3
+debug = "line-tables-only"
+split-debuginfo = "unpacked"
+
+[profile.dev.package."*"]
+opt-level = 3
+
+# Speed up tests.
+#[profile.dev.package]
+#proptest.opt-level = 3
+#rand_chacha.opt-level = 3
+#rand_xorshift.opt-level = 3
+#unarray.opt-level = 3
+
+
+[profile.release]
+opt-level = 3
+lto = true
+debug = "none"
+strip = "symbols"
+panic = "unwind"
+codegen-units = 1
+
+# Use the `--profile profiling` flag to show symbols in release mode.
+# e.g. `cargo build --profile profiling`
+[profile.profiling]
+inherits = "release"
+debug = "full"
+strip = "none"
+
+# Include debug info in benchmarks too.
+[profile.bench]
+inherits = "profiling"
+
+[profile.maxperf]
+inherits = "release"
+lto = "fat"
+codegen-units = 1
+
+[workspace.dependencies]
+console_error_panic_hook = "0.1.7"
+rand = "0.9.2" # ""0.10.0"
+serde = "1.0.228"
+serde_json = "1.0.149"
+tokio = { version = "1.52.2", features = ["full"] }
+
+
+
+#ahash = "0.8.12"
+#anyhow = "1.0.99"
+#approx = "0.5.1"
+#async-recursion = "1.1.1"
+# TODO - get rid of async-trait
+#async-trait = "0.1.89"
+#base64 = "0.22.1"
+#bio = "3.0.0"
+#bitstring = "0.2.1"
+#bytemuck = "1.24.0"
+#cfgrammar = "0.14.0"
+#chrono = "0.4.42"
+#clap = "4.5.53"
+#console_error_panic_hook = "0.1.7"
+#convert_case = "0.10.0"
+#criterion = "0.8.1"
+#csscolorparser = "0.8.1"
+#dashmap = "7.0.0-rc2"
+#dhat = "0.3.3"
+#dotenv = "0.15.0"
+#expectorate = "1.2.0"
+#flate2 = "1.1.5"
+#flume = "0.12.0"
+#fnv = "1.0.7"
+#form_urlencoded = "1.2.2"
+#futures = "0.3.31"
+#futures-lite = "2.6.1"
+#git_rev = "0.1.0"
+#gltf-json = "1.4.1"
+#handlebars = "6.3.2"
+#http = "1.4.0"
+#image = "0.25.9"
+#indexmap = "2.12.1"
+#insta = "1.45.0"
+#itertools = "0.14.0"
+#js-sys = "0.3.83"
+#lazy_static = "1.5.0"
+#libm = "0.2.15"
+#line-span = "0.1.5"
+#lrlex = "0.14.0"
+#lrpar = "0.14.0"
+#lrtable = "0.14.0"
+#measurements = "0.11.1"
+#miette = "7.6.0"
+#mime_guess = "2.0.5"
+#nalgebra-glm = "0.20.0"
+#nimbleparse = "0.14.0"
+#parse-display = "0.10.0"
+#pdl-error = { path = "crates/pdl-error" }
+#pest = "2.8.4"
+#pest_derive = "2.8.4"
+#kcl-error = { path = "crates/kcl-error" }
+#pdl-lib = { path = "crates/pdl-lib" }
+#pretty_assertions = "1.4.1"
+#pollster = "0.4.0"
+#pyo3 = "0.27.2"
+#pyo3-stub-gen = "0.17.2"
+#rand = "0.9.2"
+#rand_core = "0.9.3"
+#rayon = "1.11.0"
+#regex = "1.12.2"
+#reqwest = "0.12.26"
+#rgba_simple = "0.10.0"
+#rmp-serde = "1.3.0"
+#ropey = "2.0.0-beta.1"
+#schemars = "1.1.0"
+#seq_io = "0.4.0-alpha.0"
+#semver = "1.0.27"
+#serde = "1.0.228"
+#serde_json = "1.0.145"
+#sha2 = "0.11.0-rc.3"
+#tabled = "0.20.0"
+#tempfile = "3.23.0"
+#thiserror = "2.0.17"
+#time = "0.3.44"
+#toml = "0.9.10+spec-1.1.0"
+#toml_edit = "0.24.0+spec-1.1.0"
+#tower-lsp = "0.20.0"
+#ts-rs = "11.1.0"
+#tracing = "0.1.44"
+#tracing-futures = "0.2.5"
+#tracing-subscriber = "0.3.19"
+#twenty-twenty = "0.8.3"
+#tynm = "0.2.0"
+#typed-path = "0.12.0"
+#url = "2.5.7"
+#uuid = "1.19.0"
+#validator = "0.20.0"
+#walkdir = "2.5.0"
+#wasm-bindgen = "0.2.106"
+#wasm-bindgen-futures = "0.4.56"
+#web-time = "1.1.0"
+#winnow = "0.7.14"
+#zip = "6.0.0"
+
+#wgpu = "28.0.0"
+#wgpu-core = "27.0.3"
+#wgpu-hal = "27.0.4"
+#rust-gpu-tools = "0.7.2"
+#spirv = "0.3.0+sdk-1.3.268.0"
+#glfw = "0.61.0"
+
+# TODO - PMB ultimately remove
+#kittycad = "0.4.5"
+#pdl-ezpz = { package = "kcl-ezpz", version = "0.2.7" }
+#kcl-ezpz = "0.2.7"
+#slog = "2.8.2"
+#slog-async = "2.8.0"
+#slog-json = "2.6.1"
+#slog-term = "2.9.2"
+#kittycad-modeling-cmds = "0.2.151"
+
+#
+## [patch.crates-io]
+## alloy-consensus = { git = "https://github.com/alloy-rs/alloy", rev = "cfb13aa" }

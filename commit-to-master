@@ -1,0 +1,19 @@
+#!/bin/bash
+
+CURRENTBRANCH=`git branch | grep \* | cut -d ' ' -f2`
+git add .
+git commit -m ok
+git push
+
+if [ "${CURRENTBRANCH}" != "development" ]; then
+  git checkout development
+  git merge ${CURRENTBRANCH}
+  git push
+fi
+
+git checkout main
+git merge development
+git push
+
+git checkout ${CURRENTBRANCH}
+
