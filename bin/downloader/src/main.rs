@@ -16,6 +16,7 @@ use databento::{
     dbn::{decode::DbnMetadata, Dataset, SType, Schema, TradeMsg},
     historical::timeseries::GetRangeParams,
     HistoricalClient,
+    ReferenceClient,
 };
 use time::macros::{date, datetime};
 
@@ -59,8 +60,8 @@ async fn main() -> Result<(), Box<dyn Error>>
     //     .collect::<::errors::Result<Vec<_>, _>>().map_err(|e| anyhow!(e))?;
 
     // Canonicalize settings file
-    let settings = args.settings.canonicalize().unwrap();
-    println!("{:?}", settings);
+    // let settings = args.settings.canonicalize().unwrap();
+    // println!("{:?}", settings);
     // let settings = SessionSettings::try_from_path(&settings).map_err(|e| anyhow!("{:?}", e))?;
 
     // Databento stuff
