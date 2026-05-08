@@ -112,7 +112,7 @@ async fn main() -> Result<(), Box<dyn Error>>
 
     // tracing format
     fmt()
-        .with_level(true)
+        // .with_level(true)
         // .without_time()
         // .with_file(false)
         // .with_line_number(false)
