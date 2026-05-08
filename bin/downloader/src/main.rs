@@ -112,13 +112,13 @@ async fn main() -> Result<(), Box<dyn Error>>
 
     // tracing format
     fmt()
-        .without_time()
-        .with_file(true)
         .with_level(true)
-        .with_line_number(true)
-        .with_thread_ids(true)
-        .with_thread_names(true)
-        .pretty()
+        // .without_time()
+        // .with_file(false)
+        // .with_line_number(false)
+        // .with_thread_ids(true)
+        // .with_thread_names(true)
+        // .pretty()
         .with_env_filter(EnvFilter::from_default_env())
         .init();
 
@@ -126,7 +126,7 @@ async fn main() -> Result<(), Box<dyn Error>>
 
     // Parse the command line arguments
     let args = Args::parse();
-    tracing::info!("Run with arguments: {args:#?}");
+    // info!("Run with arguments: {args:#?}");
 
     // // Canonicalize all input files, to ensure that the files exists and that
     // // the path is valid. Store it in a vector for further processing.
