@@ -9,6 +9,14 @@ use std::{
 };
 use tracing_subscriber::{EnvFilter, fmt};
 use tokio;
+use std::error::Error;
+
+use databento::{
+    dbn::{decode::DbnMetadata, Dataset, SType, Schema, TradeMsg},
+    historical::timeseries::GetRangeParams,
+    HistoricalClient,
+};
+use time::macros::{date, datetime};
 
 mod errors;
 
@@ -20,7 +28,7 @@ const DATABENTO_API_KEY: &str = "API_KEY";
 
 
 #[tokio::main]
-async fn main()
+async fn main() -> Result<(), Box<dyn Error>>
 {
     fmt()
         .without_time()
@@ -50,9 +58,32 @@ async fn main()
     println!("{:?}", settings);
     // let settings = SessionSettings::try_from_path(&settings).map_err(|e| anyhow!("{:?}", e))?;
 
+    // Databento stuff
+    let mut client = HistoricalClient::builder().key_from_env()?.build()?;
+    // let mut decoder = client
+    //     .timeseries()
+    //     .get_range(
+    //         &GetRangeParams::builder()
+    //             .dataset(Dataset::GlbxMdp3)
+    //             .date_time_range(datetime!(2022-06-10 14:30 UTC)..datetime!(2022-06-10 14:40 UTC))
+    //             .symbols("ES.FUT")
+    //             .stype_in(SType::Parent)
+    //             .schema(Schema::Trades)
+    //             .build(),
+    //     )
+    //     .await?;
+    // let symbol_map = decoder
+    //     .metadata()
+    //     .symbol_map_for_date(date!(2022 - 06 - 10))?;
+    // while let Some(trade) = decoder.decode_record::<TradeMsg>().await? {
+    //     let symbol = &symbol_map[trade];
+    //     println!("Received trade for {symbol}: {trade:?}");
+    // }
 
 
     println!("Hello, world!");
+
+    Ok(())
 }
 
 
