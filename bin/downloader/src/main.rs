@@ -11,6 +11,7 @@ use tracing_subscriber::{EnvFilter, fmt};
 use tracing::{info, warn, error};
 use tokio;
 use std::error::Error;
+use std::num::NonZeroU64;
 use dotenv::dotenv;
 
 use databento::{
@@ -22,6 +23,7 @@ use databento::{
         Schema,
         TradeMsg
     },
+    Symbols,
     live::Subscription,
     historical::timeseries::GetRangeParams,
     HistoricalClient,
@@ -51,7 +53,9 @@ async fn get_history() -> Result<(), Box<dyn Error>>
     //             .dataset(Dataset::GlbxMdp3)
     //             .date_time_range(datetime!(2022-06-10 14:30 UTC)..datetime!(2022-06-10 14:40 UTC))
     //             .symbols("ES.FUT")
+    //             // .symbols(Symbols::All)
     //             .stype_in(SType::Parent)
+    //             // .limit(NonZeroU64::new(100).unwrap())
     //             .schema(Schema::Trades)
     //             .build(),
     //     )
