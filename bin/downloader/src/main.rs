@@ -10,6 +10,7 @@ use std::{
 use tracing_subscriber::{EnvFilter, fmt};
 use tokio;
 
+mod errors;
 
 
 const USER_NAME: &str = "username";
