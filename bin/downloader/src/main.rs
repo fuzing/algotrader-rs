@@ -8,6 +8,7 @@ use std::{
     time::Duration,
 };
 use tracing_subscriber::{EnvFilter, fmt};
+use tracing::{info, warn, error};
 use tokio;
 use std::error::Error;
 use dotenv::dotenv;
@@ -39,6 +40,8 @@ mod errors;
 
 async fn get_history() -> Result<(), Box<dyn Error>>
 {
+    info!("Downloading history");
+
     // Databento stuff
     let mut client = HistoricalClient::builder().key_from_env()?.build()?;
     // let mut decoder = client
@@ -118,6 +121,8 @@ async fn main() -> Result<(), Box<dyn Error>>
         .pretty()
         .with_env_filter(EnvFilter::from_default_env())
         .init();
+
+    info!("Starting downloader");
 
     // Parse the command line arguments
     let args = Args::parse();
