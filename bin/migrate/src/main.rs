@@ -7,13 +7,13 @@ use std::{
     process::exit,
     time::Duration,
 };
+use sqlx::{Pool, Postgres, migrate};
 use tracing_subscriber::{EnvFilter, fmt};
 use tracing::{info, warn, error};
 use tokio;
 use std::error::Error;
 use dotenv::dotenv;
 
-use time::macros::{date, datetime};
 
 
 async fn migrate() -> Result<(), Box<dyn Error>>
@@ -50,6 +50,7 @@ async fn main() -> Result<(), Box<dyn Error>>
     // info!("Run with arguments: {args:#?}");
 
     migrate().await?;
+
 
 
     Ok(())

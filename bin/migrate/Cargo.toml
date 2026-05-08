@@ -11,9 +11,8 @@ exclude.workspace = true
 [dependencies]
 anyhow.workspace = true
 clap.workspace = true
-databento.workspace = true
 dotenv.workspace = true
-#reqwest = {workspace = true, features = ["native-tls"]}
+sqlx.workspace = true
 thiserror.workspace = true
 time.workspace = true
 tokio.workspace = true

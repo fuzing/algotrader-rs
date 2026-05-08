@@ -1252,8 +1252,8 @@ version = "1.0.0"
 dependencies = [
  "anyhow",
  "clap",
- "databento",
  "dotenv",
+ "sqlx",
  "thiserror",
  "time",
  "tokio",

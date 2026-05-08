@@ -4,3 +4,7 @@
 cargo install sqlx-cli
 
 sqlx migrate add initial
+
+
+migrate by:
+cargo run --bin migrate
