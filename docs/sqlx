@@ -1,0 +1,6 @@
+
+
+# install migration binary
+cargo install sqlx-cli
+
+sqlx migrate add initial
