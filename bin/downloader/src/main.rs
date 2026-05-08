@@ -137,7 +137,7 @@ async fn main() -> Result<(), Box<dyn Error>>
     // let settings = SessionSettings::try_from_path(&settings).map_err(|e| anyhow!("{:?}", e))?;
 
     get_history().await?;
-    get_live().await?;
+    // get_live().await?;
 
     println!("Hello, world!");
 
