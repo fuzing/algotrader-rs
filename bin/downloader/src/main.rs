@@ -28,6 +28,34 @@ const PASSWORD: &str = "password";
 const DATABENTO_API_KEY: &str = "API_KEY";
 
 
+async fn get_history() -> Result<(), Box<dyn Error>>
+{
+    // Databento stuff
+    let mut client = HistoricalClient::builder().key_from_env()?.build()?;
+    // let mut decoder = client
+    //     .timeseries()
+    //     .get_range(
+    //         &GetRangeParams::builder()
+    //             .dataset(Dataset::GlbxMdp3)
+    //             .date_time_range(datetime!(2022-06-10 14:30 UTC)..datetime!(2022-06-10 14:40 UTC))
+    //             .symbols("ES.FUT")
+    //             .stype_in(SType::Parent)
+    //             .schema(Schema::Trades)
+    //             .build(),
+    //     )
+    //     .await?;
+    // let symbol_map = decoder
+    //     .metadata()
+    //     .symbol_map_for_date(date!(2022 - 06 - 10))?;
+    // while let Some(trade) = decoder.decode_record::<TradeMsg>().await? {
+    //     let symbol = &symbol_map[trade];
+    //     println!("Received trade for {symbol}: {trade:?}");
+    // }
+
+
+    Ok(())
+}
+
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>>
@@ -64,28 +92,7 @@ async fn main() -> Result<(), Box<dyn Error>>
     // println!("{:?}", settings);
     // let settings = SessionSettings::try_from_path(&settings).map_err(|e| anyhow!("{:?}", e))?;
 
-    // Databento stuff
-    let mut client = HistoricalClient::builder().key_from_env()?.build()?;
-    // let mut decoder = client
-    //     .timeseries()
-    //     .get_range(
-    //         &GetRangeParams::builder()
-    //             .dataset(Dataset::GlbxMdp3)
-    //             .date_time_range(datetime!(2022-06-10 14:30 UTC)..datetime!(2022-06-10 14:40 UTC))
-    //             .symbols("ES.FUT")
-    //             .stype_in(SType::Parent)
-    //             .schema(Schema::Trades)
-    //             .build(),
-    //     )
-    //     .await?;
-    // let symbol_map = decoder
-    //     .metadata()
-    //     .symbol_map_for_date(date!(2022 - 06 - 10))?;
-    // while let Some(trade) = decoder.decode_record::<TradeMsg>().await? {
-    //     let symbol = &symbol_map[trade];
-    //     println!("Received trade for {symbol}: {trade:?}");
-    // }
-
+    get_history().await?;
 
     println!("Hello, world!");
 
@@ -99,9 +106,9 @@ struct Args {
     #[arg(short, long)]
     enable_debug_output: bool,
 
-    /// Path to settings file
-    #[arg(short, long)]
-    settings: PathBuf,
+    // Path to settings file
+    // #[arg(short, long)]
+    // settings: PathBuf,
     // /// Path to write the generated code to.
     // #[arg()]
     // output: PathBuf,
@@ -110,3 +117,4 @@ struct Args {
     // #[arg()]
     // inputs: Vec<PathBuf>,
 }
+
