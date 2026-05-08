@@ -10,6 +10,7 @@ use std::{
 use tracing_subscriber::{EnvFilter, fmt};
 use tokio;
 use std::error::Error;
+use dotenv::dotenv;
 
 use databento::{
     dbn::{decode::DbnMetadata, Dataset, SType, Schema, TradeMsg},
@@ -30,6 +31,10 @@ const DATABENTO_API_KEY: &str = "API_KEY";
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>>
 {
+    // get .env variables into environment
+    dotenv().ok();
+
+    // tracing format
     fmt()
         .without_time()
         .with_file(true)
