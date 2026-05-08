@@ -17,14 +17,15 @@ CREATE TABLE IF NOT EXISTS equity_prices (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS option_contracts (
+CREATE TABLE IF NOT EXISTS equity_option (
     id STRING PRIMARY KEY,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS option_contract_prices (
+CREATE TABLE IF NOT EXISTS equity_option_prices (
     id STRING PRIMARY KEY,
-    option_id STRING,
+    equity_option_id STRING,
+    price FLOAT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
