@@ -7,7 +7,12 @@ use std::{
     process::exit,
     time::Duration,
 };
-use sqlx::{Pool, Postgres, migrate};
+use sqlx::{
+    Pool,
+    Postgres,
+    postgres::{PgPoolOptions},
+    migrate
+};
 use tracing_subscriber::{EnvFilter, fmt};
 use tracing::{info, warn, error};
 use tokio;
@@ -20,6 +25,15 @@ async fn migrate() -> Result<(), Box<dyn Error>>
 {
 
     info!("migrating database");
+
+    let connection_string = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+
+    let pool = PgPoolOptions::new()
+        .max_connections(5)
+        .connect(connection_string.as_str())
+        .await?;
+
+    sqlx::migrate!("../../migrations").run(&pool).await?;
 
     Ok(())
 }
@@ -50,8 +64,6 @@ async fn main() -> Result<(), Box<dyn Error>>
     // info!("Run with arguments: {args:#?}");
 
     migrate().await?;
-
-
 
     Ok(())
 }

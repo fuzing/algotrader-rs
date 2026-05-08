@@ -3,7 +3,8 @@
 # install migration binary
 cargo install sqlx-cli
 
-sqlx migrate add initial
+# -r option causes up and down files to be generated
+sqlx migrate add -r initial
 
 
 migrate by:
