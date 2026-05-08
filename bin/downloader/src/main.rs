@@ -13,19 +13,28 @@ use std::error::Error;
 use dotenv::dotenv;
 
 use databento::{
-    dbn::{decode::DbnMetadata, Dataset, SType, Schema, TradeMsg},
+    dbn::{
+        decode::DbnMetadata,
+        Dataset,
+        PitSymbolMap,
+        SType,
+        Schema,
+        TradeMsg
+    },
+    live::Subscription,
     historical::timeseries::GetRangeParams,
     HistoricalClient,
     ReferenceClient,
+    LiveClient,
 };
 use time::macros::{date, datetime};
 
 mod errors;
 
 
-const USER_NAME: &str = "username";
-const PASSWORD: &str = "password";
-const DATABENTO_API_KEY: &str = "API_KEY";
+// const USER_NAME: &str = "username";
+// const PASSWORD: &str = "password";
+// const DATABENTO_API_KEY: &str = "API_KEY";
 
 
 async fn get_history() -> Result<(), Box<dyn Error>>
@@ -52,6 +61,41 @@ async fn get_history() -> Result<(), Box<dyn Error>>
     //     println!("Received trade for {symbol}: {trade:?}");
     // }
 
+
+    Ok(())
+}
+
+
+async fn get_live() -> Result<(), Box<dyn Error>>
+{
+    // Databento stuff
+    let mut client = LiveClient::builder()
+        .key_from_env()?
+        .dataset(Dataset::GlbxMdp3)
+        .build()
+        .await?;
+    client
+        .subscribe(
+            Subscription::builder()
+                .symbols("ES.FUT")
+                .schema(Schema::Trades)
+                .stype_in(SType::Parent)
+                .build(),
+        )
+        .await
+        .unwrap();
+    // client.start().await?;
+    //
+    // let mut symbol_map = PitSymbolMap::new();
+    // // Get the next trade
+    // while let Some(rec) = client.next_record().await? {
+    //     if let Some(trade) = rec.get::<TradeMsg>() {
+    //         let symbol = &symbol_map[trade];
+    //         println!("Received trade for {symbol}: {trade:?}");
+    //         break;
+    //     }
+    //     symbol_map.on_record(rec)?;
+    // }
 
     Ok(())
 }
@@ -93,6 +137,7 @@ async fn main() -> Result<(), Box<dyn Error>>
     // let settings = SessionSettings::try_from_path(&settings).map_err(|e| anyhow!("{:?}", e))?;
 
     get_history().await?;
+    get_live().await?;
 
     println!("Hello, world!");
 
