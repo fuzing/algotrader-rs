@@ -5,7 +5,16 @@ cargo install sqlx-cli
 
 # -r option causes up and down files to be generated
 sqlx migrate add -r initial
+// create the migration
+
 
 
 migrate by:
-cargo run --bin migrate
+sqlx migrate run
+[will run the .up migrations]
+
+revert by:
+sqlx migrate revert
+[will run the last .up migration's .down and revert one step]
+
+
