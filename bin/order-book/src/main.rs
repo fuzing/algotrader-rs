@@ -1,3 +1,8 @@
+mod market;
+mod book;
+mod price_level;
+mod level;
+
 // use anyhow::anyhow;
 use clap::Parser as ClapParser;
 use std::{
@@ -9,37 +14,95 @@ use std::{
 };
 use tracing_subscriber::{EnvFilter, fmt};
 use tracing::{info, warn, error};
-use tokio;
+use tokio::{self, fs};
 use std::error::Error;
 use std::num::NonZeroU64;
 use dotenv::dotenv;
 
 use databento::{
-    dbn::{
-        decode::DbnMetadata,
-        Dataset,
-        PitSymbolMap,
-        SType,
-        Schema,
-        TradeMsg
-    },
-    Symbols,
-    live::Subscription,
-    historical::timeseries::GetRangeParams,
     HistoricalClient,
     ReferenceClient,
     LiveClient,
+    dbn::{
+        Action,
+        BidAskPair,
+        Dataset,
+        MboMsg,
+        Publisher,
+        Record,
+        Schema,
+        Side,
+        SymbolIndex,
+        UNDEF_PRICE,
+        decode::{AsyncDbnDecoder, DbnMetadata},
+        pretty,
+    },
+    historical::timeseries::GetRangeToFileParams,
 };
 use time::macros::{date, datetime};
 
 
 
-// const USER_NAME: &str = "username";
-// const PASSWORD: &str = "password";
-// const DATABENTO_API_KEY: &str = "API_KEY";
+async fn download_to_file() -> Result<(), Box<dyn Error>> {
+
+    let path = "mbo.dbn.zst";
+
+    if (!fs::try_exists(path).await?) {
+        let mut client = HistoricalClient::builder().key_from_env()?.build()?;
+        client
+            .timeseries()
+            .get_range_to_file(
+                &GetRangeToFileParams::builder()
+                    .dataset(Dataset::DbeqBasic)
+                    .symbols(vec!["GOOG", "GOOGL"])
+                    .date_time_range(
+                        datetime!(2024-04-03 08:00:00 UTC)..datetime!(2024-04-03 14:00:00 UTC),
+                    )
+                    .schema(Schema::Mbo)
+                    .path(path)
+                    .build(),
+            )
+            .await?;
+    }
+
+    Ok(())
+}
 
 
-async fn get_history() -> Result<(), Box<dyn Error>>
+async fn decode_data() -> Result<(), Box<dyn Error>> {
+    let path = "mbo.dbn.zst";
+
+    let mut market = Market::default();
+
+    let mut decoder = AsyncDbnDecoder::from_zstd_file(path).await?;
+    let symbol_map = decoder.metadata().symbol_map()?;
+
+    while let Some(mbo) = decoder.decode_record::<MboMsg>().await? {
+        market.apply(mbo.clone());
+        // If it's the last update in an event, print the state of the aggregated book
+        if mbo.flags.is_last() {
+            let symbol = symbol_map.get_for_rec(mbo).unwrap();
+            let (best_bid, best_offer) = market.aggregated_bbo(mbo.hd.instrument_id);
+            println!("{symbol} Aggregated BBO | {}", mbo.ts_recv().unwrap());
+            if let Some(best_offer) = best_offer {
+                println!("    {best_offer}");
+            } else {
+                println!("    None");
+            }
+            if let Some(best_bid) = best_bid {
+                println!("    {best_bid}");
+            } else {
+                println!("    None");
+            }
+        }
+    }
+
+    Ok(())
+}
+
+
+
+async fn build_order_book() -> Result<(), Box<dyn Error>>
 {
     info!("Downloading history");
 
@@ -55,7 +118,7 @@ async fn get_history() -> Result<(), Box<dyn Error>>
     //             // .symbols(Symbols::All)
     //             .stype_in(SType::Parent)
     //             // .limit(NonZeroU64::new(100).unwrap())
-    //             .schema(Schema::Trades)
+    //             .schema(Schema::Trades)Starting
     //             .build(),
     //     )
     //     .await?;
@@ -67,41 +130,6 @@ async fn get_history() -> Result<(), Box<dyn Error>>
     //     println!("Received trade for {symbol}: {trade:?}");
     // }
 
-
-    Ok(())
-}
-
-
-async fn get_live() -> Result<(), Box<dyn Error>>
-{
-    // Databento stuff
-    let mut client = LiveClient::builder()
-        .key_from_env()?
-        .dataset(Dataset::GlbxMdp3)
-        .build()
-        .await?;
-    client
-        .subscribe(
-            Subscription::builder()
-                .symbols("ES.FUT")
-                .schema(Schema::Trades)
-                .stype_in(SType::Parent)
-                .build(),
-        )
-        .await
-        .unwrap();
-    // client.start().await?;
-    //
-    // let mut symbol_map = PitSymbolMap::new();
-    // // Get the next trade
-    // while let Some(rec) = client.next_record().await? {
-    //     if let Some(trade) = rec.get::<TradeMsg>() {
-    //         let symbol = &symbol_map[trade];
-    //         println!("Received trade for {symbol}: {trade:?}");
-    //         break;
-    //     }
-    //     symbol_map.on_record(rec)?;
-    // }
 
     Ok(())
 }
@@ -125,7 +153,7 @@ async fn main() -> Result<(), Box<dyn Error>>
         .with_env_filter(EnvFilter::from_default_env())
         .init();
 
-    info!("Starting downloader");
+    info!("Building order book");
 
     // Parse the command line arguments
     let args = Args::parse();
@@ -144,7 +172,7 @@ async fn main() -> Result<(), Box<dyn Error>>
     // println!("{:?}", settings);
     // let settings = SessionSettings::try_from_path(&settings).map_err(|e| anyhow!("{:?}", e))?;
 
-    get_history().await?;
+    build_order_book().await?;
     // get_live().await?;
 
     println!("Hello, world!");
