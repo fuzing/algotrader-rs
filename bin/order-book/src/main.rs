@@ -43,13 +43,12 @@ use databento::{
 };
 use time::{
     OffsetDateTime,
-    format_description::well_known::Rfc3339,
+    format_description::well_known::{Rfc3339, Iso8601},
     macros::{date, datetime},
 };
 
 use chrono::{ DateTime, Utc};
-
-
+use databento::reference::Country::Is;
 
 async fn build_from_snapshot() -> Result<Market, Box<dyn Error>> {
     let mut market = Market::default();
@@ -58,15 +57,20 @@ async fn build_from_snapshot() -> Result<Market, Box<dyn Error>> {
 }
 
 
-async fn download_to_file(path: &str, symbols: &Vec<String>, start_time: &str, end_time: &str) -> Result<(), Box<dyn Error>> {
+async fn download_to_file(path: &PathBuf, symbols: &Vec<String>, start_time: &str, end_time: &str) -> Result<(), Box<dyn Error>> {
+    info!("Download to file");
 
     // let start_t = OffsetDateTime::from_unix_timestamp_nanos(start_time.parse()?)?;
     // let end_t = OffsetDateTime::from_unix_timestamp_nanos(end_time.parse()?)?;
     // let start_t = OffsetDateTime::parse(start_time, &Rfc3339)?;
     // let end_t = OffsetDateTime::parse(end_time, &Rfc3339)?;
+    let start_t = OffsetDateTime::parse(start_time, &Rfc3339)?;
+    let end_t = OffsetDateTime::parse(end_time, &Rfc3339)?;
 
-    let start_t: DateTime<Utc> = start_time.parse()?;
-    let end_t: DateTime<Utc> = end_time.parse()?;
+    // let start_t: DateTime<Utc> = start_time.parse()?;
+    // let end_t: DateTime<Utc> = end_time.parse()?;
+    println!("Uh Oh");
+    println!("DTRange {:?}", start_t..end_t);
 
     if (!fs::try_exists(path).await?) {
         let mut client = HistoricalClient::builder().key_from_env()?.build()?;
@@ -92,7 +96,7 @@ async fn download_to_file(path: &str, symbols: &Vec<String>, start_time: &str, e
 }
 
 
-async fn decode_data(path: &str) -> Result<(), Box<dyn Error>> {
+async fn decode_data(path: &PathBuf) -> Result<(), Box<dyn Error>> {
 
     let mut market = Market::default();
 
@@ -161,15 +165,9 @@ async fn main() -> Result<(), Box<dyn Error>>
     // let settings = args.settings.canonicalize().unwrap();
     // println!("{:?}", settings);
     // let settings = SessionSettings::try_from_path(&settings).map_err(|e| anyhow!("{:?}", e))?;
-    let path = "/run/media/peter/genetics/algotrader/data/mbo.dbn.zst";
-    download_to_file(path, &args.symbols, &args.start_time, &args.end_time).await?;
-    // decode_data(path).await?;
-
-    // let connection_string = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-
-    // println!("Symbols {:?}", args.symbols);
-    // println!("Start {:?}", args.start_time);
-    // println!("End {:?}", args.end_time);
+    let path: PathBuf = PathBuf::from(std::format!("/run/media/peter/genetics/algotrader/data/{}-{}-{}-mbo.dbn.zst", args.symbols.join(":"), args.start_time, args.end_time));
+    download_to_file(&path, &args.symbols, &args.start_time, &args.end_time).await?;
+    decode_data(&path).await?;
 
     Ok(())
 }
