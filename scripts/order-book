@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
-cargo run --bin order-book -- --symbols=GOOG,GOOGL --start-time="2024-04-03 08:00:00 UTC" --end-time="2024-04-03 14:00:00 UTC"
+#cargo run --bin order-book -- --symbols=GOOG,GOOGL --start-time="2024-04-03 08:00:00 UTC" --end-time="2024-04-03 14:00:00 UTC"
+cargo run --bin order-book -- --symbols=DVLT --start-time="2024-04-03 08:00:00 UTC" --end-time="2024-04-03 14:00:00 UTC"
 

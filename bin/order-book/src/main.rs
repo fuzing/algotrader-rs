@@ -15,7 +15,7 @@ use std::{
     time::Duration,
 };
 use tracing_subscriber::{EnvFilter, fmt};
-use tracing::{info, warn, error};
+use tracing::{info, warn, error, Instrument};
 use tokio::{self, fs};
 use std::error::Error;
 use std::num::NonZeroU64;
@@ -41,7 +41,13 @@ use databento::{
     },
     historical::timeseries::GetRangeToFileParams,
 };
-use time::macros::{date, datetime};
+use time::{
+    OffsetDateTime,
+    format_description::well_known::Rfc3339,
+    macros::{date, datetime},
+};
+
+use chrono::{ DateTime, Utc};
 
 
 
@@ -52,23 +58,34 @@ async fn build_from_snapshot() -> Result<Market, Box<dyn Error>> {
 }
 
 
-async fn download_to_file(path: &str) -> Result<(), Box<dyn Error>> {
+async fn download_to_file(path: &str, symbols: &Vec<String>, start_time: &str, end_time: &str) -> Result<(), Box<dyn Error>> {
+
+    // let start_t = OffsetDateTime::from_unix_timestamp_nanos(start_time.parse()?)?;
+    // let end_t = OffsetDateTime::from_unix_timestamp_nanos(end_time.parse()?)?;
+    // let start_t = OffsetDateTime::parse(start_time, &Rfc3339)?;
+    // let end_t = OffsetDateTime::parse(end_time, &Rfc3339)?;
+
+    let start_t: DateTime<Utc> = start_time.parse()?;
+    let end_t: DateTime<Utc> = end_time.parse()?;
+
     if (!fs::try_exists(path).await?) {
         let mut client = HistoricalClient::builder().key_from_env()?.build()?;
-        // client
-        //     .timeseries()
-        //     .get_range_to_file(
-        //         &GetRangeToFileParams::builder()
-        //             .dataset(Dataset::DbeqBasic)
-        //             .symbols(vec!["GOOG", "GOOGL"])
-        //             .date_time_range(
-        //                 datetime!(2024-04-03 08:00:00 UTC)..datetime!(2024-04-03 14:00:00 UTC),
-        //             )
-        //             .schema(Schema::Mbo)
-        //             .path(path)
-        //             .build(),
-        //     )
-        //     .await?;
+        client
+            .timeseries()
+            .get_range_to_file(
+                &GetRangeToFileParams::builder()
+                    .dataset(Dataset::DbeqBasic)
+                    // .symbols(vec!["GOOG", "GOOGL"])
+                    .symbols(symbols.to_owned())
+                    .date_time_range(
+                        // datetime!(2024-04-03 08:00:00 UTC)..datetime!(2024-04-03 14:00:00 UTC),
+                        start_t..end_t,
+                    )
+                    .schema(Schema::Mbo)
+                    .path(path)
+                    .build(),
+            )
+            .await?;
     }
 
     Ok(())
@@ -145,13 +162,14 @@ async fn main() -> Result<(), Box<dyn Error>>
     // println!("{:?}", settings);
     // let settings = SessionSettings::try_from_path(&settings).map_err(|e| anyhow!("{:?}", e))?;
     let path = "/run/media/peter/genetics/algotrader/data/mbo.dbn.zst";
-    // download_to_file(path).await?;
+    download_to_file(path, &args.symbols, &args.start_time, &args.end_time).await?;
     // decode_data(path).await?;
 
     // let connection_string = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let symbols = args.symbols;
 
-    println!("Symbols {:?}", symbols);
+    // println!("Symbols {:?}", args.symbols);
+    // println!("Start {:?}", args.start_time);
+    // println!("End {:?}", args.end_time);
 
     Ok(())
 }
@@ -163,7 +181,7 @@ struct Args {
     // #[arg(short, long)]
     // enable_debug_output: bool,
 
-    #[arg(long)]
+    #[arg(long, value_delimiter = ',')]
     symbols: Vec<String>,
 
     #[arg(long)]
