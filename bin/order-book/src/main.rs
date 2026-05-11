@@ -72,7 +72,7 @@ async fn download_to_file(path: &PathBuf, symbols: &Vec<String>, start_time: &st
     println!("Uh Oh");
     println!("DTRange {:?}", start_t..end_t);
 
-    if (!fs::try_exists(path).await?) {
+    if !fs::try_exists(path).await? {
         let mut client = HistoricalClient::builder().key_from_env()?.build()?;
         client
             .timeseries()

@@ -4,7 +4,7 @@ use crate::level::Level;
 use crate::price_level::PriceLevel;
 use databento::{
     dbn::{Action, BidAskPair, MboMsg, Side, UNDEF_PRICE}};
-
+use tracing::{debug };
 
 #[derive(Debug, Default)]
 pub struct Book {
@@ -92,11 +92,32 @@ impl Book {
     pub fn apply(&mut self, mbo: MboMsg) {
         let action = mbo.action().unwrap();
         match action {
-            Action::Modify => self.modify(mbo),
-            Action::Trade | Action::Fill | Action::None => {}
-            Action::Cancel => self.cancel(mbo),
-            Action::Add => self.add(mbo),
-            Action::Clear => self.clear(),
+            Action::Modify => {
+                debug!("Modify {:?}", mbo);
+                self.modify(mbo)
+            },
+            // Action::Trade | Action::Fill | Action::None => {}
+            Action::Trade => {
+                debug!("Trade {:?}", mbo);
+            },
+            Action::Fill => {
+                debug!("Fill {:?}", mbo);
+            },
+            Action::None => {
+                debug!("None {:?}", mbo);
+            },
+            Action::Cancel => {
+                debug!("Cancel: {:?}", mbo);
+                self.cancel(mbo)
+            },
+            Action::Add => {
+                debug!("Add: {:?}", mbo);
+                self.add(mbo)
+            },
+            Action::Clear => {
+                debug!("Clear {:?}", mbo);
+                self.clear()
+            },
         }
     }
 
