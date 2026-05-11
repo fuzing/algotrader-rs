@@ -16,6 +16,7 @@ members = [
     #    "crates/pdl-error",
     #    "crates/kcl-error",
     "bin/downloader",
+    "bin/order-book",
     "bin/migrate",
     "crates/models",
 #    "bin/mnist-inference-web",
