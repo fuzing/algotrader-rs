@@ -103,3 +103,13 @@ impl Display for Market {
     }
 }
 
+// impl Debug for Market {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         write!(
+//             f,
+//             "Market: {:?}",
+//             self.books,
+//         )
+//     }
+// }
+

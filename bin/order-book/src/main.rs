@@ -117,7 +117,7 @@ async fn decode_data(path: &PathBuf) -> Result<(), Box<dyn Error>> {
                 println!("    None");
             }
 
-            // println!("{}", market);
+            println!("{}", market);
         }
     }
 
