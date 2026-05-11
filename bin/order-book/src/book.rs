@@ -1,9 +1,11 @@
 
 use std::collections::{HashMap, BTreeMap, VecDeque};
+use std::fmt::Display;
 use crate::level::Level;
 use crate::price_level::PriceLevel;
 use databento::{
-    dbn::{Action, BidAskPair, MboMsg, Side, UNDEF_PRICE}};
+    dbn::{Action, BidAskPair, MboMsg, Side, UNDEF_PRICE, pretty},
+};
 use tracing::{debug };
 
 #[derive(Debug, Default)]
@@ -240,6 +242,24 @@ impl Book {
             Side::Bid => &self.bids,
             Side::None => panic!("Invalid side None"),
         }
+    }
+}
+
+
+
+impl Display for Book {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for (price, queue) in self.bids.iter() {
+
+            let mut total = 0;
+            for msg in queue.iter() {
+                total += msg.size;
+            }
+
+            writeln!(f, "   -> Price {:6.2} => {}", pretty::Px(*price), total)?;
+        }
+
+        Ok(())
     }
 }
 

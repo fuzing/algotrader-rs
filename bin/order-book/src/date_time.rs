@@ -37,10 +37,7 @@ use time::OffsetDateTime;
 
 const FORMAT: &str = "%Y-%m-%d %H:%M:%S";
 
-pub fn to_offset_date_time(datetime: &str) -> Result<OffsetDateTime, Box<dyn Error>> {
-    // 1. The local date-time string (no offset info)
-    let date_str = "2024-07-01 12:00:00";
-    // let format = "%Y-%m-%d %H:%M:%S";
+pub fn to_offset_date_time(date_str: &str) -> Result<OffsetDateTime, Box<dyn Error>> {
 
     // 2. Parse into a NaiveDateTime (no timezone yet)
     let naive_dt = NaiveDateTime::parse_from_str(date_str, FORMAT)?;
@@ -57,8 +54,8 @@ pub fn to_offset_date_time(datetime: &str) -> Result<OffsetDateTime, Box<dyn Err
     // We use the Unix timestamp to ensure a perfect transfer.
     let final_utc = OffsetDateTime::from_unix_timestamp(utc_dt_chrono.timestamp())?;
 
-    println!("Local String: {}", date_str);
-    println!("UTC Result:   {}", final_utc);
+    // println!("Local String: {}", date_str);
+    // println!("UTC Result:   {}", final_utc);
 
     Ok(final_utc)
 }

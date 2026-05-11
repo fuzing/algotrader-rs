@@ -1,5 +1,6 @@
 
 use std::collections::HashMap;
+use std::fmt::Display;
 use crate::book::Book;
 use crate::price_level::PriceLevel;
 use databento::{dbn::{Publisher, Record, MboMsg}};
@@ -88,6 +89,17 @@ impl Market {
             &mut books.last_mut().unwrap().1
         };
         book.apply(mbo);
+    }
+}
+
+
+impl Display for Market {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Market: {:?}",
+            self.books,
+        )
     }
 }
 
