@@ -2,7 +2,7 @@
 use std::collections::HashMap;
 use crate::book::Book;
 use crate::price_level::PriceLevel;
-use databento::dbn::Publisher;
+use databento::{dbn::{Publisher, Record, MboMsg}};
 
 #[derive(Debug, Default)]
 pub struct Market {
