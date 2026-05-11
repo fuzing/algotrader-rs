@@ -55,20 +55,20 @@ async fn build_from_snapshot() -> Result<Market, Box<dyn Error>> {
 async fn download_to_file(path: &str) -> Result<(), Box<dyn Error>> {
     if (!fs::try_exists(path).await?) {
         let mut client = HistoricalClient::builder().key_from_env()?.build()?;
-        client
-            .timeseries()
-            .get_range_to_file(
-                &GetRangeToFileParams::builder()
-                    .dataset(Dataset::DbeqBasic)
-                    .symbols(vec!["GOOG", "GOOGL"])
-                    .date_time_range(
-                        datetime!(2024-04-03 08:00:00 UTC)..datetime!(2024-04-03 14:00:00 UTC),
-                    )
-                    .schema(Schema::Mbo)
-                    .path(path)
-                    .build(),
-            )
-            .await?;
+        // client
+        //     .timeseries()
+        //     .get_range_to_file(
+        //         &GetRangeToFileParams::builder()
+        //             .dataset(Dataset::DbeqBasic)
+        //             .symbols(vec!["GOOG", "GOOGL"])
+        //             .date_time_range(
+        //                 datetime!(2024-04-03 08:00:00 UTC)..datetime!(2024-04-03 14:00:00 UTC),
+        //             )
+        //             .schema(Schema::Mbo)
+        //             .path(path)
+        //             .build(),
+        //     )
+        //     .await?;
     }
 
     Ok(())
@@ -154,9 +154,18 @@ async fn main() -> Result<(), Box<dyn Error>>
 
 #[derive(Debug, ClapParser)]
 struct Args {
-    /// Write additional debut output in the output directory.
+    // /// Write additional debut output in the output directory.
+    // #[arg(short, long)]
+    // enable_debug_output: bool,
+
+    #[arg(long)]
+    symbols: Vec<String>,
+
+    #[arg(long)]
+    start_time: String,
+
     #[arg(short, long)]
-    enable_debug_output: bool,
+    end_time: String,
 
     // Path to settings file
     // #[arg(short, long)]
