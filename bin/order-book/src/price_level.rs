@@ -11,7 +11,7 @@ pub struct PriceLevel {
 }
 
 impl PriceLevel {
-    fn new<'a>(price: i64, orders: impl Iterator<Item = &'a MboMsg>) -> Self {
+    pub fn new<'a>(price: i64, orders: impl Iterator<Item = &'a MboMsg>) -> Self {
         orders.fold(
             PriceLevel {
                 price,

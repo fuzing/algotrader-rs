@@ -3,6 +3,8 @@ mod book;
 mod price_level;
 mod level;
 
+use market::Market;
+
 // use anyhow::anyhow;
 use clap::Parser as ClapParser;
 use std::{
@@ -43,10 +45,14 @@ use time::macros::{date, datetime};
 
 
 
-async fn download_to_file() -> Result<(), Box<dyn Error>> {
+async fn build_from_snapshot() -> Result<Market, Box<dyn Error>> {
+    let mut market = Market::default();
 
-    let path = "mbo.dbn.zst";
+    Ok(market)
+}
 
+
+async fn download_to_file(path: &str) -> Result<(), Box<dyn Error>> {
     if (!fs::try_exists(path).await?) {
         let mut client = HistoricalClient::builder().key_from_env()?.build()?;
         client
@@ -69,8 +75,7 @@ async fn download_to_file() -> Result<(), Box<dyn Error>> {
 }
 
 
-async fn decode_data() -> Result<(), Box<dyn Error>> {
-    let path = "mbo.dbn.zst";
+async fn decode_data(path: &str) -> Result<(), Box<dyn Error>> {
 
     let mut market = Market::default();
 
@@ -101,38 +106,6 @@ async fn decode_data() -> Result<(), Box<dyn Error>> {
 }
 
 
-
-async fn build_order_book() -> Result<(), Box<dyn Error>>
-{
-    info!("Downloading history");
-
-    // Databento stuff
-    let mut client = HistoricalClient::builder().key_from_env()?.build()?;
-    // let mut decoder = client
-    //     .timeseries()
-    //     .get_range(
-    //         &GetRangeParams::builder()
-    //             .dataset(Dataset::GlbxMdp3)
-    //             .date_time_range(datetime!(2022-06-10 14:30 UTC)..datetime!(2022-06-10 14:40 UTC))
-    //             .symbols("ES.FUT")
-    //             // .symbols(Symbols::All)
-    //             .stype_in(SType::Parent)
-    //             // .limit(NonZeroU64::new(100).unwrap())
-    //             .schema(Schema::Trades)Starting
-    //             .build(),
-    //     )
-    //     .await?;
-    // let symbol_map = decoder
-    //     .metadata()
-    //     .symbol_map_for_date(date!(2022 - 06 - 10))?;
-    // while let Some(trade) = decoder.decode_record::<TradeMsg>().await? {
-    //     let symbol = &symbol_map[trade];
-    //     println!("Received trade for {symbol}: {trade:?}");
-    // }
-
-
-    Ok(())
-}
 
 
 #[tokio::main]
@@ -171,11 +144,9 @@ async fn main() -> Result<(), Box<dyn Error>>
     // let settings = args.settings.canonicalize().unwrap();
     // println!("{:?}", settings);
     // let settings = SessionSettings::try_from_path(&settings).map_err(|e| anyhow!("{:?}", e))?;
-
-    build_order_book().await?;
-    // get_live().await?;
-
-    println!("Hello, world!");
+    let path = "/run/media/peter/genetics/algotrader/data/mbo.dbn.zst";
+    download_to_file(path).await?;
+    decode_data(path).await?;
 
     Ok(())
 }
