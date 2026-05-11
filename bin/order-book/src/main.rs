@@ -145,8 +145,13 @@ async fn main() -> Result<(), Box<dyn Error>>
     // println!("{:?}", settings);
     // let settings = SessionSettings::try_from_path(&settings).map_err(|e| anyhow!("{:?}", e))?;
     let path = "/run/media/peter/genetics/algotrader/data/mbo.dbn.zst";
-    download_to_file(path).await?;
-    decode_data(path).await?;
+    // download_to_file(path).await?;
+    // decode_data(path).await?;
+
+    // let connection_string = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let symbols = args.symbols;
+
+    println!("Symbols {:?}", symbols);
 
     Ok(())
 }
