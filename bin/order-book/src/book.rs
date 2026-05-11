@@ -19,6 +19,8 @@ impl Book {
         Self::default()
     }
 
+    // best bid-offer
+    // the best bid and ask prices
     pub fn bbo(&self) -> (Option<PriceLevel>, Option<PriceLevel>) {
         (self.bid_level(0), self.ask_level(0))
     }

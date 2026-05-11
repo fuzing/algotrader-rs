@@ -2,8 +2,10 @@ mod market;
 mod book;
 mod price_level;
 mod level;
+mod date_time;
 
 use market::Market;
+use date_time::to_offset_date_time;
 
 // use anyhow::anyhow;
 use clap::Parser as ClapParser;
@@ -64,33 +66,32 @@ async fn download_to_file(path: &PathBuf, symbols: &Vec<String>, start_time: &st
     // let end_t = OffsetDateTime::from_unix_timestamp_nanos(end_time.parse()?)?;
     // let start_t = OffsetDateTime::parse(start_time, &Rfc3339)?;
     // let end_t = OffsetDateTime::parse(end_time, &Rfc3339)?;
-    let start_t = OffsetDateTime::parse(start_time, &Rfc3339)?;
-    let end_t = OffsetDateTime::parse(end_time, &Rfc3339)?;
+    // let start_t = OffsetDateTime::parse(start_time, &Rfc3339)?;
+    // let end_t = OffsetDateTime::parse(end_time, &Rfc3339)?;
+    let start_t = to_offset_date_time(start_time)?;
+    let end_t = to_offset_date_time(end_time)?;
 
-    // let start_t: DateTime<Utc> = start_time.parse()?;
-    // let end_t: DateTime<Utc> = end_time.parse()?;
-    println!("Uh Oh");
-    println!("DTRange {:?}", start_t..end_t);
-
-    if !fs::try_exists(path).await? {
-        let mut client = HistoricalClient::builder().key_from_env()?.build()?;
-        client
-            .timeseries()
-            .get_range_to_file(
-                &GetRangeToFileParams::builder()
-                    .dataset(Dataset::DbeqBasic)
-                    // .symbols(vec!["GOOG", "GOOGL"])
-                    .symbols(symbols.to_owned())
-                    .date_time_range(
-                        // datetime!(2024-04-03 08:00:00 UTC)..datetime!(2024-04-03 14:00:00 UTC),
-                        start_t..end_t,
-                    )
-                    .schema(Schema::Mbo)
-                    .path(path)
-                    .build(),
-            )
-            .await?;
-    }
+    // println!("DTRange {:?}", start_t..end_t);
+    //
+    // if !fs::try_exists(path).await? {
+    //     let mut client = HistoricalClient::builder().key_from_env()?.build()?;
+    //     client
+    //         .timeseries()
+    //         .get_range_to_file(
+    //             &GetRangeToFileParams::builder()
+    //                 .dataset(Dataset::DbeqBasic)
+    //                 // .symbols(vec!["GOOG", "GOOGL"])
+    //                 .symbols(symbols.to_owned())
+    //                 .date_time_range(
+    //                     // datetime!(2024-04-03 08:00:00 UTC)..datetime!(2024-04-03 14:00:00 UTC),
+    //                     start_t..end_t,
+    //                 )
+    //                 .schema(Schema::Mbo)
+    //                 .path(path)
+    //                 .build(),
+    //         )
+    //         .await?;
+    // }
 
     Ok(())
 }
@@ -166,8 +167,13 @@ async fn main() -> Result<(), Box<dyn Error>>
     // println!("{:?}", settings);
     // let settings = SessionSettings::try_from_path(&settings).map_err(|e| anyhow!("{:?}", e))?;
     let path: PathBuf = PathBuf::from(std::format!("/run/media/peter/genetics/algotrader/data/{}-{}-{}-mbo.dbn.zst", args.symbols.join(":"), args.start_time, args.end_time));
-    download_to_file(&path, &args.symbols, &args.start_time, &args.end_time).await?;
-    decode_data(&path).await?;
+
+    let start_offset = to_offset_date_time(&args.start_time)?;
+    let end_offset = to_offset_date_time(&args.end_time)?;
+
+
+    // download_to_file(&path, &args.symbols, &args.start_time, &args.end_time).await?;
+    // decode_data(&path).await?;
 
     Ok(())
 }

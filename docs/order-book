@@ -1,3 +1,27 @@
 
 
 Market
+has:
+  a HashMap (books) of instrument_id's that indexes a vector of (Publisher,Book) entries
+
+Book
+has:
+  a HashMap (orders_by_id) of order id's that indexes a (Side, i64) tuple
+  a BtreeMap (offers) that has price levels that index a Level
+  a BtreeMap (bids) that has price levels that index a Level
+
+Level
+  is just a type that specifies a VecDeque<MboMsg>
+
+
+PriceLevel
+has:
+  price - the level's price
+  count - ??
+  size - total number of shares
+
+
+
+
+
+
