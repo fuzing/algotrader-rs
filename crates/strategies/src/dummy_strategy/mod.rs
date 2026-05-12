@@ -13,11 +13,11 @@ pub struct DummyStrategy {}
 // }
 
 impl Strategy for DummyStrategy {
-    async fn pre_apply(msg: &MboMsg, symbol_map: &TsSymbolMap, market: &Market) -> Result<(), Box<dyn Error>> {
+    /*async*/ fn pre_apply(msg: &MboMsg, symbol_map: &TsSymbolMap, market: &Market) -> Result<(), Box<dyn Error>> {
         Ok(())
     }
 
-    async fn post_apply(msg: &MboMsg, symbol_map: &TsSymbolMap, market: &Market) -> Result<(), Box<dyn Error>> {
+    /*async*/ fn post_apply(msg: &MboMsg, symbol_map: &TsSymbolMap, market: &Market) -> Result<(), Box<dyn Error>> {
         Ok(())
     }
 }
