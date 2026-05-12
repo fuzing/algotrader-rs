@@ -62,8 +62,6 @@ async fn build_from_snapshot() -> Result<Market, Box<dyn Error>> {
 async fn download_to_file(path: &PathBuf, symbols: &Vec<String>, start_time: &str, end_time: &str) -> Result<(), Box<dyn Error>> {
     info!("Download to file");
 
-    // let start_t = OffsetDateTime::parse(start_time, &Rfc3339)?;
-    // let end_t = OffsetDateTime::parse(end_time, &Rfc3339)?;
     let start_t = to_offset_date_time(start_time)?;
     let end_t = to_offset_date_time(end_time)?;
 
