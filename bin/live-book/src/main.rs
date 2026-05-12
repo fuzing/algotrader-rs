@@ -38,6 +38,8 @@ use databento::{
         SType,
         Side,
         SymbolIndex,
+        SymbolMappingMsg,
+        TsSymbolMap,
         UNDEF_PRICE,
         decode::{AsyncDbnDecoder, DbnMetadata},
         pretty,
@@ -121,6 +123,10 @@ async fn decode_data(symbols: &Vec<String>) -> Result<(), Box<dyn Error>> {
     // }
 
 
+    // start with an empty symbol map
+    // https://github.com/databento/databento-rs/blob/main/src/historical/symbology.rs
+    let mut symbol_map = TsSymbolMap::new();
+
 
     // Then, we will process all snapshot records, and stop at the first record
     // with F_LAST flag, which indicates that the snapshot is complete and the
@@ -137,6 +143,12 @@ async fn decode_data(symbols: &Vec<String>) -> Result<(), Box<dyn Error>> {
                 println!("Snapshot is complete");
                 // break;
             }
+        } else if let Some(symbol) = record.get::<SymbolMappingMsg>() {
+            info!("Symbol mapping: {symbol:?}");
+            // insert the symbol into the symbol table
+            // symbol_map.insert(
+            //     symbol.instrument(),
+            // ).await?;
         } else if let Some(error) = record.get::<ErrorMsg>() {
             eprintln!("{}", error.err()?);
             break;
