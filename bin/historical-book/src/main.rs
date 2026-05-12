@@ -4,7 +4,10 @@ use order_book::{
     date_time::to_offset_date_time,
 };
 
-use strategies::strategy::Strategy;
+use strategies::{
+    strategy::Strategy,
+    dummy_strategy::DummyStrategy,
+};
 
 // use anyhow::anyhow;
 use clap::Parser as ClapParser;
@@ -90,7 +93,7 @@ async fn download_to_file(path: &PathBuf, symbols: &Vec<String>, start_time: &st
 }
 
 
-// async fn decode_data(path: &PathBuf, strategy: Strategy) -> Result<(), Box<dyn Error>> {
+// async fn decode_data(path: &PathBuf, strategy: Box<dyn Strategy>) -> Result<(), Box<dyn Error>> {
 async fn decode_data(path: &PathBuf) -> Result<(), Box<dyn Error>> {
 
     let mut market = Market::default();
