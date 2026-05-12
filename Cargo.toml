@@ -12,31 +12,17 @@ keywords = ["pdl", "pipelines" ]
 
 [workspace]
 members = [
-    #    "crates/pdl-lib",
-    #    "crates/pdl-error",
-    #    "crates/kcl-error",
     "bin/downloader",
-    "bin/order-book",
+    "bin/historical-book",
     "bin/migrate",
     "crates/models",
-#    "bin/mnist-inference-web",
-#    "bin/text-train",
-    #    "bin/dynamic-test",
-    #    "bin/wgpu-test",
-    #    "bin/pdl-engine",
-    #    "bin/pdl-language-server",
-    #    "crates/pdl-parser",
-    #    "crates/pdl-pest-parser",
+    "crates/order-book",
 ]
 # add to this for bins/crates that need testing/benching
 #default-members = [
 #    "bin/order-matcher",
 #    "bin/order-matcher-exerciser",
 #    "bin/broker-terminal",
-#    "bin/udp-client",
-#    "bin/udp-server",
-#    "crates/order-book",
-#    "crates/tcp-packet",
 #]
 #exclude = ["book/sources", "book/cli"]
 
@@ -205,8 +191,10 @@ clap = { version = "4.6.1", features = ["default", "derive"] }
 chrono = {  version = "0.4.44", features = ["serde"] }
 chrono-tz = "0.10.4"
 console_error_panic_hook = "0.1.7"
+criterion = "0.8.2"
 dotenv = "0.15.0"
 databento = { version = "0.50.0", features = ["historical", "live"], default-features = true }
+order-book = { path = "crates/order-book" }
 rand = "0.10.1" # ""0.10.0"
 reqwest = { version = "0.13.3", features = ["native-tls"] }
 serde = "1.0.228"

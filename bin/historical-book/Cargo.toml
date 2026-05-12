@@ -1,5 +1,5 @@
 [package]
-name = "order-book"
+name = "historical-book"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -15,6 +15,7 @@ chrono-tz.workspace = true
 clap.workspace = true
 databento.workspace = true
 dotenv.workspace = true
+order-book.workspace = true
 #reqwest = {workspace = true, features = ["native-tls"]}
 thiserror.workspace = true
 time.workspace = true
