@@ -8,6 +8,7 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/models/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bin/historical-book/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/order-book/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/bin/live-book/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

@@ -25,3 +25,15 @@ has:
 
 
 
+Mbo "Action" field
+Add - Insert a new order into the book
+Modify - Change an order's price and/or size
+Cancel - Fully or partially cancel an order from the book
+Clear - Remove all resting orders for the instrument
+Trade - An aggressing order traded. Does not affect the book
+Fill - resting order was filled. Does not affect the book
+None - no action but may carry flags or other information
+
+
+
+
