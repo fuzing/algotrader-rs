@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
 # markets are open between 09:30AM and 04:00PM EST
-cargo run --bin live-book -- --symbols=WSO --start-time="2024-04-03 08:00:00 ET" --end-time="2024-04-03 16:30:00 ET"
+cargo run --bin live-book -- --symbols=WSO
+
 

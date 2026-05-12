@@ -28,17 +28,21 @@ use databento::{
         Action,
         BidAskPair,
         Dataset,
+        ErrorMsg,
         MboMsg,
         Publisher,
         Record,
         Schema,
+        SType,
         Side,
         SymbolIndex,
         UNDEF_PRICE,
         decode::{AsyncDbnDecoder, DbnMetadata},
         pretty,
+
     },
     historical::timeseries::GetRangeToFileParams,
+    live::Subscription,
 };
 use time::{
     OffsetDateTime,
@@ -56,67 +60,84 @@ async fn build_from_snapshot() -> Result<Market, Box<dyn Error>> {
 }
 
 
-async fn download_to_file(path: &PathBuf, symbols: &Vec<String>, start_time: &str, end_time: &str) -> Result<(), Box<dyn Error>> {
-    info!("Download to file");
+async fn decode_data(symbols: &Vec<String>) -> Result<(), Box<dyn Error>> {
 
-    // let start_t = OffsetDateTime::parse(start_time, &Rfc3339)?;
-    // let end_t = OffsetDateTime::parse(end_time, &Rfc3339)?;
-    let start_t = to_offset_date_time(start_time)?;
-    let end_t = to_offset_date_time(end_time)?;
-
-    println!("DTRange {:?}", start_t..end_t);
-
-    if !fs::try_exists(path).await? {
-        let mut client = HistoricalClient::builder().key_from_env()?.build()?;
-        client
-            .timeseries()
-            .get_range_to_file(
-                &GetRangeToFileParams::builder()
-                    .dataset(Dataset::DbeqBasic)
-                    .symbols(symbols.to_owned())
-                    .date_time_range(
-                        // datetime!(2024-04-03 08:00:00 UTC)..datetime!(2024-04-03 14:00:00 UTC),
-                        start_t..end_t,
-                    )
-                    .schema(Schema::Mbo)
-                    .path(path)
-                    .build(),
-            )
-            .await?;
-    }
-
-    Ok(())
-}
-
-
-async fn decode_data(path: &PathBuf) -> Result<(), Box<dyn Error>> {
+    let symbols_str = symbols.iter().map(|s| s.as_str()).collect::<Vec<&str>>();
 
     let mut market = Market::default();
 
-    let mut decoder = AsyncDbnDecoder::from_zstd_file(path).await?;
-    let symbol_map = decoder.metadata().symbol_map()?;
+    // let mut decoder = AsyncDbnDecoder::from_zstd_file(path).await?;
+    // let symbol_map = decoder.metadata().symbol_map()?;
 
-    while let Some(mbo) = decoder.decode_record::<MboMsg>().await? {
-        market.apply(mbo.clone());
-        // If it's the last update in an event, print the state of the aggregated book
-        if mbo.flags.is_last() {
-            let symbol = symbol_map.get_for_rec(mbo).unwrap();
-            let (best_bid, best_offer) = market.aggregated_bbo(mbo.hd.instrument_id);
-            println!("{symbol} Aggregated BBO | {}", mbo.ts_recv().unwrap());
-            if let Some(best_offer) = best_offer {
-                println!("    {best_offer}");
-            } else {
-                println!("    None");
-            }
-            if let Some(best_bid) = best_bid {
-                println!("    {best_bid}");
-            } else {
-                println!("    None");
-            }
 
-            println!("{}", market);
+    // First, create a live client and connect
+    let mut client = LiveClient::builder()
+        .key_from_env()?
+        .dataset(Dataset::GlbxMdp3)
+        .build()
+        .await?;
+
+    // Next, we will subscribe to the MBO snapshot and start the session
+    client
+        .subscribe(
+            Subscription::builder()
+                .schema(Schema::Mbo)
+                .symbols(symbols_str)
+                .stype_in(SType::Continuous)
+                .use_snapshot(true)
+                .build(),
+        )
+        .await?;
+    client.start().await?;
+
+    // historical records
+    // while let Some(mbo) = decoder.decode_record::<MboMsg>().await? {
+    //     market.apply(mbo.clone());
+    //     // If it's the last update in an event, print the state of the aggregated book
+    //     if mbo.flags.is_last() {
+    //         let symbol = symbol_map.get_for_rec(mbo).unwrap();
+    //         let (best_bid, best_offer) = market.aggregated_bbo(mbo.hd.instrument_id);
+    //         println!("{symbol} Aggregated BBO | {}", mbo.ts_recv().unwrap());
+    //         if let Some(best_offer) = best_offer {
+    //             println!("    {best_offer}");
+    //         } else {
+    //             println!("    None");
+    //         }
+    //         if let Some(best_bid) = best_bid {
+    //             println!("    {best_bid}");
+    //         } else {
+    //             println!("    None");
+    //         }
+    //
+    //         println!("{}", market);
+    //     }
+    // }
+
+
+
+    // Then, we will process all snapshot records, and stop at the first record
+    // with F_LAST flag, which indicates that the snapshot is complete and the
+    // order book is in a valid state
+    while let Some(record) = client.next_record().await? {
+        if let Some(mbo) = record.get::<MboMsg>() {
+            market.apply(mbo.clone());
+            if mbo.flags.is_snapshot() {
+                println!("Snapshot: {mbo:?}");
+            } else {
+                println!("Live: {mbo:?}");
+            }
+            if mbo.flags.is_last() {
+                println!("Snapshot is complete");
+                // break;
+            }
+        } else if let Some(error) = record.get::<ErrorMsg>() {
+            eprintln!("{}", error.err()?);
+            break;
         }
     }
+
+
+    client.close().await?;
 
     Ok(())
 }
@@ -160,9 +181,7 @@ async fn main() -> Result<(), Box<dyn Error>>
     // let settings = args.settings.canonicalize().unwrap();
     // println!("{:?}", settings);
     // let settings = SessionSettings::try_from_path(&settings).map_err(|e| anyhow!("{:?}", e))?;
-    let path: PathBuf = PathBuf::from(std::format!("/run/media/peter/genetics/algotrader/data/{}-{}-{}-mbo.dbn.zst", args.symbols.join(":"), args.start_time, args.end_time));
-    download_to_file(&path, &args.symbols, &args.start_time, &args.end_time).await?;
-    decode_data(&path).await?;
+    decode_data(&args.symbols).await?;
     Ok(())
 }
 
@@ -175,12 +194,6 @@ struct Args {
 
     #[arg(long, value_delimiter = ',')]
     symbols: Vec<String>,
-
-    #[arg(long)]
-    start_time: String,
-
-    #[arg(short, long)]
-    end_time: String,
 
     // Path to settings file
     // #[arg(short, long)]
