@@ -1,5 +1,5 @@
 [package]
-name = "historical-book"
+name = "strategies"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -12,12 +12,10 @@ exclude.workspace = true
 anyhow.workspace = true
 chrono.workspace = true
 chrono-tz.workspace = true
-clap.workspace = true
 databento.workspace = true
 dotenv.workspace = true
 order-book.workspace = true
 #reqwest = {workspace = true, features = ["native-tls"]}
-strategies.workspace = true
 thiserror.workspace = true
 time.workspace = true
 tokio.workspace = true
@@ -47,3 +45,11 @@ workspace = true
 #cuda = ["burn/cuda", "burn/default"]
 #vulkan = ["burn/vulkan", "burn/default"]
 #rocm = ["burn/rocm", "burn/default"]
+
+
+#[dev-dependencies]
+#criterion.workspace = true
+#
+#[[bench]]
+#name = "order_book_benchmark"
+#harness = false

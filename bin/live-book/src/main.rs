@@ -4,6 +4,8 @@ use order_book::{
     date_time::to_offset_date_time,
 };
 
+use strategies::strategy::Strategy;
+
 // use anyhow::anyhow;
 use clap::Parser as ClapParser;
 use std::{
@@ -60,8 +62,11 @@ async fn build_from_snapshot() -> Result<Market, Box<dyn Error>> {
 }
 
 
+
+// async fn decode_data(symbols: &Vec<String>, strategy: dyn Strategy) -> Result<(), Box<dyn Error>> {
 async fn decode_data(symbols: &Vec<String>) -> Result<(), Box<dyn Error>> {
 
+    // turn Vec<String> into Vec<&str>
     let symbols_str = symbols.iter().map(|s| s.as_str()).collect::<Vec<&str>>();
 
     let mut market = Market::default();

@@ -17,6 +17,7 @@ databento.workspace = true
 dotenv.workspace = true
 order-book.workspace = true
 #reqwest = {workspace = true, features = ["native-tls"]}
+strategies.workspace = true
 thiserror.workspace = true
 time.workspace = true
 tokio.workspace = true

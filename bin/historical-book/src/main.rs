@@ -4,6 +4,8 @@ use order_book::{
     date_time::to_offset_date_time,
 };
 
+use strategies::strategy::Strategy;
+
 // use anyhow::anyhow;
 use clap::Parser as ClapParser;
 use std::{
@@ -47,6 +49,7 @@ use time::{
 };
 
 use chrono::{ DateTime, Utc};
+use clap::builder::Str;
 use databento::reference::Country::Is;
 
 async fn build_from_snapshot() -> Result<Market, Box<dyn Error>> {
@@ -89,6 +92,7 @@ async fn download_to_file(path: &PathBuf, symbols: &Vec<String>, start_time: &st
 }
 
 
+// async fn decode_data(path: &PathBuf, strategy: Strategy) -> Result<(), Box<dyn Error>> {
 async fn decode_data(path: &PathBuf) -> Result<(), Box<dyn Error>> {
 
     let mut market = Market::default();

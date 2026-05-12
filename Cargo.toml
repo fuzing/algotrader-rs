@@ -18,7 +18,9 @@ members = [
     "bin/migrate",
     "crates/models",
     "crates/order-book",
+    "crates/strategies",
 ]
+
 # add to this for bins/crates that need testing/benching
 #default-members = [
 #    "bin/order-matcher",
@@ -201,6 +203,7 @@ reqwest = { version = "0.13.3", features = ["native-tls"] }
 serde = "1.0.228"
 serde_json = "1.0.149"
 sqlx = { version = "0.9.0-alpha.1", features = ["runtime-tokio", "postgres", "chrono", "uuid", "derive"] }
+strategies = { path = "crates/strategies" }
 thiserror = "2.0.18"
 time = "0.3.47"
 time_range = "0.0.3-alpha.0"
