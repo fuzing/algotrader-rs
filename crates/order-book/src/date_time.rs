@@ -32,30 +32,35 @@
 
 use std::error::Error;
 use chrono::{NaiveDateTime, TimeZone};
-use chrono_tz::America::New_York;
+use chrono_tz::{
+    America::New_York,
+    America::Chicago,
+    America::Denver,
+    America::Los_Angeles,
+    UTC,
+};
+use databento::dbn::StatUpdateAction::New;
 use time::OffsetDateTime;
 
 const FORMAT: &str = "%Y-%m-%d %H:%M:%S";
 
-pub fn to_offset_date_time(date_str: &str) -> Result<OffsetDateTime, Box<dyn Error>> {
+pub fn to_offset_date_time(date_time_str: &str) -> Result<OffsetDateTime, Box<dyn Error>> {
+    let (dt_part, tz_part) = date_time_str.rsplit_once(' ').unwrap();
+    let naive_dt = NaiveDateTime::parse_from_str(dt_part, FORMAT)?;
 
-    // 2. Parse into a NaiveDateTime (no timezone yet)
-    let naive_dt = NaiveDateTime::parse_from_str(date_str, FORMAT)?;
+    let local_dt = match tz_part {
+        "ET" => New_York.from_local_datetime(&naive_dt),                // Eastern
+        "CT" => Chicago.from_local_datetime(&naive_dt),                 // Central
+        "MT" => Denver.from_local_datetime(&naive_dt),                  // Mountain
+        "PT" => Los_Angeles.from_local_datetime(&naive_dt),             // Pacific
+        "UTC" => UTC.from_local_datetime(&naive_dt),                    // UTC
+        _ => return Err(format!("Invalid timezone: {}", tz_part).into()),
+    };
 
-    // 3. Attach the specific Time Zone.
-    // chrono-tz handles DST transitions automatically for the given date.
-    let local_dt = New_York.from_local_datetime(&naive_dt).single()
+    let local_dt = local_dt.single()
         .ok_or("Ambiguous or invalid local time (DST transition)")?;
-
-    // 4. Convert to UTC
     let utc_dt_chrono = local_dt.with_timezone(&chrono::Utc);
-
-    // 5. Convert to time::OffsetDateTime
-    // We use the Unix timestamp to ensure a perfect transfer.
     let final_utc = OffsetDateTime::from_unix_timestamp(utc_dt_chrono.timestamp())?;
-
-    // println!("Local String: {}", date_str);
-    // println!("UTC Result:   {}", final_utc);
 
     Ok(final_utc)
 }

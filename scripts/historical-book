@@ -4,5 +4,5 @@
 #cargo run --bin historical-book -- --symbols=WSO --start-time="2024-04-03T00:00:00Z" --end-time="2024-04-04T00:00:00Z"
 
 # markets are open between 09:30AM and 04:00PM EST
-cargo run --bin historical-book -- --symbols=WSO --start-time="2024-04-03 08:00:00" --end-time="2024-04-03 16:30:00"
+cargo run --bin historical-book -- --symbols=WSO --start-time="2024-04-03 08:00:00 ET" --end-time="2024-04-03 16:30:00 ET"
 
