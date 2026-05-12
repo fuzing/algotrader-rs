@@ -73,7 +73,9 @@ async fn decode_data(symbols: &Vec<String>) -> Result<(), Box<dyn Error>> {
     // First, create a live client and connect
     let mut client = LiveClient::builder()
         .key_from_env()?
-        .dataset(Dataset::GlbxMdp3)
+        // TODO - check which DB to use
+        // .dataset(Dataset::GlbxMdp3)
+        .dataset(Dataset::DbeqBasic)
         .build()
         .await?;
 
