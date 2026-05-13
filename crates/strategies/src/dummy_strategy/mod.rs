@@ -6,18 +6,18 @@ use crate::strategy::Strategy;
 #[derive(Debug)]
 pub struct DummyStrategy {}
 
-// impl DummyStrategy {
-//     pub fn new() -> Self {
-//         Self {}
-//     }
-// }
+impl DummyStrategy {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
 
 impl Strategy for DummyStrategy {
-    /*async*/ fn pre_apply(msg: &MboMsg, symbol_map: &TsSymbolMap, market: &Market) -> Result<(), Box<dyn Error>> {
+    async fn pre_apply(msg: &MboMsg, symbol_map: &TsSymbolMap, market: &Market) -> Result<(), Box<dyn Error>> {
         Ok(())
     }
 
-    /*async*/ fn post_apply(msg: &MboMsg, symbol_map: &TsSymbolMap, market: &Market) -> Result<(), Box<dyn Error>> {
+    async fn post_apply(msg: &MboMsg, symbol_map: &TsSymbolMap, market: &Market) -> Result<(), Box<dyn Error>> {
         Ok(())
     }
 }

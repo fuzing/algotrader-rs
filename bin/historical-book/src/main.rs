@@ -93,8 +93,7 @@ async fn download_to_file(path: &PathBuf, symbols: &Vec<String>, start_time: &st
 }
 
 
-// async fn decode_data(path: &PathBuf, strategy: Box<dyn Strategy>) -> Result<(), Box<dyn Error>> {
-async fn decode_data(path: &PathBuf) -> Result<(), Box<dyn Error>> {
+async fn decode_data(path: &PathBuf, strategy: &impl Strategy) -> Result<(), Box<dyn Error>> {
 
     let mut market = Market::default();
 
@@ -167,7 +166,7 @@ async fn main() -> Result<(), Box<dyn Error>>
     // let settings = SessionSettings::try_from_path(&settings).map_err(|e| anyhow!("{:?}", e))?;
     let path: PathBuf = PathBuf::from(std::format!("/run/media/peter/genetics/algotrader/data/{}-{}-{}-mbo.dbn.zst", args.symbols.join(":"), args.start_time, args.end_time));
     download_to_file(&path, &args.symbols, &args.start_time, &args.end_time).await?;
-    decode_data(&path).await?;
+    decode_data(&path, &DummyStrategy::new()).await?;
     Ok(())
 }
 
