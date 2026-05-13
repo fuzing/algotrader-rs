@@ -7,6 +7,7 @@ use databento::{dbn::{Publisher, Record, MboMsg}};
 
 #[derive(Debug, Default)]
 pub struct Market {
+    // indexed by u32 instrument_id
     books: HashMap<u32, Vec<(Publisher, Book)>>,
 }
 
@@ -21,7 +22,7 @@ impl Market {
             .map(|pub_books| pub_books.as_slice())
     }
 
-    pub fn book(&self, instrument_id: u32, publisher: Publisher) -> Option<&Book> {
+    pub fn find_book(&self, instrument_id: u32, publisher: Publisher) -> Option<&Book> {
         let books = self.books.get(&instrument_id)?;
         books.iter().find_map(|(book_pub, book)| {
             if *book_pub == publisher {
@@ -37,7 +38,7 @@ impl Market {
         instrument_id: u32,
         publisher: Publisher,
     ) -> (Option<PriceLevel>, Option<PriceLevel>) {
-        self.book(instrument_id, publisher)
+        self.find_book(instrument_id, publisher)
             .map(|book| book.bbo())
             .unwrap_or_default()
     }
@@ -89,6 +90,12 @@ impl Market {
             &mut books.last_mut().unwrap().1
         };
         book.apply(mbo);
+    }
+
+    // PMB - given an Mbo message, find its corresponding limit order book
+    pub fn find_book_from_mbo(&self, mbo: &MboMsg) -> Option<&Book> {
+        let publisher = mbo.publisher().unwrap();
+        self.find_book(mbo.hd.instrument_id, publisher)
     }
 }
 

@@ -7,6 +7,7 @@ use order_book::{
 use strategies::{
     strategy::Strategy,
     dummy_strategy::DummyStrategy,
+    test_strategy::TestStrategy,
 };
 
 // use anyhow::anyhow;
@@ -172,7 +173,7 @@ async fn main() -> Result<(), Box<dyn Error>>
     // let settings = SessionSettings::try_from_path(&settings).map_err(|e| anyhow!("{:?}", e))?;
     let path: PathBuf = PathBuf::from(std::format!("/run/media/peter/genetics/algotrader/data/{}-{}-{}-mbo.dbn.zst", args.symbols.join(":"), args.start_time, args.end_time));
     download_to_file(&path, &args.symbols, &args.start_time, &args.end_time).await?;
-    let strategy = DummyStrategy::new();
+    let strategy = TestStrategy::new();
     decode_data(&path, &strategy).await?;
     Ok(())
 }
