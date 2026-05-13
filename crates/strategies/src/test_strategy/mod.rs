@@ -1,6 +1,6 @@
 
 use std::error::Error;
-use databento::dbn::{MboMsg, TsSymbolMap};
+use databento::dbn::{Action, MboMsg, TsSymbolMap};
 use order_book::market::Market;
 use crate::strategy::Strategy;
 use tracing::{debug};
@@ -22,10 +22,52 @@ impl Strategy for TestStrategy {
         Ok(())
     }
 
-    async fn post_apply(&self, msg: &MboMsg, symbol_map: &TsSymbolMap, market: &Market) -> Result<(), Box<dyn Error>> {
+    async fn post_apply(&self, mbo: &MboMsg, symbol_map: &TsSymbolMap, market: &Market) -> Result<(), Box<dyn Error>> {
 
-        if let Some(book) = market.find_book_from_mbo(msg) {
-            debug!("=====================> found book");
+        let action = mbo.action().unwrap();
+        match action {
+            Action::Modify => {
+                debug!("Modify {:?}", mbo);
+                // self.modify(mbo)
+            },
+            // Action::Trade | Action::Fill | Action::None => {}
+            Action::Trade => {
+                debug!("Trade {:?}", mbo);
+            },
+            Action::Fill => {
+                debug!("Fill {:?}", mbo);
+            },
+            Action::None => {
+                debug!("None {:?}", mbo);
+            },
+            Action::Cancel => {
+                debug!("Cancel: {:?}", mbo);
+                // self.cancel(mbo)
+            },
+            Action::Add => {
+                debug!("Add: {:?}", mbo);
+                // self.add(mbo)
+            },
+            Action::Clear => {
+                debug!("Clear {:?}", mbo);
+                // self.clear()
+            },
+        }
+
+
+
+        if let Some(book) = market.find_book_from_mbo(mbo) {
+            let bid_levels = book.bid_levels();
+            let (total_bid_orders, total_bid_shares) = bid_levels.fold((0, 0), |(total_orders, total_shares), level| {
+                (total_orders + level.count, total_shares + level.size)
+            });
+
+            let ask_levels = book.ask_levels();
+            let (total_ask_orders, total_ask_shares) = ask_levels.fold((0, 0), |(total_orders, total_shares), level| {
+                (total_orders + level.count, total_shares + level.size)
+            });
+
+            debug!("\n\n=======> Total Bid Orders ({total_bid_orders}), Total Bid Shares ({total_bid_shares}) => Total Ask Orders ({total_ask_orders}), Total Ask Shares ({total_ask_shares})");
         }
 
         Ok(())
