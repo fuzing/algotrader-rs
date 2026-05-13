@@ -94,7 +94,7 @@ async fn download_to_file(path: &PathBuf, symbols: &Vec<String>, start_time: &st
 }
 
 
-async fn decode_data(path: &PathBuf, strategy: &impl Strategy) -> Result<(), Box<dyn Error>> {
+async fn decode_data(path: &PathBuf, strategy: &mut impl Strategy) -> Result<(), Box<dyn Error>> {
 
     let mut market = Market::default();
 
@@ -103,7 +103,7 @@ async fn decode_data(path: &PathBuf, strategy: &impl Strategy) -> Result<(), Box
 
     while let Some(mbo) = decoder.decode_record::<MboMsg>().await? {
 
-        println!("----------------------------------------------------------------------------------------------------------------------------------------------------");
+        // println!("----------------------------------------------------------------------------------------------------------------------------------------------------");
 
         debug!("\n ===> 1 pre_apply");
         strategy.pre_apply(mbo, &symbol_map, &market).await?;
@@ -117,19 +117,19 @@ async fn decode_data(path: &PathBuf, strategy: &impl Strategy) -> Result<(), Box
 
         // If it's the last update in an event, print the state of the aggregated book
         if mbo.flags.is_last() {
-            let symbol = symbol_map.get_for_rec(mbo).unwrap();
-            let (best_bid, best_offer) = market.aggregated_bbo(mbo.hd.instrument_id);
-            println!("{symbol} Aggregated BBO | {}", mbo.ts_recv().unwrap());
-            if let Some(best_offer) = best_offer {
-                println!("    Ask -> {best_offer}");
-            } else {
-                println!("    Ask -> None");
-            }
-            if let Some(best_bid) = best_bid {
-                println!("    Bid -> {best_bid}");
-            } else {
-                println!("    Bid -> None");
-            }
+            // let symbol = symbol_map.get_for_rec(mbo).unwrap();
+            // let (best_bid, best_offer) = market.aggregated_bbo(mbo.hd.instrument_id);
+            // println!("{symbol} Aggregated BBO | {}", mbo.ts_recv().unwrap());
+            // if let Some(best_offer) = best_offer {
+            //     println!("    Ask -> {best_offer}");
+            // } else {
+            //     println!("    Ask -> None");
+            // }
+            // if let Some(best_bid) = best_bid {
+            //     println!("    Bid -> {best_bid}");
+            // } else {
+            //     println!("    Bid -> None");
+            // }
 
             // println!("{}", market);
         }
@@ -182,8 +182,8 @@ async fn main() -> Result<(), Box<dyn Error>>
     // let settings = SessionSettings::try_from_path(&settings).map_err(|e| anyhow!("{:?}", e))?;
     let path: PathBuf = PathBuf::from(std::format!("/run/media/peter/genetics/algotrader/data/{}-{}-{}-mbo.dbn.zst", args.symbols.join(":"), args.start_time, args.end_time));
     download_to_file(&path, &args.symbols, &args.start_time, &args.end_time).await?;
-    let strategy = TestStrategy::new();
-    decode_data(&path, &strategy).await?;
+    let mut strategy = TestStrategy::new();
+    decode_data(&path, &mut strategy).await?;
     Ok(())
 }
 
