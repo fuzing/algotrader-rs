@@ -184,6 +184,7 @@ async fn main() -> Result<(), Box<dyn Error>>
     download_to_file(&path, &args.symbols, &args.start_time, &args.end_time).await?;
 
     let mut strategy = TestStrategyBuilder::new()
+        .minimum_bid_shares(100)
         .holding_wait_time(30)
         .bid_ask_volume_ratio(2.0)
         .gain_success_percentage(0.25)
