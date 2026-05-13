@@ -36,7 +36,7 @@ pub struct TestStrategy {
     profit_loss: i64,
 
     purchase_shares: u32,
-    minimum_ask_shares: u32,
+    minimum_ask_shares_in_book: u32,
     bid_ask_volume_ratio: f32,      // e.g. 2.0 would mean that the buy is triggered when bid volume is 2x ask volume
     maximum_holding_time: u32,         // duration to wait for success in seconds, otherwise fail
     desired_gain_percentage: f32,   // when this upside price is breached then exit the trade
@@ -46,7 +46,7 @@ pub struct TestStrategy {
 impl TestStrategy {
     pub fn new(
         purchase_shares: u32,
-        minimum_ask_shares: u32,
+        minimum_ask_shares_in_book: u32,
         bid_ask_volume_ratio: f32,
         maximum_holding_time: u32,
         desired_gain_percentage: f32,
@@ -57,7 +57,7 @@ impl TestStrategy {
             current_state: TestStrategyState::Waiting,
             profit_loss: 0,
             purchase_shares,
-            minimum_ask_shares,
+            minimum_ask_shares_in_book,
             bid_ask_volume_ratio,
             maximum_holding_time,
             desired_gain_percentage,
@@ -132,13 +132,13 @@ impl Strategy for TestStrategy {
                         let (best_bid, best_offer) = market.aggregated_bbo(mbo.hd.instrument_id);
                         if let Some(best_bid) = best_bid && let Some(best_offer) = best_offer {
                             // buy at the mid-point of bid/ask
-                            if total_ask_shares >= self.minimum_ask_shares && (total_bid_shares as f32 / total_ask_shares as f32) > self.bid_ask_volume_ratio {
+                            if total_ask_shares >= self.minimum_ask_shares_in_book && (total_bid_shares as f32 / total_ask_shares as f32) > self.bid_ask_volume_ratio {
                                 let limit_price = (best_bid.price + best_offer.price) / 2;
 
                                 let stop_loss_price = limit_price - (limit_price as f32 * self.stop_loss_percentage / 100.00) as i64;
                                 let success_price = limit_price + (limit_price as f32 * self.desired_gain_percentage / 100.00) as i64;
                                 let end_time = mbo.ts_recv + (self.maximum_holding_time as u64 * 1_000_000_000);
-                                info!("========> Purchase => Buy at ${}", pretty::Px(limit_price));
+                                info!("========> Purchase => Buy at ${} @ {}", pretty::Px(limit_price), mbo.ts_recv().unwrap());
                                 self.current_state = TestStrategyState::Processing(mbo.ts_recv, end_time, self.purchase_shares, limit_price, success_price, stop_loss_price);
                             }
                         }
@@ -159,7 +159,10 @@ impl Strategy for TestStrategy {
                     self.current_state = TestStrategyState::Waiting;
                 }
                 else if mbo.ts_recv >= end_time {
-                    info!("========> Timeout - cancel trade");
+                    let sold_at_price = self.last_trade_price.unwrap();
+                    let profit = (sold_at_price - purchase_price) * purchase_shares as i64;
+                    self.profit_loss += profit;
+                    info!("========> Timeout - Paid(${}), Sold At(${}) Profit(${}) @ {}", pretty::Px(purchase_price), pretty::Px(sold_at_price), pretty::Px(profit), mbo.ts_recv().unwrap());
                     self.current_state = TestStrategyState::Waiting;
                 }
 
@@ -172,7 +175,7 @@ impl Strategy for TestStrategy {
 
 #[derive(Debug)]
 pub struct TestStrategyBuilder {
-    minimum_ask_shares: u32,
+    minimum_ask_shares_in_book: u32,
     purchase_shares: u32,
     bid_ask_volume_ratio: f32,
     maximum_holding_time: u32,
@@ -184,7 +187,7 @@ pub struct TestStrategyBuilder {
 impl TestStrategyBuilder {
     pub fn default() -> Self {
         Self {
-            minimum_ask_shares: 100,                // minimum ask shares in book
+            minimum_ask_shares_in_book: 100,                // minimum ask shares in book
             purchase_shares: 100,
             bid_ask_volume_ratio: 1.2,              // ratio of bid to ask in the book
             maximum_holding_time: 1_800,               // seconds
@@ -196,7 +199,7 @@ impl TestStrategyBuilder {
     pub fn build(&self) -> TestStrategy {
         TestStrategy::new(
             self.purchase_shares,
-            self.minimum_ask_shares,
+            self.minimum_ask_shares_in_book,
             self.bid_ask_volume_ratio,
             self.maximum_holding_time,
             self.desired_gain_percentage,
@@ -209,8 +212,8 @@ impl TestStrategyBuilder {
         self
     }
 
-    pub fn minimum_ask_shares(&mut self, value: u32) -> &mut Self {
-        self.minimum_ask_shares = value;
+    pub fn minimum_ask_shares_in_book(&mut self, value: u32) -> &mut Self {
+        self.minimum_ask_shares_in_book = value;
         self
     }
 

@@ -185,11 +185,11 @@ async fn main() -> Result<(), Box<dyn Error>>
 
     let mut strategy = TestStrategyBuilder::default()
         .purchase_shares(100)
-        .minimum_ask_shares(100)
-        .maximum_holding_time(15 * 60)
+        .minimum_ask_shares_in_book(200)
+        .maximum_holding_time(12 * 60 * 60)
         .bid_ask_volume_ratio(1.5)
-        .desired_gain_percentage(0.1)
-        .stop_loss_percentage(0.5)
+        .desired_gain_percentage(0.2)
+        .stop_loss_percentage(1.0)
         .build();
 
     println!("Strategy is {:?}", strategy);
