@@ -121,14 +121,14 @@ async fn decode_data(path: &PathBuf, strategy: &impl Strategy) -> Result<(), Box
             let (best_bid, best_offer) = market.aggregated_bbo(mbo.hd.instrument_id);
             println!("{symbol} Aggregated BBO | {}", mbo.ts_recv().unwrap());
             if let Some(best_offer) = best_offer {
-                println!("    {best_offer}");
+                println!("    Ask -> {best_offer}");
             } else {
-                println!("    None");
+                println!("    Ask -> None");
             }
             if let Some(best_bid) = best_bid {
-                println!("    {best_bid}");
+                println!("    Bid -> {best_bid}");
             } else {
-                println!("    None");
+                println!("    Bid -> None");
             }
 
             // println!("{}", market);
