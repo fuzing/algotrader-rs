@@ -187,8 +187,8 @@ async fn main() -> Result<(), Box<dyn Error>>
         .minimum_ask_shares(100)
         .holding_wait_time(3_600)
         .bid_ask_volume_ratio(4.0)
-        .gain_success_percentage(0.1)
-        .stop_loss_percentage(1.0)
+        .gain_success_percentage(1.0)
+        .stop_loss_percentage(0.1)
         .build();
 
     println!("Strategy is {:?}", strategy);
