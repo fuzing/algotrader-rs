@@ -103,6 +103,8 @@ async fn decode_data(path: &PathBuf, strategy: &impl Strategy) -> Result<(), Box
 
     while let Some(mbo) = decoder.decode_record::<MboMsg>().await? {
 
+        println!("----------------------------------------------------------------------------------------------------------------------------------------------------");
+
         debug!("\n ===> 1 pre_apply");
         strategy.pre_apply(mbo, &symbol_map, &market).await?;
         debug!("\n ===> 2 apply");
