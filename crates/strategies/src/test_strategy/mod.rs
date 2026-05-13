@@ -29,7 +29,7 @@ enum TestStrategyState {
 
 #[derive(Debug)]
 pub struct TestStrategy {
-    had_trade: bool,
+    last_trade_price: Option<i64>,
     current_state: TestStrategyState,
 
     bid_ask_volume_ratio: f32,      // e.g. 2.0 would mean that the buy is triggered when bid volume is 2x ask volume
@@ -41,12 +41,12 @@ pub struct TestStrategy {
 impl TestStrategy {
     pub fn new() -> Self {
         Self {
-            had_trade: false,
+            last_trade_price: None,
             current_state: TestStrategyState::Waiting,
             bid_ask_volume_ratio: 2.0,
             holding_wait_time: 3_600,                           // 1 hour
             gain_success_percentage: 0.25,
-            stop_loss_percentage: 2.0,
+            stop_loss_percentage: 1.00,
         }
     }
 }
@@ -93,15 +93,13 @@ impl Strategy for TestStrategy {
 
         let action = mbo.action().unwrap();
 
-        if !self.had_trade {
-            if action == Action::Trade {
-                self.had_trade = true;
-            }
+        if action == Action::Trade {
+            self.last_trade_price = Some(mbo.price);
         }
 
         match self.current_state {
             TestStrategyState::Waiting => {
-                if self.had_trade {
+                if let Some(last_trade_price) = self.last_trade_price {
                     if let Some(book) = market.find_book_from_mbo(mbo) {
                         let bid_levels = book.bid_levels();
                         let (total_bid_orders, total_bid_shares) = bid_levels.fold((0, 0), |(total_orders, total_shares), level| {
@@ -134,15 +132,15 @@ impl Strategy for TestStrategy {
             TestStrategyState::Processing(start_time, end_time, purchase_price, success_price, stop_loss_price) => {
                 // 0.1% move
                 if action == Action::Trade && mbo.price >= success_price {
-                    info!("========> Success Trade at ${} @ {}", pretty::Px(mbo.price), mbo.ts_recv().unwrap());
+                    info!("========> Success Trade at Paid(${}), Sold At(${}) @ {}", pretty::Px(purchase_price), pretty::Px(mbo.price), mbo.ts_recv().unwrap());
                     self.current_state = TestStrategyState::Waiting;
                 }
                 else if action == Action::Trade && mbo.price <= stop_loss_price {
-                    info!("========> Failed Stop Loss Trade at ${} @ {}", pretty::Px(mbo.price), mbo.ts_recv().unwrap());
+                    info!("========> Failed Stop Loss Trade at Paid(${}), Sold At(${}) @ {}", pretty::Px(purchase_price), pretty::Px(mbo.price), mbo.ts_recv().unwrap());
                     self.current_state = TestStrategyState::Waiting;
                 }
                 else if mbo.ts_recv >= end_time {
-                    info!("=======> Failed Time trade {start_time} -> {}", mbo.ts_recv);
+                    info!("=======> Failed Time trade Paid(${}) {start_time} -> {}", pretty::Px(purchase_price), mbo.ts_recv);
                     self.current_state = TestStrategyState::Waiting;
                 }
 
