@@ -14,6 +14,7 @@ use tracing::{debug, info};
 
 
 
+
 #[derive(Debug)]
 enum TestStrategyState {
     Waiting,
@@ -32,21 +33,29 @@ pub struct TestStrategy {
     last_trade_price: Option<i64>,
     current_state: TestStrategyState,
 
+    minimum_bid_shares: u32,
     bid_ask_volume_ratio: f32,      // e.g. 2.0 would mean that the buy is triggered when bid volume is 2x ask volume
-    holding_wait_time: u32,                     // duration to wait for success in seconds, otherwise fail
-    gain_success_percentage: f32,            // when this upside price is breached then exit the trade
-    stop_loss_percentage: f32,          // when the price hits the loss point then do this
+    holding_wait_time: u32,         // duration to wait for success in seconds, otherwise fail
+    gain_success_percentage: f32,   // when this upside price is breached then exit the trade
+    stop_loss_percentage: f32,      // when the price hits the loss point then do this
 }
 
 impl TestStrategy {
-    pub fn new() -> Self {
+    pub fn new(
+        minimum_bid_shares: u32,
+        bid_ask_volume_ratio: f32,
+        holding_wait_time: u32,
+        gain_success_percentage: f32,
+        stop_loss_percentage: f32
+    ) -> Self {
         Self {
+            minimum_bid_shares,
             last_trade_price: None,
             current_state: TestStrategyState::Waiting,
-            bid_ask_volume_ratio: 2.0,
-            holding_wait_time: 3_600,                           // 1 hour
-            gain_success_percentage: 0.25,
-            stop_loss_percentage: 1.00,
+            bid_ask_volume_ratio, // : 2.0,
+            holding_wait_time, //: 3_600,                           // 1 hour
+            gain_success_percentage, //: 0.25,
+            stop_loss_percentage, // : 1.00,
         }
     }
 }
@@ -116,7 +125,7 @@ impl Strategy for TestStrategy {
                         let (best_bid, best_offer) = market.aggregated_bbo(mbo.hd.instrument_id);
                         if let Some(best_bid) = best_bid && let Some(best_offer) = best_offer {
                             // buy at the mid-point of bid/ask
-                            if total_ask_shares > 0 && (total_bid_shares as f32 / total_ask_shares as f32) > self.bid_ask_volume_ratio {
+                            if total_ask_shares > self.minimum_bid_shares && (total_bid_shares as f32 / total_ask_shares as f32) > self.bid_ask_volume_ratio {
                                 let limit_price = (best_bid.price + best_offer.price) / 2;
 
                                 let stop_loss_price = limit_price - (limit_price as f32 * self.stop_loss_percentage / 100.00) as i64;
@@ -130,7 +139,6 @@ impl Strategy for TestStrategy {
                 }
             },
             TestStrategyState::Processing(start_time, end_time, purchase_price, success_price, stop_loss_price) => {
-                // 0.1% move
                 if action == Action::Trade && mbo.price >= success_price {
                     info!("========> Success Trade at Paid(${}), Sold At(${}) @ {}", pretty::Px(purchase_price), pretty::Px(mbo.price), mbo.ts_recv().unwrap());
                     self.current_state = TestStrategyState::Waiting;
@@ -147,11 +155,63 @@ impl Strategy for TestStrategy {
             }
         }
 
-
-
-
         Ok(())
     }
 }
 
+#[derive(Debug)]
+pub struct TestStrategyBuilder {
+    minimum_bid_shares: u32,
+    bid_ask_volume_ratio: f32,
+    holding_wait_time: u32,
+    gain_success_percentage: f32,
+    stop_loss_percentage: f32,
+}
 
+
+impl TestStrategyBuilder {
+    pub fn new() -> Self {
+        Self {
+            minimum_bid_shares: 100,
+            bid_ask_volume_ratio: 1.2,
+            holding_wait_time: 10,
+            gain_success_percentage: 1.0,
+            stop_loss_percentage: 1.0,
+        }
+    }
+
+    pub fn build(&self) -> TestStrategy {
+        TestStrategy::new(
+            self.minimum_bid_shares,
+            self.bid_ask_volume_ratio,
+            self.holding_wait_time,
+            self.gain_success_percentage,
+            self.stop_loss_percentage,
+        )
+    }
+
+    pub fn minimum_bid_shares(&mut self, value: u32) -> &mut Self {
+        self.minimum_bid_shares = value;
+        self
+    }
+
+    pub fn bid_ask_volume_ratio(&mut self, value: f32) -> &mut Self {
+        self.bid_ask_volume_ratio = value;
+        self
+    }
+
+    pub fn holding_wait_time(&mut self, value: u32) -> &mut Self {
+        self.holding_wait_time = value;
+        self
+    }
+
+    pub fn gain_success_percentage(&mut self, value: f32) -> &mut Self {
+        self.gain_success_percentage = value;
+        self
+    }
+
+    pub fn stop_loss_percentage(&mut self, value: f32) -> &mut Self {
+        self.stop_loss_percentage = value;
+        self
+    }
+}
