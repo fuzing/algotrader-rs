@@ -183,17 +183,22 @@ async fn main() -> Result<(), Box<dyn Error>>
     let path: PathBuf = PathBuf::from(std::format!("/run/media/peter/genetics/algotrader/data/{}-{}-{}-mbo.dbn.zst", args.symbols.join(":"), args.start_time, args.end_time));
     download_to_file(&path, &args.symbols, &args.start_time, &args.end_time).await?;
 
-    let mut strategy = TestStrategyBuilder::new()
+    let mut strategy = TestStrategyBuilder::default()
+        .purchase_shares(100)
         .minimum_ask_shares(100)
-        .holding_wait_time(3_600)
-        .bid_ask_volume_ratio(4.0)
-        .gain_success_percentage(1.0)
-        .stop_loss_percentage(0.1)
+        .maximum_holding_time(15 * 60)
+        .bid_ask_volume_ratio(1.5)
+        .desired_gain_percentage(0.1)
+        .stop_loss_percentage(0.5)
         .build();
 
     println!("Strategy is {:?}", strategy);
-    
+
     decode_data(&path, &mut strategy).await?;
+
+
+    println!("Total Profit/Loss {:.2}", strategy.profit_loss());
+
     Ok(())
 }
 

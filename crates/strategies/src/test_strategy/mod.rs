@@ -22,6 +22,7 @@ enum TestStrategyState {
     Processing(
         u64,        // start_time
         u64,        // end_time
+        u32,        // purchase_shares
         i64,        // purchase_price
         i64,        // success_price
         i64,        // stop_loss price
@@ -32,73 +33,79 @@ enum TestStrategyState {
 pub struct TestStrategy {
     last_trade_price: Option<i64>,
     current_state: TestStrategyState,
+    profit_loss: i64,
 
+    purchase_shares: u32,
     minimum_ask_shares: u32,
     bid_ask_volume_ratio: f32,      // e.g. 2.0 would mean that the buy is triggered when bid volume is 2x ask volume
-    holding_wait_time: u32,         // duration to wait for success in seconds, otherwise fail
-    gain_success_percentage: f32,   // when this upside price is breached then exit the trade
+    maximum_holding_time: u32,         // duration to wait for success in seconds, otherwise fail
+    desired_gain_percentage: f32,   // when this upside price is breached then exit the trade
     stop_loss_percentage: f32,      // when the price hits the loss point then do this
 }
 
 impl TestStrategy {
     pub fn new(
-        minimum_bid_shares: u32,
+        purchase_shares: u32,
+        minimum_ask_shares: u32,
         bid_ask_volume_ratio: f32,
-        holding_wait_time: u32,
-        gain_success_percentage: f32,
+        maximum_holding_time: u32,
+        desired_gain_percentage: f32,
         stop_loss_percentage: f32
     ) -> Self {
         Self {
-            minimum_ask_shares: minimum_bid_shares,
             last_trade_price: None,
             current_state: TestStrategyState::Waiting,
-            bid_ask_volume_ratio, // : 2.0,
-            holding_wait_time, //: 3_600,                           // 1 hour
-            gain_success_percentage, //: 0.25,
-            stop_loss_percentage, // : 1.00,
+            profit_loss: 0,
+            purchase_shares,
+            minimum_ask_shares,
+            bid_ask_volume_ratio,
+            maximum_holding_time,
+            desired_gain_percentage,
+            stop_loss_percentage,
         }
+    }
+
+    pub fn profit_loss(&self) -> f32 {
+        (self.profit_loss / 1_000_000_000) as f32
     }
 }
 
 impl Strategy for TestStrategy {
-    async fn pre_apply(&mut self, msg: &MboMsg, symbol_map: &TsSymbolMap, market: &Market) -> Result<(), Box<dyn Error>> {
-        // if let Some(book) = market.find_book_from_mbo(msg) {
-        //
-        // }
-        Ok(())
-    }
+    // async fn pre_apply(&mut self, msg: &MboMsg, symbol_map: &TsSymbolMap, market: &Market) -> Result<(), Box<dyn Error>> {
+    //     Ok(())
+    // }
 
     async fn post_apply(&mut self, mbo: &MboMsg, symbol_map: &TsSymbolMap, market: &Market) -> Result<(), Box<dyn Error>> {
 
-        let action = mbo.action().unwrap();
-        match action {
-            Action::Modify => {
-                debug!("Post Modify");
-                // self.modify(mbo)
-            },
-            // Action::Trade | Action::Fill | Action::None => {}
-            Action::Trade => {
-                info!("Post Trade at ${} @ {}", pretty::Px(mbo.price), mbo.ts_recv().unwrap());
-            },
-            Action::Fill => {
-                debug!("Post Fill");
-            },
-            Action::None => {
-                debug!("Post None");
-            },
-            Action::Cancel => {
-                debug!("Post Cancel");
-                // self.cancel(mbo)
-            },
-            Action::Add => {
-                debug!("Post Add");
-                // self.add(mbo)
-            },
-            Action::Clear => {
-                debug!("Post Clear");
-                // self.clear()
-            },
-        }
+        // let action = mbo.action().unwrap();
+        // match action {
+        //     Action::Modify => {
+        //         debug!("Post Modify");
+        //         // self.modify(mbo)
+        //     },
+        //     // Action::Trade | Action::Fill | Action::None => {}
+        //     Action::Trade => {
+        //         info!("Post Trade at ${} @ {}", pretty::Px(mbo.price), mbo.ts_recv().unwrap());
+        //     },
+        //     Action::Fill => {
+        //         debug!("Post Fill");
+        //     },
+        //     Action::None => {
+        //         debug!("Post None");
+        //     },
+        //     Action::Cancel => {
+        //         debug!("Post Cancel");
+        //         // self.cancel(mbo)
+        //     },
+        //     Action::Add => {
+        //         debug!("Post Add");
+        //         // self.add(mbo)
+        //     },
+        //     Action::Clear => {
+        //         debug!("Post Clear");
+        //         // self.clear()
+        //     },
+        // }
 
         let action = mbo.action().unwrap();
 
@@ -129,26 +136,30 @@ impl Strategy for TestStrategy {
                                 let limit_price = (best_bid.price + best_offer.price) / 2;
 
                                 let stop_loss_price = limit_price - (limit_price as f32 * self.stop_loss_percentage / 100.00) as i64;
-                                let success_price = limit_price + (limit_price as f32 * self.gain_success_percentage / 100.00) as i64;
-                                let end_time = mbo.ts_recv + (self.holding_wait_time as u64 * 1_000_000_000);
+                                let success_price = limit_price + (limit_price as f32 * self.desired_gain_percentage / 100.00) as i64;
+                                let end_time = mbo.ts_recv + (self.maximum_holding_time as u64 * 1_000_000_000);
                                 info!("========> Purchase => Buy at ${}", pretty::Px(limit_price));
-                                self.current_state = TestStrategyState::Processing(mbo.ts_recv, end_time, limit_price, success_price, stop_loss_price);
+                                self.current_state = TestStrategyState::Processing(mbo.ts_recv, end_time, self.purchase_shares, limit_price, success_price, stop_loss_price);
                             }
                         }
                     }
                 }
             },
-            TestStrategyState::Processing(start_time, end_time, purchase_price, success_price, stop_loss_price) => {
+            TestStrategyState::Processing(start_time, end_time, purchase_shares, purchase_price, success_price, stop_loss_price) => {
                 if action == Action::Trade && mbo.price >= success_price {
-                    info!("========> Success Trade at Paid(${}), Sold At(${}) @ {}", pretty::Px(purchase_price), pretty::Px(mbo.price), mbo.ts_recv().unwrap());
+                    let profit = (mbo.price - purchase_price) * purchase_shares as i64;
+                    self.profit_loss += profit;
+                    info!("========> Success Paid(${}), Sold At(${}) Profit(${}) @ {}", pretty::Px(purchase_price), pretty::Px(mbo.price), pretty::Px(profit), mbo.ts_recv().unwrap());
                     self.current_state = TestStrategyState::Waiting;
                 }
                 else if action == Action::Trade && mbo.price <= stop_loss_price {
-                    info!("========> Failed Stop Loss Trade at Paid(${}), Sold At(${}) @ {}", pretty::Px(purchase_price), pretty::Px(mbo.price), mbo.ts_recv().unwrap());
+                    let profit = (mbo.price - purchase_price) * purchase_shares as i64;
+                    self.profit_loss += profit;
+                    info!("========> Failed Stop Loss Paid(${}), Sold At(${}) Profit(${}) @ {}", pretty::Px(purchase_price), pretty::Px(mbo.price), pretty::Px(profit), mbo.ts_recv().unwrap());
                     self.current_state = TestStrategyState::Waiting;
                 }
                 else if mbo.ts_recv >= end_time {
-                    info!("=======> Failed Time trade Paid(${}), Sold At(${}) {start_time} -> {}", pretty::Px(self.last_trade_price.unwrap()), pretty::Px(purchase_price), mbo.ts_recv);
+                    info!("========> Timeout - cancel trade");
                     self.current_state = TestStrategyState::Waiting;
                 }
 
@@ -162,32 +173,40 @@ impl Strategy for TestStrategy {
 #[derive(Debug)]
 pub struct TestStrategyBuilder {
     minimum_ask_shares: u32,
+    purchase_shares: u32,
     bid_ask_volume_ratio: f32,
-    holding_wait_time: u32,
-    gain_success_percentage: f32,
+    maximum_holding_time: u32,
+    desired_gain_percentage: f32,
     stop_loss_percentage: f32,
 }
 
 
 impl TestStrategyBuilder {
-    pub fn new() -> Self {
+    pub fn default() -> Self {
         Self {
-            minimum_ask_shares: 100,
-            bid_ask_volume_ratio: 1.2,
-            holding_wait_time: 10,
-            gain_success_percentage: 1.0,
-            stop_loss_percentage: 1.0,
+            minimum_ask_shares: 100,                // minimum ask shares in book
+            purchase_shares: 100,
+            bid_ask_volume_ratio: 1.2,              // ratio of bid to ask in the book
+            maximum_holding_time: 1_800,               // seconds
+            desired_gain_percentage: 0.1,           // set limit on sell order purchase limit plus this percentage
+            stop_loss_percentage: 1.0,              // if stock trades at purchase price less this percent, then sell
         }
     }
 
     pub fn build(&self) -> TestStrategy {
         TestStrategy::new(
+            self.purchase_shares,
             self.minimum_ask_shares,
             self.bid_ask_volume_ratio,
-            self.holding_wait_time,
-            self.gain_success_percentage,
+            self.maximum_holding_time,
+            self.desired_gain_percentage,
             self.stop_loss_percentage,
         )
+    }
+
+    pub fn purchase_shares(&mut self, value: u32) -> &mut Self {
+        self.purchase_shares = value;
+        self
     }
 
     pub fn minimum_ask_shares(&mut self, value: u32) -> &mut Self {
@@ -200,13 +219,13 @@ impl TestStrategyBuilder {
         self
     }
 
-    pub fn holding_wait_time(&mut self, value: u32) -> &mut Self {
-        self.holding_wait_time = value;
+    pub fn maximum_holding_time(&mut self, value: u32) -> &mut Self {
+        self.maximum_holding_time = value;
         self
     }
 
-    pub fn gain_success_percentage(&mut self, value: f32) -> &mut Self {
-        self.gain_success_percentage = value;
+    pub fn desired_gain_percentage(&mut self, value: f32) -> &mut Self {
+        self.desired_gain_percentage = value;
         self
     }
 
@@ -215,3 +234,4 @@ impl TestStrategyBuilder {
         self
     }
 }
+
