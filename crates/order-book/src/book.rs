@@ -120,10 +120,10 @@ impl Book {
             },
             // Action::Trade | Action::Fill | Action::None => {}
             Action::Trade => {
-                debug!("Trade {:?}", mbo);
+                debug!("Trade Price (${}) {:?}", pretty::Px(mbo.price), mbo);
             },
             Action::Fill => {
-                debug!("Fill {:?}", mbo);
+                debug!("Fill Price (${}) {:?}", pretty::Px(mbo.price), mbo);
             },
             Action::None => {
                 debug!("None {:?}", mbo);
