@@ -33,7 +33,7 @@ pub struct TestStrategy {
     last_trade_price: Option<i64>,
     current_state: TestStrategyState,
 
-    minimum_bid_shares: u32,
+    minimum_ask_shares: u32,
     bid_ask_volume_ratio: f32,      // e.g. 2.0 would mean that the buy is triggered when bid volume is 2x ask volume
     holding_wait_time: u32,         // duration to wait for success in seconds, otherwise fail
     gain_success_percentage: f32,   // when this upside price is breached then exit the trade
@@ -49,7 +49,7 @@ impl TestStrategy {
         stop_loss_percentage: f32
     ) -> Self {
         Self {
-            minimum_bid_shares,
+            minimum_ask_shares: minimum_bid_shares,
             last_trade_price: None,
             current_state: TestStrategyState::Waiting,
             bid_ask_volume_ratio, // : 2.0,
@@ -125,13 +125,13 @@ impl Strategy for TestStrategy {
                         let (best_bid, best_offer) = market.aggregated_bbo(mbo.hd.instrument_id);
                         if let Some(best_bid) = best_bid && let Some(best_offer) = best_offer {
                             // buy at the mid-point of bid/ask
-                            if total_ask_shares > self.minimum_bid_shares && (total_bid_shares as f32 / total_ask_shares as f32) > self.bid_ask_volume_ratio {
+                            if total_ask_shares >= self.minimum_ask_shares && (total_bid_shares as f32 / total_ask_shares as f32) > self.bid_ask_volume_ratio {
                                 let limit_price = (best_bid.price + best_offer.price) / 2;
 
                                 let stop_loss_price = limit_price - (limit_price as f32 * self.stop_loss_percentage / 100.00) as i64;
                                 let success_price = limit_price + (limit_price as f32 * self.gain_success_percentage / 100.00) as i64;
                                 let end_time = mbo.ts_recv + (self.holding_wait_time as u64 * 1_000_000_000);
-                                info!("========> BINGO!!!!   buy at ${}", pretty::Px(limit_price));
+                                info!("========> Purchase => Buy at ${}", pretty::Px(limit_price));
                                 self.current_state = TestStrategyState::Processing(mbo.ts_recv, end_time, limit_price, success_price, stop_loss_price);
                             }
                         }
@@ -148,7 +148,7 @@ impl Strategy for TestStrategy {
                     self.current_state = TestStrategyState::Waiting;
                 }
                 else if mbo.ts_recv >= end_time {
-                    info!("=======> Failed Time trade Paid(${}) {start_time} -> {}", pretty::Px(purchase_price), mbo.ts_recv);
+                    info!("=======> Failed Time trade Paid(${}), Sold At(${}) {start_time} -> {}", pretty::Px(self.last_trade_price.unwrap()), pretty::Px(purchase_price), mbo.ts_recv);
                     self.current_state = TestStrategyState::Waiting;
                 }
 
@@ -161,7 +161,7 @@ impl Strategy for TestStrategy {
 
 #[derive(Debug)]
 pub struct TestStrategyBuilder {
-    minimum_bid_shares: u32,
+    minimum_ask_shares: u32,
     bid_ask_volume_ratio: f32,
     holding_wait_time: u32,
     gain_success_percentage: f32,
@@ -172,7 +172,7 @@ pub struct TestStrategyBuilder {
 impl TestStrategyBuilder {
     pub fn new() -> Self {
         Self {
-            minimum_bid_shares: 100,
+            minimum_ask_shares: 100,
             bid_ask_volume_ratio: 1.2,
             holding_wait_time: 10,
             gain_success_percentage: 1.0,
@@ -182,7 +182,7 @@ impl TestStrategyBuilder {
 
     pub fn build(&self) -> TestStrategy {
         TestStrategy::new(
-            self.minimum_bid_shares,
+            self.minimum_ask_shares,
             self.bid_ask_volume_ratio,
             self.holding_wait_time,
             self.gain_success_percentage,
@@ -190,8 +190,8 @@ impl TestStrategyBuilder {
         )
     }
 
-    pub fn minimum_bid_shares(&mut self, value: u32) -> &mut Self {
-        self.minimum_bid_shares = value;
+    pub fn minimum_ask_shares(&mut self, value: u32) -> &mut Self {
+        self.minimum_ask_shares = value;
         self
     }
 
