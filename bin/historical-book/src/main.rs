@@ -20,7 +20,7 @@ use std::{
     time::Duration,
 };
 use tracing_subscriber::{EnvFilter, fmt};
-use tracing::{info, warn, error, Instrument};
+use tracing::{debug, info, warn, error, Instrument};
 use tokio::{self, fs};
 use std::error::Error;
 use std::num::NonZeroU64;
@@ -102,13 +102,17 @@ async fn decode_data(path: &PathBuf, strategy: &impl Strategy) -> Result<(), Box
     let symbol_map = decoder.metadata().symbol_map()?;
 
     while let Some(mbo) = decoder.decode_record::<MboMsg>().await? {
-        
+
+        debug!("\n ===> 1 pre_apply");
         strategy.pre_apply(mbo, &symbol_map, &market).await?;
-        
+        debug!("\n ===> 2 apply");
+
         market.apply(mbo.clone());
-        
+        debug!("\n ===> 3 post_apply");
+
         strategy.post_apply(mbo, &symbol_map, &market).await?;
-        
+        debug!("\n ===> 4 print");
+
         // If it's the last update in an event, print the state of the aggregated book
         if mbo.flags.is_last() {
             let symbol = symbol_map.get_for_rec(mbo).unwrap();
@@ -125,8 +129,11 @@ async fn decode_data(path: &PathBuf, strategy: &impl Strategy) -> Result<(), Box
                 println!("    None");
             }
 
-            println!("{}", market);
+            // println!("{}", market);
         }
+        debug!("\n ===> 5 complete");
+
+
     }
 
     Ok(())

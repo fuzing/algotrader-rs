@@ -27,33 +27,32 @@ impl Strategy for TestStrategy {
         let action = mbo.action().unwrap();
         match action {
             Action::Modify => {
-                debug!("Modify {:?}", mbo);
+                debug!("Post Modify");
                 // self.modify(mbo)
             },
             // Action::Trade | Action::Fill | Action::None => {}
             Action::Trade => {
-                debug!("Trade {:?}", mbo);
+                debug!("Post Trade");
             },
             Action::Fill => {
-                debug!("Fill {:?}", mbo);
+                debug!("Post Fill");
             },
             Action::None => {
-                debug!("None {:?}", mbo);
+                debug!("Post None");
             },
             Action::Cancel => {
-                debug!("Cancel: {:?}", mbo);
+                debug!("Post Cancel");
                 // self.cancel(mbo)
             },
             Action::Add => {
-                debug!("Add: {:?}", mbo);
+                debug!("Post Add");
                 // self.add(mbo)
             },
             Action::Clear => {
-                debug!("Clear {:?}", mbo);
+                debug!("Post Clear");
                 // self.clear()
             },
         }
-
 
 
         if let Some(book) = market.find_book_from_mbo(mbo) {
@@ -68,6 +67,10 @@ impl Strategy for TestStrategy {
             });
 
             debug!("\n\n=======> Total Bid Orders ({total_bid_orders}), Total Bid Shares ({total_bid_shares}) => Total Ask Orders ({total_ask_orders}), Total Ask Shares ({total_ask_shares})");
+
+            if total_ask_shares > 0 && total_bid_shares / total_ask_shares > 3 {
+                debug!("========> BINGO!!!!");
+            }
         }
 
         Ok(())
