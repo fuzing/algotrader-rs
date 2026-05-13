@@ -133,7 +133,7 @@ impl Strategy for TestStrategy {
                         if let Some(best_bid) = best_bid && let Some(best_offer) = best_offer {
                             // buy at the mid-point of bid/ask
                             if total_ask_shares >= self.minimum_ask_shares_in_book && (total_bid_shares as f32 / total_ask_shares as f32) > self.bid_ask_volume_ratio {
-                                let limit_price = (best_bid.price + best_offer.price) / 2;
+                                let limit_price = self.last_trade_price.unwrap(); // best_bid.price; // (best_bid.price + best_offer.price) / 2;
 
                                 let stop_loss_price = limit_price - (limit_price as f32 * self.stop_loss_percentage / 100.00) as i64;
                                 let success_price = limit_price + (limit_price as f32 * self.desired_gain_percentage / 100.00) as i64;
