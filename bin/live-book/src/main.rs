@@ -56,6 +56,7 @@ use time::{
 
 use chrono::{ DateTime, Utc};
 use databento::reference::Country::Is;
+use strategies::dummy_strategy::DummyStrategy;
 
 async fn build_from_snapshot() -> Result<Market, Box<dyn Error>> {
     let mut market = Market::default();
@@ -65,8 +66,8 @@ async fn build_from_snapshot() -> Result<Market, Box<dyn Error>> {
 
 
 
-// async fn decode_data(symbols: &Vec<String>, strategy: dyn Strategy) -> Result<(), Box<dyn Error>> {
-async fn decode_data(symbols: &Vec<String>) -> Result<(), Box<dyn Error>> {
+async fn decode_data(symbols: &Vec<String>, strategy: & impl Strategy) -> Result<(), Box<dyn Error>> {
+// async fn decode_data(symbols: &Vec<String>) -> Result<(), Box<dyn Error>> {
 
     // turn Vec<String> into Vec<&str>
     let symbols_str = symbols.iter().map(|s| s.as_str()).collect::<Vec<&str>>();
@@ -133,7 +134,11 @@ async fn decode_data(symbols: &Vec<String>) -> Result<(), Box<dyn Error>> {
     // order book is in a valid state
     while let Some(record) = client.next_record().await? {
         if let Some(mbo) = record.get::<MboMsg>() {
+
+            strategy.pre_apply(mbo, &symbol_map, &market).await?;
             market.apply(mbo.clone());
+            strategy.post_apply(mbo, &symbol_map, &market).await?;
+
             if mbo.flags.is_snapshot() {
                 println!("Snapshot: {mbo:?}");
             } else {
@@ -200,7 +205,8 @@ async fn main() -> Result<(), Box<dyn Error>>
     // let settings = args.settings.canonicalize().unwrap();
     // println!("{:?}", settings);
     // let settings = SessionSettings::try_from_path(&settings).map_err(|e| anyhow!("{:?}", e))?;
-    decode_data(&args.symbols).await?;
+    let strategy = DummyStrategy::new();
+    decode_data(&args.symbols, &strategy).await?;
     Ok(())
 }
 

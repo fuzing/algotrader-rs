@@ -101,7 +101,13 @@ async fn decode_data(path: &PathBuf, strategy: &impl Strategy) -> Result<(), Box
     let symbol_map = decoder.metadata().symbol_map()?;
 
     while let Some(mbo) = decoder.decode_record::<MboMsg>().await? {
+        
+        strategy.pre_apply(mbo, &symbol_map, &market).await?;
+        
         market.apply(mbo.clone());
+        
+        strategy.post_apply(mbo, &symbol_map, &market).await?;
+        
         // If it's the last update in an event, print the state of the aggregated book
         if mbo.flags.is_last() {
             let symbol = symbol_map.get_for_rec(mbo).unwrap();
@@ -166,7 +172,8 @@ async fn main() -> Result<(), Box<dyn Error>>
     // let settings = SessionSettings::try_from_path(&settings).map_err(|e| anyhow!("{:?}", e))?;
     let path: PathBuf = PathBuf::from(std::format!("/run/media/peter/genetics/algotrader/data/{}-{}-{}-mbo.dbn.zst", args.symbols.join(":"), args.start_time, args.end_time));
     download_to_file(&path, &args.symbols, &args.start_time, &args.end_time).await?;
-    decode_data(&path, &DummyStrategy::new()).await?;
+    let strategy = DummyStrategy::new();
+    decode_data(&path, &strategy).await?;
     Ok(())
 }
 
