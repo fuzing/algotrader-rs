@@ -190,6 +190,7 @@ codegen-units = 1
 
 [workspace.dependencies]
 anyhow = "1.0.102"
+burn = { version = "0.21.0", features = ["fusion", "metrics", "tch", "std", "train", "tui", "vision", "wgpu", "ndarray", "autotune"] }
 clap = { version = "4.6.1", features = ["default", "derive"] }
 chrono = {  version = "0.4.44", features = ["serde"] }
 chrono-tz = "0.10.4"
