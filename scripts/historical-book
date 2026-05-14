@@ -24,4 +24,6 @@
 
 
 # Apple
-cargo run --bin historical-book -- --symbols=AAPL --start-time="2026-04-02 00:00:00 UTC" --end-time="2026-04-02 23:59:59 UTC"
+#cargo run --bin historical-book -- --symbols=AAPL --start-time="2026-04-02 00:00:00 UTC" --end-time="2026-04-02 23:59:59 UTC"
+#cargo run --bin historical-book -- --symbols=AAPL --start-time="2026-05-12 00:00:00 UTC" --end-time="2026-05-12 23:59:59 UTC"
+cargo run --bin historical-book -- --symbols=AAPL --start-time="2026-05-11 00:00:00 UTC" --end-time="2026-05-11 23:59:59 UTC"
