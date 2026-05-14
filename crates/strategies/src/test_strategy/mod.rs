@@ -34,6 +34,7 @@ pub struct TestStrategy {
     last_trade_price: Option<i64>,
     current_state: TestStrategyState,
     profit_loss: i64,
+    total_shares_traded: u32,
 
     purchase_shares: u32,
     minimum_ask_shares_in_book: u32,
@@ -56,6 +57,7 @@ impl TestStrategy {
             last_trade_price: None,
             current_state: TestStrategyState::Waiting,
             profit_loss: 0,
+            total_shares_traded: 0,
             purchase_shares,
             minimum_ask_shares_in_book,
             bid_ask_volume_ratio,
@@ -67,6 +69,9 @@ impl TestStrategy {
 
     pub fn profit_loss(&self) -> f32 {
         (self.profit_loss / 1_000_000_000) as f32
+    }
+    pub fn total_shares_traded(&self) -> u32 {
+        self.total_shares_traded
     }
 }
 
@@ -111,6 +116,7 @@ impl Strategy for TestStrategy {
 
         if action == Action::Trade {
             self.last_trade_price = Some(mbo.price);
+            self.total_shares_traded += mbo.size;
         }
 
         match self.current_state {

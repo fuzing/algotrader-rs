@@ -62,8 +62,13 @@ async fn build_from_snapshot() -> Result<Market, Box<dyn Error>> {
     Ok(market)
 }
 
-
-async fn download_to_file(path: &PathBuf, symbols: &Vec<String>, start_time: &str, end_time: &str) -> Result<(), Box<dyn Error>> {
+//
+// Datasets:
+//   Nasdaq -> XNAS.ITCH
+//   NYSE -> ARCX.PILLAR
+//
+//
+async fn download_to_file(path: &PathBuf, dataset: &str, symbols: &Vec<String>, start_time: &str, end_time: &str) -> Result<(), Box<dyn Error>> {
     info!("Download to file");
 
     let start_t = to_offset_date_time(start_time)?;
@@ -77,7 +82,7 @@ async fn download_to_file(path: &PathBuf, symbols: &Vec<String>, start_time: &st
             .timeseries()
             .get_range_to_file(
                 &GetRangeToFileParams::builder()
-                    .dataset(Dataset::DbeqBasic)
+                    .dataset(dataset)
                     .symbols(symbols.to_owned())
                     .date_time_range(
                         // datetime!(2024-04-03 08:00:00 UTC)..datetime!(2024-04-03 14:00:00 UTC),
@@ -104,11 +109,9 @@ async fn decode_data(path: &PathBuf, strategy: &mut impl Strategy) -> Result<(),
     while let Some(mbo) = decoder.decode_record::<MboMsg>().await? {
 
         println!("----------------------------------------------------------------------------------------------------------------------------------------------------");
-        // strategy.pre_apply(mbo, &symbol_map, &market).await?;
-
+        strategy.pre_apply(mbo, &symbol_map, &market).await?;
         market.apply(mbo.clone());
-
-        // strategy.post_apply(mbo, &symbol_map, &market).await?;
+        strategy.post_apply(mbo, &symbol_map, &market).await?;
 
         // If it's the last update in an event, print the state of the aggregated book
         if mbo.flags.is_last() {
@@ -174,8 +177,8 @@ async fn main() -> Result<(), Box<dyn Error>>
     // let settings = args.settings.canonicalize().unwrap();
     // println!("{:?}", settings);
     // let settings = SessionSettings::try_from_path(&settings).map_err(|e| anyhow!("{:?}", e))?;
-    let path: PathBuf = PathBuf::from(std::format!("/run/media/peter/genetics/algotrader/data/{}-{}-{}-mbo.dbn.zst", args.symbols.join(":"), args.start_time, args.end_time));
-    download_to_file(&path, &args.symbols, &args.start_time, &args.end_time).await?;
+    let path: PathBuf = PathBuf::from(std::format!("/run/media/peter/genetics/algotrader/data/{}-{}-{}-{}-mbo.dbn.zst", args.symbols.join(":"), args.dataset, args.start_time, args.end_time));
+    download_to_file(&path, &args.dataset, &args.symbols, &args.start_time, &args.end_time).await?;
 
     let mut strategy = TestStrategyBuilder::default()
         .purchase_shares(100)
@@ -192,6 +195,7 @@ async fn main() -> Result<(), Box<dyn Error>>
 
 
     println!("Total Profit/Loss {:.2}", strategy.profit_loss());
+    println!("Total Shares Traded for the Period {}", strategy.total_shares_traded());
 
     Ok(())
 }
@@ -211,6 +215,9 @@ struct Args {
 
     #[arg(short, long)]
     end_time: String,
+
+    #[arg(short, long)]
+    dataset: String,
 
     // Path to settings file
     // #[arg(short, long)]

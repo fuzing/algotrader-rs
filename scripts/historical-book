@@ -1,29 +1,23 @@
 #!/usr/bin/env bash
 #cargo run --bin historical-book -- --symbols=GOOG,GOOGL --start-time="2024-04-03T08:00:00Z" --end-time="2024-04-03T14:00:00Z"
-#cargo run --bin historical-book -- --symbols=WSO --start-time="2024-04-03T08:00:00Z" --end-time="2024-04-03T14:00:00Z"
-#cargo run --bin historical-book -- --symbols=WSO --start-time="2024-04-03T00:00:00Z" --end-time="2024-04-04T00:00:00Z"
-
-# markets are open between 09:30AM and 04:00PM EST
-
-#WSO
-#cargo run --bin historical-book -- --symbols=WSO --start-time="2024-04-03 08:00:00 ET" --end-time="2024-04-03 16:30:00 ET"
-#cargo run --bin historical-book -- --symbols=WSO --start-time="2024-04-02 08:00:00 ET" --end-time="2024-04-02 16:30:00 ET"
-#cargo run --bin historical-book -- --symbols=WSO --start-time="2024-04-04 08:00:00 ET" --end-time="2024-04-04 16:30:00 ET"
-#cargo run --bin historical-book -- --symbols=WSO --start-time="2024-04-03 00:00:00 UTC" --end-time="2024-04-03 23:59:59 UTC"
-
+#cargo run --bin historical-book -- --dataset=ARCX.PILLAR --symbols=WSO --start-time="2026-05-12 00:00:00 UTC" --end-time="2026-05-12 23:59:59 UTC"
 
 
 # Verisign
-#cargo run --bin historical-book -- --symbols=VRSN --start-time="2024-04-04 06:00:00 ET" --end-time="2024-04-04 16:30:00 ET"
-#cargo run --bin historical-book -- --symbols=VRSN --start-time="2024-04-03 00:00:00 UTC" --end-time="2024-04-03 23:59:59 UTC"
+#cargo run --bin historical-book -- --dataset=XNAS.ITCH --symbols=VRSN --start-time="2026-05-04 00:00:00 UTC" --end-time="2026-05-04 23:59:59 UTC"
+#cargo run --bin historical-book -- --dataset=XNAS.ITCH --symbols=VRSN --start-time="2026-05-12 00:00:00 UTC" --end-time="2026-05-12 23:59:59 UTC"
 
 # Lennar Corp
-#cargo run --bin historical-book -- --symbols=LEN --start-time="2024-04-04 06:00:00 ET" --end-time="2024-04-04 16:30:00 ET"
-#cargo run --bin historical-book -- --symbols=LEN --start-time="2024-04-04 00:00:00 UTC" --end-time="2024-04-04 23:59:59 UTC"
-#cargo run --bin historical-book -- --symbols=LEN --start-time="2024-04-06 00:00:00 UTC" --end-time="2024-04-06 23:59:59 UTC"
+#cargo run --bin historical-book -- --dataset=ARCX.PILLAR --symbols=LEN --start-time="2026-05-12 00:00:00 UTC" --end-time="2026-05-12 23:59:59 UTC"
 
 
 # Apple
-#cargo run --bin historical-book -- --symbols=AAPL --start-time="2026-04-02 00:00:00 UTC" --end-time="2026-04-02 23:59:59 UTC"
-#cargo run --bin historical-book -- --symbols=AAPL --start-time="2026-05-12 00:00:00 UTC" --end-time="2026-05-12 23:59:59 UTC"
-cargo run --bin historical-book -- --symbols=AAPL --start-time="2026-05-11 00:00:00 UTC" --end-time="2026-05-11 23:59:59 UTC"
+#cargo run --bin historical-book -- --dataset=XNAS.ITCH --symbols=AAPL --start-time="2026-05-04 00:00:00 UTC" --end-time="2026-05-04 23:59:59 UTC"
+
+
+# NFLX
+#cargo run --bin historical-book -- --dataset=XNAS.ITCH --symbols=NFLX --start-time="2026-05-04 00:00:00 UTC" --end-time="2026-05-04 23:59:59 UTC"
+
+
+# Kraft-Heinz
+cargo run --bin historical-book -- --dataset=XNAS.ITCH --symbols=KHC --start-time="2026-05-04 00:00:00 UTC" --end-time="2026-05-04 23:59:59 UTC"
