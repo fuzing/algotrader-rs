@@ -140,12 +140,12 @@ impl Strategy for TestStrategy {
                         // }
 
 
-                        let bid_levels = book.bid_levels(/*usize::MAX*/ 10);
+                        let bid_levels = book.bid_levels(usize::MAX);
                         let (total_bid_orders, total_bid_shares) = bid_levels.fold((0, 0), |(total_orders, total_shares), level| {
                             (total_orders + level.count, total_shares + level.size)
                         });
 
-                        let ask_levels = book.ask_levels(/*usize::MAX*/10);
+                        let ask_levels = book.ask_levels(usize::MAX);
                         let (total_ask_orders, total_ask_shares) = ask_levels.fold((0, 0), |(total_orders, total_shares), level| {
                             (total_orders + level.count, total_shares + level.size)
                         });
