@@ -103,17 +103,13 @@ async fn decode_data(path: &PathBuf, strategy: &mut impl Strategy) -> Result<(),
 
     while let Some(mbo) = decoder.decode_record::<MboMsg>().await? {
 
-        // println!("----------------------------------------------------------------------------------------------------------------------------------------------------");
-
-        debug!("\n ===> 1 pre_apply");
+        println!("----------------------------------------------------------------------------------------------------------------------------------------------------");
+        info!("Hello");
         strategy.pre_apply(mbo, &symbol_map, &market).await?;
-        debug!("\n ===> 2 apply");
 
         market.apply(mbo.clone());
-        debug!("\n ===> 3 post_apply");
 
         strategy.post_apply(mbo, &symbol_map, &market).await?;
-        debug!("\n ===> 4 print");
 
         // If it's the last update in an event, print the state of the aggregated book
         if mbo.flags.is_last() {
@@ -159,6 +155,7 @@ async fn main() -> Result<(), Box<dyn Error>>
         // .with_thread_ids(true)
         // .with_thread_names(true)
         // .pretty()
+        // .with_ansi(false)
         .with_env_filter(EnvFilter::from_default_env())
         .init();
 
