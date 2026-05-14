@@ -108,7 +108,6 @@ async fn decode_data(path: &PathBuf, strategy: &mut impl Strategy) -> Result<(),
 
     while let Some(mbo) = decoder.decode_record::<MboMsg>().await? {
 
-        println!("----------------------------------------------------------------------------------------------------------------------------------------------------");
         strategy.pre_apply(mbo, &symbol_map, &market).await?;
         market.apply(mbo.clone());
         strategy.post_apply(mbo, &symbol_map, &market).await?;
@@ -183,10 +182,10 @@ async fn main() -> Result<(), Box<dyn Error>>
     let mut strategy = TestStrategyBuilder::default()
         .purchase_shares(100)
         .minimum_ask_shares_in_book(200)
-        .maximum_holding_time(12 * 60 * 60)
-        .bid_ask_volume_ratio(1.25)
-        .desired_gain_percentage(0.1)
-        .stop_loss_percentage(5.0)
+        .maximum_holding_time(24 * 60 * 60)
+        .bid_ask_volume_ratio(1.5)
+        .desired_gain_percentage(0.25)
+        .stop_loss_percentage(2.0)
         .build();
 
     println!("Strategy is {:?}", strategy);

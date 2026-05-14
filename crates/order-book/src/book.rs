@@ -30,17 +30,20 @@ impl Book {
     
     
     // PMB return all bid levels
-    pub fn bid_levels(&self) -> impl Iterator<Item = PriceLevel> {
+    pub fn bid_levels(&self, nlevels: usize) -> impl Iterator<Item = PriceLevel> {
         self.bids
             .iter()
             // Reverse to get highest first
+            .rev()
+            .take(nlevels)
             .map(|(price, orders)| PriceLevel::new(*price, orders.iter()))
     }
 
     // PMB return all ask levels
-    pub fn ask_levels(&self) -> impl Iterator<Item = PriceLevel> {
+    pub fn ask_levels(&self, nlevels: usize) -> impl Iterator<Item = PriceLevel> {
         self.offers
             .iter()
+            .take(nlevels)
             .map(|(price, orders)| PriceLevel::new(*price, orders.iter()))
     }    
     

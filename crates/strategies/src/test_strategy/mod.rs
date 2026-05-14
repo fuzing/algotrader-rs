@@ -123,12 +123,29 @@ impl Strategy for TestStrategy {
             TestStrategyState::Waiting => {
                 if let Some(last_trade_price) = self.last_trade_price {
                     if let Some(book) = market.find_book_from_mbo(mbo) {
-                        let bid_levels = book.bid_levels();
+                        // println!("----------------------------------------------------------------------------------------------");
+                        // for x in book.ask_levels(5) {
+                        //     println!("Ask {}", pretty::Px(x.price));
+                        // }
+                        // println!("");
+                        // for x in book.bid_levels(5) {
+                        //     println!("Bid {}", pretty::Px(x.price));
+                        // }
+                        // let (bid, ask) = book.bbo();
+                        // if let Some(bid) = bid {
+                        //     println!("Best Bid {}", pretty::Px(bid.price));
+                        // }
+                        // if let Some(ask) = ask {
+                        //     println!("Best Ask {}", pretty::Px(ask.price));
+                        // }
+
+
+                        let bid_levels = book.bid_levels(/*usize::MAX*/ 10);
                         let (total_bid_orders, total_bid_shares) = bid_levels.fold((0, 0), |(total_orders, total_shares), level| {
                             (total_orders + level.count, total_shares + level.size)
                         });
 
-                        let ask_levels = book.ask_levels();
+                        let ask_levels = book.ask_levels(/*usize::MAX*/10);
                         let (total_ask_orders, total_ask_shares) = ask_levels.fold((0, 0), |(total_orders, total_shares), level| {
                             (total_orders + level.count, total_shares + level.size)
                         });
