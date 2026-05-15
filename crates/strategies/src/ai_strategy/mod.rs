@@ -13,8 +13,6 @@ use crate::strategy::{Strategy};
 use tracing::{debug, info};
 
 
-
-
 #[derive(Debug)]
 enum AiStrategyState {
     Waiting,
