@@ -19,6 +19,7 @@ members = [
     "crates/models",
     "crates/order-book",
     "crates/strategies",
+    "crates/utilities",
 ]
 
 # add to this for bins/crates that need testing/benching
@@ -208,9 +209,11 @@ strategies = { path = "crates/strategies" }
 thiserror = "2.0.18"
 time = "0.3.47"
 time_range = "0.0.3-alpha.0"
+time-tz = "3.0.0-rc.5.0.0"
 tokio = { version = "1.52.2", features = ["full"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+utilities = { path = "crates/utilities" }
 uuid = {  version = "1.23.1", features = ["serde", "v4"] }
 
 

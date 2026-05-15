@@ -39,7 +39,6 @@ use chrono_tz::{
     America::Los_Angeles,
     UTC,
 };
-use databento::dbn::StatUpdateAction::New;
 use time::OffsetDateTime;
 
 const FORMAT: &str = "%Y-%m-%d %H:%M:%S";
@@ -66,4 +65,20 @@ pub fn to_offset_date_time(date_time_str: &str) -> Result<OffsetDateTime, Box<dy
 }
 
 
+use time_tz::{OffsetDateTimeExt, timezones, ToTimezone};
+pub fn nanos_to_offset_date_time_with_tz(nanos: u64, tz: &str) -> Result<OffsetDateTime, Box<dyn Error>> {
+    let local_tz = match tz {
+        "ET" => timezones::db::america::NEW_YORK,
+        "CT" => timezones::db::america::CHICAGO,
+        "MT" => timezones::db::america::DENVER,
+        "PT" => timezones::db::america::LOS_ANGELES,
+        "UTC" => timezones::db::UTC,
+        _ => return Err(format!("Invalid timezone: {}", tz).into()),
+    };
+
+    let t = OffsetDateTime::from_unix_timestamp_nanos(nanos as i128)?;
+    let t = t.to_timezone(local_tz);
+
+    Ok(t)
+}
 
