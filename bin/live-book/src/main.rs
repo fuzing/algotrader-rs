@@ -4,7 +4,7 @@ use order_book::{
     date_time::to_offset_date_time,
 };
 
-use strategies::strategy::Strategy;
+use strategies::strategy::{Strategy, StrategyMode};
 
 // use anyhow::anyhow;
 use clap::Parser as ClapParser;
@@ -58,15 +58,8 @@ use chrono::{ DateTime, Utc};
 use databento::reference::Country::Is;
 use strategies::dummy_strategy::DummyStrategy;
 
-async fn build_from_snapshot() -> Result<Market, Box<dyn Error>> {
-    let mut market = Market::default();
 
-    Ok(market)
-}
-
-
-
-async fn decode_data(symbols: &Vec<String>, strategy: & impl Strategy) -> Result<(), Box<dyn Error>> {
+async fn decode_data(dataset: &str, symbols: &Vec<String>, strategy: &mut impl Strategy) -> Result<(), Box<dyn Error>> {
 // async fn decode_data(symbols: &Vec<String>) -> Result<(), Box<dyn Error>> {
 
     // turn Vec<String> into Vec<&str>
@@ -81,9 +74,7 @@ async fn decode_data(symbols: &Vec<String>, strategy: & impl Strategy) -> Result
     // First, create a live client and connect
     let mut client = LiveClient::builder()
         .key_from_env()?
-        // TODO - check which DB to use
-        // .dataset(Dataset::GlbxMdp3)
-        .dataset(Dataset::DbeqBasic)
+        .dataset(dataset)
         .build()
         .await?;
 
@@ -135,9 +126,9 @@ async fn decode_data(symbols: &Vec<String>, strategy: & impl Strategy) -> Result
     while let Some(record) = client.next_record().await? {
         if let Some(mbo) = record.get::<MboMsg>() {
 
-            strategy.pre_apply(mbo, &symbol_map, &market).await?;
+            strategy.pre_apply(StrategyMode::Live, mbo, &symbol_map, &market).await?;
             market.apply(mbo.clone());
-            strategy.post_apply(mbo, &symbol_map, &market).await?;
+            strategy.post_apply(StrategyMode::Live, mbo, &symbol_map, &market).await?;
 
             if mbo.flags.is_snapshot() {
                 println!("Snapshot: {mbo:?}");
@@ -205,8 +196,8 @@ async fn main() -> Result<(), Box<dyn Error>>
     // let settings = args.settings.canonicalize().unwrap();
     // println!("{:?}", settings);
     // let settings = SessionSettings::try_from_path(&settings).map_err(|e| anyhow!("{:?}", e))?;
-    let strategy = DummyStrategy::new();
-    decode_data(&args.symbols, &strategy).await?;
+    let mut strategy = DummyStrategy::new();
+    decode_data(&args.dataset, &args.symbols, &mut strategy).await?;
     Ok(())
 }
 
@@ -219,6 +210,10 @@ struct Args {
 
     #[arg(long, value_delimiter = ',')]
     symbols: Vec<String>,
+
+    #[arg(short, long)]
+    dataset: String,
+
 
     // Path to settings file
     // #[arg(short, long)]

@@ -9,7 +9,7 @@ use databento::{
     },
 };
 use order_book::market::Market;
-use crate::strategy::Strategy;
+use crate::strategy::{Strategy, StrategyMode};
 use tracing::{debug, info};
 
 
@@ -66,6 +66,10 @@ impl TestStrategy {
             stop_loss_percentage,
         }
     }
+    
+    pub fn builder() -> TestStrategyBuilder {
+        TestStrategyBuilder::default()
+    }
 
     pub fn profit_loss(&self) -> f32 {
         (self.profit_loss / 1_000_000_000) as f32
@@ -76,11 +80,11 @@ impl TestStrategy {
 }
 
 impl Strategy for TestStrategy {
-    // async fn pre_apply(&mut self, msg: &MboMsg, symbol_map: &TsSymbolMap, market: &Market) -> Result<(), Box<dyn Error>> {
+    // async fn pre_apply(&mut self, mode: StrategyMode, msg: &MboMsg, symbol_map: &TsSymbolMap, market: &Market) -> Result<(), Box<dyn Error>> {
     //     Ok(())
     // }
 
-    async fn post_apply(&mut self, mbo: &MboMsg, symbol_map: &TsSymbolMap, market: &Market) -> Result<(), Box<dyn Error>> {
+    async fn post_apply(&mut self, mode: StrategyMode, mbo: &MboMsg, symbol_map: &TsSymbolMap, market: &Market) -> Result<(), Box<dyn Error>> {
 
         // let action = mbo.action().unwrap();
         // match action {

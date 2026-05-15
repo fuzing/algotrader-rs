@@ -5,7 +5,7 @@ use order_book::{
 };
 
 use strategies::{
-    strategy::Strategy,
+    strategy::{Strategy, StrategyMode},
     dummy_strategy::DummyStrategy,
     test_strategy::{TestStrategy, TestStrategyBuilder},
 };
@@ -108,9 +108,9 @@ async fn decode_data(path: &PathBuf, strategy: &mut impl Strategy) -> Result<(),
 
     while let Some(mbo) = decoder.decode_record::<MboMsg>().await? {
 
-        strategy.pre_apply(mbo, &symbol_map, &market).await?;
+        strategy.pre_apply(StrategyMode::Live, mbo, &symbol_map, &market).await?;
         market.apply(mbo.clone());
-        strategy.post_apply(mbo, &symbol_map, &market).await?;
+        strategy.post_apply(StrategyMode::Live, mbo, &symbol_map, &market).await?;
 
         // If it's the last update in an event, print the state of the aggregated book
         if mbo.flags.is_last() {
@@ -179,7 +179,8 @@ async fn main() -> Result<(), Box<dyn Error>>
     let path: PathBuf = PathBuf::from(std::format!("/run/media/peter/genetics/algotrader/data/{}-{}-{}-{}-mbo.dbn.zst", args.symbols.join(":"), args.dataset, args.start_time, args.end_time));
     download_to_file(&path, &args.dataset, &args.symbols, &args.start_time, &args.end_time).await?;
 
-    let mut strategy = TestStrategyBuilder::default()
+    // let mut strategy = TestStrategyBuilder::default()
+    let mut strategy = TestStrategy::builder()
         .purchase_shares(100)
         .minimum_ask_shares_in_book(1_000)
         .maximum_holding_time(24 * 60 * 60)
