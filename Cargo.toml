@@ -15,7 +15,7 @@ members = [
     "bin/downloader",
     "bin/historical-book",
     "bin/live-book",
-    "bin/migrate",
+    "bin/trainer",
     "crates/models",
     "crates/order-book",
     "crates/strategies",

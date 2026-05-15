@@ -78,7 +78,8 @@ async fn main() -> Result<(), Box<dyn Error>>
 
     // Parse the command line arguments
     let args = Args::parse();
-    let path: PathBuf = PathBuf::from(std::format!("/run/media/peter/genetics/algotrader/data/{}-{}-{}-{}-mbo.dbn.zst", args.symbols.join(":"), args.dataset, args.start_time, args.end_time));
+    let root_folder = env::var("ROOT_FOLDER").expect("no ROOT_FOLDER found in environment");
+    let path: PathBuf = PathBuf::from(std::format!("{}/data/{}-{}-{}-{}-mbo.dbn.zst", root_folder, args.symbols.join(":"), args.dataset, args.start_time, args.end_time));
 
     download_to_file(&path, &args.dataset, &args.symbols, &args.start_time, &args.end_time).await?;
 

@@ -1,5 +1,5 @@
 [package]
-name = "migrate"
+name = "trainer"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -10,9 +10,14 @@ exclude.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+burn.workspace = true
+chrono.workspace = true
+chrono-tz.workspace = true
 clap.workspace = true
+databento.workspace = true
 dotenv.workspace = true
-sqlx.workspace = true
+order-book.workspace = true
+strategies.workspace = true
 thiserror.workspace = true
 time.workspace = true
 tokio.workspace = true

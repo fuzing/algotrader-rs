@@ -113,22 +113,9 @@ async fn main() -> Result<(), Box<dyn Error>>
     // Parse the command line arguments
     let args = Args::parse();
     // info!("Run with arguments: {args:#?}");
-
-    // // Canonicalize all input files, to ensure that the files exists and that
-    // // the path is valid. Store it in a vector for further processing.
-    // let inputs = args
-    //     .inputs
-    //     .into_iter()
-    //     .map(|p| p.canonicalize())
-    //     .collect::<::errors::Result<Vec<_>, _>>().map_err(|e| anyhow!(e))?;
-
-    // Canonicalize settings file
-    // let settings = args.settings.canonicalize().unwrap();
-    // println!("{:?}", settings);
-    // let settings = SessionSettings::try_from_path(&settings).map_err(|e| anyhow!("{:?}", e))?;
     let root_folder = env::var("ROOT_FOLDER").expect("no ROOT_FOLDER found in environment");
     let path: PathBuf = PathBuf::from(std::format!("{}/data/{}-{}-{}-{}-mbo.dbn.zst", root_folder, args.symbols.join(":"), args.dataset, args.start_time, args.end_time));
-
+    
     // let mut strategy = TestStrategyBuilder::default()
     let mut strategy = TestStrategy::builder()
         .purchase_shares(100)
