@@ -4,7 +4,7 @@ use order_book::{
     date_time::to_offset_date_time,
 };
 
-use strategies::strategy::{Strategy, StrategyMode};
+use strategies::strategy::{Strategy};
 
 // use anyhow::anyhow;
 use clap::Parser as ClapParser;
@@ -126,9 +126,9 @@ async fn decode_data(dataset: &str, symbols: &Vec<String>, strategy: &mut impl S
     while let Some(record) = client.next_record().await? {
         if let Some(mbo) = record.get::<MboMsg>() {
 
-            strategy.pre_apply(StrategyMode::Live, mbo, &symbol_map, &market).await?;
+            strategy.pre_apply(mbo, &symbol_map, &market).await?;
             market.apply(mbo.clone());
-            strategy.post_apply(StrategyMode::Live, mbo, &symbol_map, &market).await?;
+            strategy.post_apply(mbo, &symbol_map, &market).await?;
 
             if mbo.flags.is_snapshot() {
                 println!("Snapshot: {mbo:?}");

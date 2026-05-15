@@ -4,7 +4,7 @@ use order_book::{
 };
 
 use strategies::{
-    strategy::{Strategy, StrategyMode},
+    strategy::{Strategy},
     test_strategy::{TestStrategy},
 };
 
@@ -58,9 +58,9 @@ async fn decode_data(path: &PathBuf, strategy: &mut impl Strategy) -> Result<(),
 
     while let Some(mbo) = decoder.decode_record::<MboMsg>().await? {
 
-        strategy.pre_apply(StrategyMode::Live, mbo, &symbol_map, &market).await?;
+        strategy.pre_apply(mbo, &symbol_map, &market).await?;
         market.apply(mbo.clone());
-        strategy.post_apply(StrategyMode::Live, mbo, &symbol_map, &market).await?;
+        strategy.post_apply(mbo, &symbol_map, &market).await?;
 
         // If it's the last update in an event, print the state of the aggregated book
         if mbo.flags.is_last() {
