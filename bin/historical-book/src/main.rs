@@ -1,13 +1,11 @@
 
 use order_book::{
     market::Market,
-    date_time::to_offset_date_time,
 };
 
 use strategies::{
     strategy::{Strategy, StrategyMode},
-    dummy_strategy::DummyStrategy,
-    test_strategy::{TestStrategy, TestStrategyBuilder},
+    test_strategy::{TestStrategy},
 };
 
 // use anyhow::anyhow;
@@ -21,9 +19,8 @@ use std::{
 };
 use tracing_subscriber::{EnvFilter, fmt};
 use tracing::{debug, info, warn, error, Instrument};
-use tokio::{self, fs};
+use tokio;
 use std::error::Error;
-use std::num::NonZeroU64;
 use dotenv::dotenv;
 
 use databento::{
@@ -47,56 +44,9 @@ use databento::{
     historical::timeseries::GetRangeToFileParams,
 };
 use time::{
-    OffsetDateTime,
     format_description::well_known::{Rfc3339, Iso8601},
     macros::{date, datetime},
 };
-
-use chrono::{ DateTime, Utc};
-use clap::builder::Str;
-use databento::reference::Country::Is;
-
-async fn build_from_snapshot() -> Result<Market, Box<dyn Error>> {
-    let mut market = Market::default();
-
-    Ok(market)
-}
-
-//
-// Datasets:
-//   Nasdaq -> XNAS.ITCH
-//   NYSE -> ARCX.PILLAR
-//
-//
-async fn download_to_file(path: &PathBuf, dataset: &str, symbols: &Vec<String>, start_time: &str, end_time: &str) -> Result<(), Box<dyn Error>> {
-    info!("Download to file");
-
-    let start_t = to_offset_date_time(start_time)?;
-    let end_t = to_offset_date_time(end_time)?;
-
-    println!("DTRange {:?}", start_t..end_t);
-
-    if !fs::try_exists(path).await? {
-        let mut client = HistoricalClient::builder().key_from_env()?.build()?;
-        client
-            .timeseries()
-            .get_range_to_file(
-                &GetRangeToFileParams::builder()
-                    .dataset(dataset)
-                    .symbols(symbols.to_owned())
-                    .date_time_range(
-                        // datetime!(2024-04-03 08:00:00 UTC)..datetime!(2024-04-03 14:00:00 UTC),
-                        start_t..end_t,
-                    )
-                    .schema(Schema::Mbo)
-                    .path(path)
-                    .build(),
-            )
-            .await?;
-    }
-
-    Ok(())
-}
 
 
 async fn decode_data(path: &PathBuf, strategy: &mut impl Strategy) -> Result<(), Box<dyn Error>> {
@@ -177,7 +127,6 @@ async fn main() -> Result<(), Box<dyn Error>>
     // println!("{:?}", settings);
     // let settings = SessionSettings::try_from_path(&settings).map_err(|e| anyhow!("{:?}", e))?;
     let path: PathBuf = PathBuf::from(std::format!("/run/media/peter/genetics/algotrader/data/{}-{}-{}-{}-mbo.dbn.zst", args.symbols.join(":"), args.dataset, args.start_time, args.end_time));
-    download_to_file(&path, &args.dataset, &args.symbols, &args.start_time, &args.end_time).await?;
 
     // let mut strategy = TestStrategyBuilder::default()
     let mut strategy = TestStrategy::builder()

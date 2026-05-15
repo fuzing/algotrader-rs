@@ -1,3 +1,4 @@
+
 // use anyhow::anyhow;
 use clap::Parser as ClapParser;
 use std::{
@@ -8,105 +9,53 @@ use std::{
     time::Duration,
 };
 use tracing_subscriber::{EnvFilter, fmt};
-use tracing::{info, warn, error};
-use tokio;
+use tracing::{debug, info, warn, error, Instrument};
+use tokio::{self, fs};
 use std::error::Error;
-use std::num::NonZeroU64;
 use dotenv::dotenv;
 
 use databento::{
-    dbn::{
-        decode::DbnMetadata,
-        Dataset,
-        PitSymbolMap,
-        SType,
-        Schema,
-        TradeMsg
-    },
-    Symbols,
-    live::Subscription,
-    historical::timeseries::GetRangeParams,
     HistoricalClient,
-    ReferenceClient,
-    LiveClient,
+    dbn::{Schema, },
+    historical::timeseries::GetRangeToFileParams,
 };
-use time::macros::{date, datetime};
 
-mod errors;
+use order_book::date_time::to_offset_date_time;
 
+//
+// Datasets:
+//   Nasdaq -> XNAS.ITCH
+//   NYSE -> ARCX.PILLAR
+//
+//
+async fn download_to_file(path: &PathBuf, dataset: &str, symbols: &Vec<String>, start_time: &str, end_time: &str) -> Result<(), Box<dyn Error>> {
+    info!("Download to file");
 
-// const USER_NAME: &str = "username";
-// const PASSWORD: &str = "password";
-// const DATABENTO_API_KEY: &str = "API_KEY";
+    let start_t = to_offset_date_time(start_time)?;
+    let end_t = to_offset_date_time(end_time)?;
 
+    println!("DTRange {:?}", start_t..end_t);
 
-async fn get_history() -> Result<(), Box<dyn Error>>
-{
-    info!("Downloading history");
-
-    // Databento stuff
-    let mut client = HistoricalClient::builder().key_from_env()?.build()?;
-    // let mut decoder = client
-    //     .timeseries()
-    //     .get_range(
-    //         &GetRangeParams::builder()
-    //             .dataset(Dataset::GlbxMdp3)
-    //             .date_time_range(datetime!(2022-06-10 14:30 UTC)..datetime!(2022-06-10 14:40 UTC))
-    //             .symbols("ES.FUT")
-    //             // .symbols(Symbols::All)
-    //             .stype_in(SType::Parent)
-    //             // .limit(NonZeroU64::new(100).unwrap())
-    //             .schema(Schema::Trades)
-    //             .build(),
-    //     )
-    //     .await?;
-    // let symbol_map = decoder
-    //     .metadata()
-    //     .symbol_map_for_date(date!(2022 - 06 - 10))?;
-    // while let Some(trade) = decoder.decode_record::<TradeMsg>().await? {
-    //     let symbol = &symbol_map[trade];
-    //     println!("Received trade for {symbol}: {trade:?}");
-    // }
-
+    if !fs::try_exists(path).await? {
+        let mut client = HistoricalClient::builder().key_from_env()?.build()?;
+        client
+            .timeseries()
+            .get_range_to_file(
+                &GetRangeToFileParams::builder()
+                    .dataset(dataset)
+                    .symbols(symbols.to_owned())
+                    .date_time_range(
+                        start_t..end_t,
+                    )
+                    .schema(Schema::Mbo)
+                    .path(path)
+                    .build(),
+            )
+            .await?;
+    }
 
     Ok(())
 }
-
-
-async fn get_live() -> Result<(), Box<dyn Error>>
-{
-    // Databento stuff
-    let mut client = LiveClient::builder()
-        .key_from_env()?
-        .dataset(Dataset::GlbxMdp3)
-        .build()
-        .await?;
-    client
-        .subscribe(
-            Subscription::builder()
-                .symbols("ES.FUT")
-                .schema(Schema::Trades)
-                .stype_in(SType::Parent)
-                .build(),
-        )
-        .await
-        .unwrap();
-    // client.start().await?;
-    //
-    // let mut symbol_map = PitSymbolMap::new();
-    // // Get the next trade
-    // while let Some(rec) = client.next_record().await? {
-    //     if let Some(trade) = rec.get::<TradeMsg>() {
-    //         let symbol = &symbol_map[trade];
-    //         println!("Received trade for {symbol}: {trade:?}");
-    //         break;
-    //     }
-    //     symbol_map.on_record(rec)?;
-    // }
-
-    Ok(())
-}
-
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>>
@@ -123,32 +72,15 @@ async fn main() -> Result<(), Box<dyn Error>>
         // .with_thread_ids(true)
         // .with_thread_names(true)
         // .pretty()
+        .with_ansi(false)   // turns off display characters that change color etc.
         .with_env_filter(EnvFilter::from_default_env())
         .init();
 
-    info!("Starting downloader");
-
     // Parse the command line arguments
     let args = Args::parse();
-    // info!("Run with arguments: {args:#?}");
+    let path: PathBuf = PathBuf::from(std::format!("/run/media/peter/genetics/algotrader/data/{}-{}-{}-{}-mbo.dbn.zst", args.symbols.join(":"), args.dataset, args.start_time, args.end_time));
 
-    // // Canonicalize all input files, to ensure that the files exists and that
-    // // the path is valid. Store it in a vector for further processing.
-    // let inputs = args
-    //     .inputs
-    //     .into_iter()
-    //     .map(|p| p.canonicalize())
-    //     .collect::<::errors::Result<Vec<_>, _>>().map_err(|e| anyhow!(e))?;
-
-    // Canonicalize settings file
-    // let settings = args.settings.canonicalize().unwrap();
-    // println!("{:?}", settings);
-    // let settings = SessionSettings::try_from_path(&settings).map_err(|e| anyhow!("{:?}", e))?;
-
-    get_history().await?;
-    // get_live().await?;
-
-    println!("Hello, world!");
+    download_to_file(&path, &args.dataset, &args.symbols, &args.start_time, &args.end_time).await?;
 
     Ok(())
 }
@@ -156,19 +88,17 @@ async fn main() -> Result<(), Box<dyn Error>>
 
 #[derive(Debug, ClapParser)]
 struct Args {
-    /// Write additional debut output in the output directory.
-    #[arg(short, long)]
-    enable_debug_output: bool,
+    #[arg(long, value_delimiter = ',')]
+    symbols: Vec<String>,
 
-    // Path to settings file
-    // #[arg(short, long)]
-    // settings: PathBuf,
-    // /// Path to write the generated code to.
-    // #[arg()]
-    // output: PathBuf,
-    //
-    // /// Paths to read the schemas files from.
-    // #[arg()]
-    // inputs: Vec<PathBuf>,
+    #[arg(long)]
+    start_time: String,
+
+    #[arg(short, long)]
+    end_time: String,
+
+    #[arg(short, long)]
+    dataset: String,
 }
+
 
