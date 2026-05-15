@@ -20,7 +20,7 @@ use databento::{
     historical::timeseries::GetRangeToFileParams,
 };
 
-use utilities::date_time::to_offset_date_time;
+use utilities::date_time::str_to_offset_date_time;
 
 //
 // Datasets:
@@ -31,8 +31,8 @@ use utilities::date_time::to_offset_date_time;
 async fn download_to_file(path: &PathBuf, dataset: &str, symbols: &Vec<String>, start_time: &str, end_time: &str) -> Result<(), Box<dyn Error>> {
     info!("Download to file");
 
-    let start_t = to_offset_date_time(start_time)?;
-    let end_t = to_offset_date_time(end_time)?;
+    let start_t = str_to_offset_date_time(start_time)?;
+    let end_t = str_to_offset_date_time(end_time)?;
 
     println!("DTRange {:?}", start_t..end_t);
 

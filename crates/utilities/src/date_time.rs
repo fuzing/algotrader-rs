@@ -43,7 +43,7 @@ use time::OffsetDateTime;
 
 const FORMAT: &str = "%Y-%m-%d %H:%M:%S";
 
-pub fn to_offset_date_time(date_time_str: &str) -> Result<OffsetDateTime, Box<dyn Error>> {
+pub fn str_to_offset_date_time(date_time_str: &str) -> Result<OffsetDateTime, Box<dyn Error>> {
     let (dt_part, tz_part) = date_time_str.rsplit_once(' ').unwrap();
     let naive_dt = NaiveDateTime::parse_from_str(dt_part, FORMAT)?;
 
