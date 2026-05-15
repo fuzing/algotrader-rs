@@ -10,6 +10,7 @@ exclude.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+burn.workspace = true
 chrono.workspace = true
 chrono-tz.workspace = true
 databento.workspace = true

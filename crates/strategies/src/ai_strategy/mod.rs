@@ -16,7 +16,7 @@ use tracing::{debug, info};
 
 
 #[derive(Debug)]
-enum TestStrategyState {
+enum AiStrategyState {
     Waiting,
     // processing with (start_time, purchase_price, success_price, stop_loss_price)
     Processing(
@@ -30,9 +30,9 @@ enum TestStrategyState {
 }
 
 #[derive(Debug)]
-pub struct TestStrategy {
+pub struct AiStrategy {
     last_trade_price: Option<i64>,
-    current_state: TestStrategyState,
+    current_state: AiStrategyState,
     profit_loss: i64,
     total_shares_traded: u32,
 
@@ -44,7 +44,7 @@ pub struct TestStrategy {
     stop_loss_percentage: f32,      // when the price hits the loss point then do this
 }
 
-impl TestStrategy {
+impl AiStrategy {
     pub fn new(
         purchase_shares: u32,
         minimum_ask_shares_in_book: u32,
@@ -55,7 +55,7 @@ impl TestStrategy {
     ) -> Self {
         Self {
             last_trade_price: None,
-            current_state: TestStrategyState::Waiting,
+            current_state: AiStrategyState::Waiting,
             profit_loss: 0,
             total_shares_traded: 0,
             purchase_shares,
@@ -66,9 +66,9 @@ impl TestStrategy {
             stop_loss_percentage,
         }
     }
-    
-    pub fn builder() -> TestStrategyBuilder {
-        TestStrategyBuilder::default()
+
+    pub fn builder() -> AiStrategyBuilder {
+        AiStrategyBuilder::default()
     }
 
     pub fn profit_loss(&self) -> f32 {
@@ -79,7 +79,7 @@ impl TestStrategy {
     }
 }
 
-impl Strategy for TestStrategy {
+impl Strategy for AiStrategy {
     // async fn pre_apply(&mut self, msg: &MboMsg, symbol_map: &TsSymbolMap, market: &Market) -> Result<(), Box<dyn Error>> {
     //     Ok(())
     // }
@@ -124,7 +124,7 @@ impl Strategy for TestStrategy {
         }
 
         match self.current_state {
-            TestStrategyState::Waiting => {
+            AiStrategyState::Waiting => {
                 if let Some(last_trade_price) = self.last_trade_price {
                     if let Some(book) = market.find_book_from_mbo(mbo) {
                         // println!("----------------------------------------------------------------------------------------------");
@@ -166,31 +166,31 @@ impl Strategy for TestStrategy {
                                 let success_price = limit_price + (limit_price as f32 * self.desired_gain_percentage / 100.00) as i64;
                                 let end_time = mbo.ts_recv + (self.maximum_holding_time as u64 * 1_000_000_000);
                                 info!("========> Purchase => Buy at ${} @ {}", pretty::Px(limit_price), mbo.ts_recv().unwrap());
-                                self.current_state = TestStrategyState::Processing(mbo.ts_recv, end_time, self.purchase_shares, limit_price, success_price, stop_loss_price);
+                                self.current_state = AiStrategyState::Processing(mbo.ts_recv, end_time, self.purchase_shares, limit_price, success_price, stop_loss_price);
                             }
                         }
                     }
                 }
             },
-            TestStrategyState::Processing(start_time, end_time, purchase_shares, purchase_price, success_price, stop_loss_price) => {
+            AiStrategyState::Processing(start_time, end_time, purchase_shares, purchase_price, success_price, stop_loss_price) => {
                 if action == Action::Trade && mbo.price >= success_price {
                     let profit = (mbo.price - purchase_price) * purchase_shares as i64;
                     self.profit_loss += profit;
                     info!("========> Success Paid(${}), Sold At(${}) Profit(${}) @ {}", pretty::Px(purchase_price), pretty::Px(mbo.price), pretty::Px(profit), mbo.ts_recv().unwrap());
-                    self.current_state = TestStrategyState::Waiting;
+                    self.current_state = AiStrategyState::Waiting;
                 }
                 else if action == Action::Trade && mbo.price <= stop_loss_price {
                     let profit = (mbo.price - purchase_price) * purchase_shares as i64;
                     self.profit_loss += profit;
                     info!("========> Failed Stop Loss Paid(${}), Sold At(${}) Profit(${}) @ {}", pretty::Px(purchase_price), pretty::Px(mbo.price), pretty::Px(profit), mbo.ts_recv().unwrap());
-                    self.current_state = TestStrategyState::Waiting;
+                    self.current_state = AiStrategyState::Waiting;
                 }
                 else if mbo.ts_recv >= end_time {
                     let sold_at_price = self.last_trade_price.unwrap();
                     let profit = (sold_at_price - purchase_price) * purchase_shares as i64;
                     self.profit_loss += profit;
                     info!("========> Timeout - Paid(${}), Sold At(${}) Profit(${}) @ {}", pretty::Px(purchase_price), pretty::Px(sold_at_price), pretty::Px(profit), mbo.ts_recv().unwrap());
-                    self.current_state = TestStrategyState::Waiting;
+                    self.current_state = AiStrategyState::Waiting;
                 }
 
             }
@@ -201,7 +201,7 @@ impl Strategy for TestStrategy {
 }
 
 #[derive(Debug)]
-pub struct TestStrategyBuilder {
+pub struct AiStrategyBuilder {
     minimum_ask_shares_in_book: u32,
     purchase_shares: u32,
     bid_ask_volume_ratio: f32,
@@ -210,7 +210,8 @@ pub struct TestStrategyBuilder {
     stop_loss_percentage: f32,
 }
 
-impl Default for TestStrategyBuilder {
+
+impl Default for AiStrategyBuilder {
     fn default() -> Self {
         Self {
             minimum_ask_shares_in_book: 100,                // minimum ask shares in book
@@ -223,10 +224,9 @@ impl Default for TestStrategyBuilder {
     }
 }
 
-
-impl TestStrategyBuilder {
-    pub fn build(&self) -> TestStrategy {
-        TestStrategy::new(
+impl AiStrategyBuilder {
+    pub fn build(&self) -> AiStrategy {
+        AiStrategy::new(
             self.purchase_shares,
             self.minimum_ask_shares_in_book,
             self.bid_ask_volume_ratio,
