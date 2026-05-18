@@ -64,7 +64,7 @@ async fn decode_data(path: &PathBuf, extractor: &mut impl Extractor<IntervalExtr
     while let Some(mbo) = decoder.decode_record::<MboMsg>().await? {
         let results = extractor.push(mbo).await?;
         if !results.is_empty() {
-            println!("{:?}\n", results);
+            // println!("{:?}\n", results);
             all_results.append(&mut results.clone());
         }
     }

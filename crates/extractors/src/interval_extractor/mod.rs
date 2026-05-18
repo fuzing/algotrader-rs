@@ -141,7 +141,7 @@ impl Extractor<IntervalExtraction> for IntervalExtractor {
             if action == Action::Trade {
                 self.total_trades += 1;
                 self.last_trade_price = Some(mbo.price_f64());
-                println!("Last trade price: {:?}", self.last_trade_price.unwrap());
+                // println!("Last trade price: {:?}", self.last_trade_price.unwrap());
 
                 if self.next_extraction_time.is_none() {
                     let net = mbo.ts_recv + self.extraction_interval_nanos;
@@ -154,8 +154,6 @@ impl Extractor<IntervalExtraction> for IntervalExtractor {
             //
             if let Some(mut next_extraction_time) = self.next_extraction_time {
                 if mbo.ts_recv > next_extraction_time {
-                    // println!("Book: {}", self.book);
-
                     // main processing
                     let mut bid_levels = self.book.bid_levels(self.nbr_lob_levels);
                     let mut ask_levels = self.book.ask_levels(self.nbr_lob_levels);
