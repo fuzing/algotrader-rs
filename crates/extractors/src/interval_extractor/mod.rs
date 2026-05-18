@@ -34,7 +34,10 @@ pub struct IntervalExtraction {
     asks: Vec<PriceVolumeLevel>,
 }
 
-
+#[derive(Debug)]
+pub struct IntervalExtractorStats {
+    total_mbo_messages: usize,
+}
 
 #[derive(Debug)]
 pub struct IntervalExtractor {
@@ -43,7 +46,7 @@ pub struct IntervalExtractor {
 
     book: Book,                     // LOB
     last_trade_price: Option<f64>,
-
+    total_mbo_messages: usize,
 }
 
 impl IntervalExtractor {
@@ -56,17 +59,24 @@ impl IntervalExtractor {
             extraction_interval_nanos,
             book: Book::new(),
             last_trade_price: None,
+            total_mbo_messages: 0,
         }
     }
 
     pub fn builder() -> IntervalExtractorBuilder {
         IntervalExtractorBuilder::default()
     }
-
+    pub fn stats(&self) -> IntervalExtractorStats {
+        IntervalExtractorStats {
+            total_mbo_messages: self.total_mbo_messages,
+        }
+    }
 }
+
 
 impl Extractor<IntervalExtraction> for IntervalExtractor {
     async fn push(&mut self, mbo: &MboMsg) -> Result<Vec<IntervalExtraction>, Box<dyn Error>> {
+        self.total_mbo_messages += 1;
 
         // apply the MBO message to the order book
         self.book.apply(mbo.clone());
@@ -145,10 +155,9 @@ impl Extractor<IntervalExtraction> for IntervalExtractor {
                 asks: ask_price_volume_levels,
             })
         }
-
-
         Ok(results)
     }
+
 }
 
 #[derive(Debug)]

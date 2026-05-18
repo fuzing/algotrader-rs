@@ -36,7 +36,6 @@ use time::{
 async fn decode_data(path: &PathBuf, extractor: &mut impl Extractor<IntervalExtraction>) -> Result<(), Box<dyn Error>> {
     let mut decoder = AsyncDbnDecoder::from_zstd_file(path).await?;
     while let Some(mbo) = decoder.decode_record::<MboMsg>().await? {
-
         let results = extractor.push(mbo).await?;
     }
 
@@ -89,6 +88,9 @@ async fn main() -> Result<(), Box<dyn Error>>
 
     println!("Extractor is {:?}", extractor);
     decode_data(inputs.get(0).unwrap(), &mut extractor).await?;
+    println!("Extractor is {:?}", extractor);
+
+    println!("Stats: {:?}", extractor.stats());
 
     Ok(())
 }
