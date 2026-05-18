@@ -1,0 +1,56 @@
+[package]
+name = "extractors"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+exclude.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+burn.workspace = true
+chrono.workspace = true
+chrono-tz.workspace = true
+databento.workspace = true
+dotenv.workspace = true
+order-book.workspace = true
+#reqwest = {workspace = true, features = ["native-tls"]}
+thiserror.workspace = true
+time.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+
+
+#burn = {workspace = true, features = ["fusion", "metrics", "std", "train", "tui", "vision", "wgpu", "ndarray", "autotune"] }
+#rand.workspace = true
+#serde = { workspace = true, features = ["std", "derive"] }
+
+[lints]
+workspace = true
+
+[features]
+#default = ["burn/tui"]
+#ndarray = ["burn/ndarray"]
+#ndarray-blas-accelerate = ["burn/ndarray", "burn/accelerate"]
+#ndarray-blas-netlib = ["burn/ndarray", "burn/blas-netlib"]
+#ndarray-blas-openblas = ["burn/ndarray", "burn/openblas"]
+#tch-cpu = ["burn/tch"]
+#tch-gpu = ["burn/tch"]
+#remote = ["burn/remote"]
+#wgpu = ["burn/wgpu", "burn/default"]
+#metal = ["burn/metal", "burn/default"]
+#cuda = ["burn/cuda", "burn/default"]
+#vulkan = ["burn/vulkan", "burn/default"]
+#rocm = ["burn/rocm", "burn/default"]
+
+
+#[dev-dependencies]
+#criterion.workspace = true
+#
+#[[bench]]
+#name = "order_book_benchmark"
+#harness = false

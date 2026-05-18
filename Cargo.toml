@@ -19,6 +19,7 @@ members = [
     "bin/trainer",
     "crates/models",
     "crates/order-book",
+    "crates/extractors",
     "crates/strategies",
     "crates/utilities",
 ]
