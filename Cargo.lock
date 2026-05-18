@@ -2847,6 +2847,7 @@ dependencies = [
  "clap",
  "databento",
  "dotenv",
+ "extractors",
  "order-book",
  "strategies",
  "thiserror 2.0.18",

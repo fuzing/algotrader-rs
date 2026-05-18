@@ -1,11 +1,8 @@
 
-use order_book::{
-    market::Market,
-};
 
-use strategies::{
-    strategy::{Strategy},
-    test_strategy::{TestStrategy},
+use extractors::{
+    extractor::Extractor,
+    interval_extractor::{ IntervalExtractor, IntervalExtractorBuilder, IntervalExtraction},
 };
 
 use anyhow::anyhow;
@@ -26,67 +23,25 @@ use std::error::Error;
 use dotenv::dotenv;
 
 use databento::{
-    HistoricalClient,
-    ReferenceClient,
-    LiveClient,
     dbn::{
-        Action,
-        BidAskPair,
-        Dataset,
         MboMsg,
-        Publisher,
-        Record,
-        Schema,
-        Side,
-        SymbolIndex,
-        UNDEF_PRICE,
         decode::{AsyncDbnDecoder, DbnMetadata},
-        pretty,
     },
-    historical::timeseries::GetRangeToFileParams,
 };
 use time::{
-    format_description::well_known::{Rfc3339, Iso8601},
     macros::{date, datetime},
 };
 
 
-// async fn decode_data(path: &PathBuf, strategy: &mut impl Strategy) -> Result<(), Box<dyn Error>> {
-//
-//     let mut market = Market::default();
-//
-//     let mut decoder = AsyncDbnDecoder::from_zstd_file(path).await?;
-//     let symbol_map = decoder.metadata().symbol_map()?;
-//
-//     while let Some(mbo) = decoder.decode_record::<MboMsg>().await? {
-//
-//         strategy.pre_apply(mbo, &symbol_map, &market).await?;
-//         market.apply(mbo.clone());
-//         strategy.post_apply(mbo, &symbol_map, &market).await?;
-//
-//         // If it's the last update in an event, print the state of the aggregated book
-//         if mbo.flags.is_last() {
-//             // let symbol = symbol_map.get_for_rec(mbo).unwrap();
-//             // let (best_bid, best_offer) = market.aggregated_bbo(mbo.hd.instrument_id);
-//             // println!("{symbol} Aggregated BBO | {}", mbo.ts_recv().unwrap());
-//             // if let Some(best_offer) = best_offer {
-//             //     println!("    Ask -> {best_offer}");
-//             // } else {
-//             //     println!("    Ask -> None");
-//             // }
-//             // if let Some(best_bid) = best_bid {
-//             //     println!("    Bid -> {best_bid}");
-//             // } else {
-//             //     println!("    Bid -> None");
-//             // }
-//
-//             // println!("{}", market);
-//         }
-//
-//     }
-//
-//     Ok(())
-// }
+async fn decode_data(path: &PathBuf, extractor: &mut impl Extractor<IntervalExtraction>) -> Result<(), Box<dyn Error>> {
+    let mut decoder = AsyncDbnDecoder::from_zstd_file(path).await?;
+    while let Some(mbo) = decoder.decode_record::<MboMsg>().await? {
+
+        let results = extractor.push(mbo).await?;
+    }
+
+    Ok(())
+}
 
 
 
@@ -127,22 +82,13 @@ async fn main() -> Result<(), Box<dyn Error>>
 
     println!("inputs: {:?}", inputs);
     
-    // let mut strategy = TestStrategy::builder()
-    //     .purchase_shares(100)
-    //     .minimum_ask_shares_in_book(1_000)
-    //     .maximum_holding_time(24 * 60 * 60)
-    //     .bid_ask_volume_ratio(1.5)
-    //     .desired_gain_percentage(0.35)
-    //     .stop_loss_percentage(2.0)
-    //     .build();
-    //
-    // println!("Strategy is {:?}", strategy);
-    //
-    // // decode_data(&path, &mut strategy).await?;
-    //
-    //
-    // println!("Total Profit/Loss {:.2}", strategy.profit_loss());
-    // println!("Total Shares Traded for the Period {}", strategy.total_shares_traded());
+    let mut extractor = IntervalExtractor::builder()
+        .nbr_lob_levels(10)
+        .extraction_interval_nanos(1_000_000_000)
+        .build();
+
+    println!("Extractor is {:?}", extractor);
+    decode_data(inputs.get(0).unwrap(), &mut extractor).await?;
 
     Ok(())
 }
