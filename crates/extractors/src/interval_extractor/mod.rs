@@ -28,12 +28,12 @@ struct PriceVolumeLevel {
 }
 
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct IntervalExtraction {
-    date_time_nanos: u64,                     // nanos past unix epoch
-    last_trade_price: f64,
-    bids: Vec<PriceVolumeLevel>,
-    asks: Vec<PriceVolumeLevel>,
+    pub date_time_nanos: u64,                     // nanos past unix epoch
+    pub last_trade_price: f64,
+    pub bids: Vec<PriceVolumeLevel>,
+    pub asks: Vec<PriceVolumeLevel>,
 }
 
 #[derive(Debug)]
