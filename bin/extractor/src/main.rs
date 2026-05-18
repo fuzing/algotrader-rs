@@ -152,7 +152,7 @@ async fn main() -> Result<(), Box<dyn Error>>
 
     for input in inputs {
         let mut extractor = IntervalExtractor::builder()
-            .nbr_lob_levels(5)
+            .nbr_lob_levels(10)
             .extraction_interval_nanos(args.extraction_interval_nanos)
             .build();
 
