@@ -31,18 +31,6 @@ use databento::{
     },
 };
 
-
-
-
-// #[derive(Clone, Debug, Serialize, Deserialize)]
-// pub struct IntervalExtraction {
-//     date_time_nanos: u64,                     // nanos past unix epoch
-//     last_trade_price: f64,
-//     bids: Vec<PriceVolumeLevel>,
-//     asks: Vec<PriceVolumeLevel>,
-// }
-
-
 #[derive(Debug, Serialize, Deserialize)]
 struct IntervalExtractionWithGain {
     // extract: IntervalExtraction,
@@ -91,7 +79,6 @@ async fn decode_data(path: &PathBuf, extractor: &mut impl Extractor<IntervalExtr
                     asks: result.asks.clone(),
                     last_trade_price: result.last_trade_price,
                     future_trade_price: future_result.last_trade_price,
-                    // extract: result.clone(),
                     gain: ((future_result.last_trade_price / result.last_trade_price) - 1.0) * 100.0,
                 }
             );
@@ -99,18 +86,7 @@ async fn decode_data(path: &PathBuf, extractor: &mut impl Extractor<IntervalExtr
     }
 
     Ok(all_results_mapped)
-
-    // println!("\n\nGot {} results.", all_results.len());
-    //
-    // for rm in all_results_mapped {
-    //     println!("{}", rm);
-    // }
-
-    // write the data as json
-    // let json_data = serde_json::to_string(&all_results_mapped)?;
-
 }
-
 
 
 async fn write_data(path: PathBuf, data: Vec<IntervalExtractionWithGain>) -> Result<(), Box<dyn Error>> {
@@ -119,8 +95,6 @@ async fn write_data(path: PathBuf, data: Vec<IntervalExtractionWithGain>) -> Res
     serde_json::to_writer_pretty(writer, &data)?;
     Ok(())
 }
-
-
 
 
 #[tokio::main]
@@ -147,7 +121,6 @@ async fn main() -> Result<(), Box<dyn Error>>
 
     // Parse the command line arguments
     let args = Args::parse();
-    // info!("Run with arguments: {args:#?}");
 
     // Canonicalize all input files, to ensure that the files exists and that
     // the path is valid. Store it in a vector for further processing.
@@ -158,24 +131,25 @@ async fn main() -> Result<(), Box<dyn Error>>
         .collect::<Result<Vec<_>, _>>().map_err(|e| anyhow!(e))?;
 
     println!("inputs: {:?}", inputs);
-    
-    let mut extractor = IntervalExtractor::builder()
-        .nbr_lob_levels(5)
-        .extraction_interval_nanos(args.extraction_interval_nanos)
-        .build();
-
-    // println!("Extractor is {:?}", extractor);
 
     // number of intervals that we're presuming holding for
     let holding_time_intervals: usize = (args.holding_time_seconds * 1_000_000_000 / args.extraction_interval_nanos) as usize;
 
-    let data = decode_data(inputs.get(0).unwrap(), &mut extractor, holding_time_intervals).await?;
+    let mut all_data: Vec<IntervalExtractionWithGain> = Vec::new();
 
-    write_data(args.output, data).await?;
+    for input in inputs {
+        let mut extractor = IntervalExtractor::builder()
+            .nbr_lob_levels(5)
+            .extraction_interval_nanos(args.extraction_interval_nanos)
+            .build();
 
-    // println!("Extractor is {:?}", extractor);
+        let mut data = decode_data(&input, &mut extractor, holding_time_intervals).await?;
+        all_data.append(&mut data);
 
-    println!("Stats: {}", extractor.stats());
+        println!("Stats: {}", extractor.stats());
+    }
+
+    write_data(args.output, all_data).await?;
 
     Ok(())
 }
@@ -183,13 +157,6 @@ async fn main() -> Result<(), Box<dyn Error>>
 
 #[derive(Debug, ClapParser)]
 struct Args {
-    // /// Write additional debut output in the output directory.
-    // #[arg(short, long)]
-    // enable_debug_output: bool,
-
-    #[arg(long, value_delimiter = ',')]
-    symbol: String,
-
     #[arg(long)]
     start_date: String,
 
@@ -202,19 +169,9 @@ struct Args {
     #[arg(long)]
     holding_time_seconds: u64,
 
-
     #[arg(long)]
     output: PathBuf,
 
-
-    // Path to settings file
-    // #[arg(short, long)]
-    // settings: PathBuf,
-    // /// Path to write the generated code to.
-    // #[arg()]
-    // output: PathBuf,
-    //
-    // /// Paths to read the schemas files from.
     #[arg()]
     inputs: Vec<PathBuf>,
 }
