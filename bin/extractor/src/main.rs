@@ -37,6 +37,9 @@ async fn decode_data(path: &PathBuf, extractor: &mut impl Extractor<IntervalExtr
     let mut decoder = AsyncDbnDecoder::from_zstd_file(path).await?;
     while let Some(mbo) = decoder.decode_record::<MboMsg>().await? {
         let results = extractor.push(mbo).await?;
+        if !results.is_empty() {
+            println!("{:?}", results)
+        }
     }
 
     Ok(())

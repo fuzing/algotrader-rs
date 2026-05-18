@@ -19,7 +19,7 @@ use utilities::date_time::nanos_to_offset_date_time_with_tz;
 
 
 // a price level
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 struct PriceVolumeLevel {
     price: f64,
     volume: u32,
@@ -47,6 +47,7 @@ pub struct IntervalExtractor {
     book: Book,                     // LOB
     last_trade_price: Option<f64>,
     total_mbo_messages: usize,
+    next_extraction_time: Option<u64>,
 }
 
 impl IntervalExtractor {
@@ -59,6 +60,7 @@ impl IntervalExtractor {
             extraction_interval_nanos,
             book: Book::new(),
             last_trade_price: None,
+            next_extraction_time: None,
             total_mbo_messages: 0,
         }
     }
@@ -81,11 +83,6 @@ impl Extractor<IntervalExtraction> for IntervalExtractor {
         // apply the MBO message to the order book
         self.book.apply(mbo.clone());
 
-        let action = mbo.action().unwrap();
-        if action == Action::Trade {
-            self.last_trade_price = Some(mbo.price_f64());
-        }
-
         
         let mut results: Vec<IntervalExtraction> = Vec::new();
         
@@ -105,55 +102,81 @@ impl Extractor<IntervalExtraction> for IntervalExtractor {
             (local_hour > 9 || (local_hour == 9 && local_minute >= 10)) &&
             (local_hour < 15 || (local_hour == 15 && local_minute <= 50)) {
 
-            // continue processing
-            let mut bid_levels = self.book.bid_levels(self.nbr_lob_levels);
-            let mut ask_levels = self.book.ask_levels(self.nbr_lob_levels);
+            // if this is a trade action then use it to set the last trade price
+            let action = mbo.action().unwrap();
+            if action == Action::Trade {
+                self.last_trade_price = Some(mbo.price_f64());
 
-            let mut bid_price_volume_levels: Vec<PriceVolumeLevel> = Vec::new();
-            let mut ask_price_volume_levels: Vec<PriceVolumeLevel> = Vec::new();
-
-            let mut last_valid_bid: f64 = 0.0;
-            let mut last_valid_ask: f64 = 0.0;
-
-            for i in 0..self.nbr_lob_levels {
-                // bids
-                if let Some(bid_level) = bid_levels.nth(i) {
-                    last_valid_bid = bid_level.price as f64 / 1_000_000_000_f64;
-                    bid_price_volume_levels.push(PriceVolumeLevel {
-                        price: last_valid_bid,
-                        volume: bid_level.size,
-                    });
-                }
-                else {
-                    let level = bid_price_volume_levels.get(i - 1).unwrap();
-                    bid_price_volume_levels.push(PriceVolumeLevel {
-                        price: last_valid_bid,
-                        volume: 0,
-                    });
-                }
-
-                // asks
-                if let Some(ask_level) = ask_levels.nth(i) {
-                    last_valid_ask = ask_level.price as f64 / 1_000_000_000_f64;
-                    ask_price_volume_levels.push(PriceVolumeLevel {
-                        price: last_valid_ask,
-                        volume: ask_level.size,
-                    });
-                }
-                else {
-                    ask_price_volume_levels.push(PriceVolumeLevel {
-                        price: last_valid_ask,
-                        volume: 0,
-                    });
+                if self.next_extraction_time.is_none() {
+                    self.next_extraction_time = Some(mbo.ts_recv + self.extraction_interval_nanos);
                 }
             }
-            
-            results.push(IntervalExtraction {
-                date_time_nanos: 0,
-                last_trade_price: self.last_trade_price,
-                bids: bid_price_volume_levels,
-                asks: ask_price_volume_levels,
-            })
+
+            if let Some(mut next_extraction_time) = self.next_extraction_time {
+                if mbo.ts_recv > next_extraction_time {
+
+                    // main processing
+                    let mut bid_levels = self.book.bid_levels(self.nbr_lob_levels);
+                    let mut ask_levels = self.book.ask_levels(self.nbr_lob_levels);
+
+                    let mut bid_price_volume_levels: Vec<PriceVolumeLevel> = Vec::new();
+                    let mut ask_price_volume_levels: Vec<PriceVolumeLevel> = Vec::new();
+
+                    let mut last_valid_bid: f64 = 0.0;
+                    let mut last_valid_ask: f64 = 0.0;
+
+                    for i in 0..self.nbr_lob_levels {
+                        // bids
+                        if let Some(bid_level) = bid_levels.nth(i) {
+                            last_valid_bid = bid_level.price as f64 / 1_000_000_000_f64;
+                            bid_price_volume_levels.push(PriceVolumeLevel {
+                                price: last_valid_bid,
+                                volume: bid_level.size,
+                            });
+                        }
+                        else {
+                            let level = bid_price_volume_levels.get(i - 1).unwrap();
+                            bid_price_volume_levels.push(PriceVolumeLevel {
+                                price: last_valid_bid,
+                                volume: 0,
+                            });
+                        }
+
+                        // asks
+                        if let Some(ask_level) = ask_levels.nth(i) {
+                            last_valid_ask = ask_level.price as f64 / 1_000_000_000_f64;
+                            ask_price_volume_levels.push(PriceVolumeLevel {
+                                price: last_valid_ask,
+                                volume: ask_level.size,
+                            });
+                        }
+                        else {
+                            ask_price_volume_levels.push(PriceVolumeLevel {
+                                price: last_valid_ask,
+                                volume: 0,
+                            });
+                        }
+                    }
+
+                    while mbo.ts_recv > next_extraction_time {
+                        results.push(IntervalExtraction {
+                            date_time_nanos: next_extraction_time,
+                            last_trade_price: self.last_trade_price,
+                            bids: bid_price_volume_levels.clone(),
+                            asks: ask_price_volume_levels.clone(),
+                        });
+
+                        next_extraction_time += self.extraction_interval_nanos;
+                    }
+
+                    self.next_extraction_time = Some(next_extraction_time);
+                }
+            }
+
+        }
+        else {
+            self.last_trade_price = None;
+            self.next_extraction_time = None;
         }
         Ok(results)
     }
