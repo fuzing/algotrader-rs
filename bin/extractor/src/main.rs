@@ -2,15 +2,17 @@
 
 use extractors::{
     extractor::Extractor,
-    interval_extractor::{ IntervalExtractor, IntervalExtraction },
+    interval_extractor::{ IntervalExtractor, IntervalExtraction, PriceVolumeLevel },
 };
 
+use serde::{Deserialize, Serialize};
 use anyhow::anyhow;
 
 use clap::Parser as ClapParser;
 use std::{
     env,
-    io::{ Read, stderr, stdin, stdout },
+    io::{ BufWriter, Read, stderr, stdin, stdout },
+    fs::File,
     path::{Path, PathBuf},
     process::exit,
     time::Duration,
@@ -41,23 +43,35 @@ use databento::{
 // }
 
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 struct IntervalExtractionWithGain {
-    extract: IntervalExtraction,
+    // extract: IntervalExtraction,
+    date_time_nanos: u64,
+    last_trade_price: f64,
+    future_trade_price: f64,
     gain: f64,
+    bids: Vec<PriceVolumeLevel>,
+    asks: Vec<PriceVolumeLevel>
 }
 impl Display for IntervalExtractionWithGain {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "IntervalExtraction with gain (gain: {})", self.gain)?;
+        writeln!(f, "IntervalExtractionWithGain:")?;
+        writeln!(f, "  date_time_nanos: {}", self.date_time_nanos)?;
+        writeln!(f, "  last_trade_price: {}", self.last_trade_price)?;
+        writeln!(f, "  future_trade_price: {}", self.future_trade_price)?;
+        // writeln!(f, "  bids: {:?}", self.bids)?;
+        // writeln!(f, "  asks: {:?}", self.asks)?;
+        writeln!(f, "  gain: {}", self.gain)?;
         Ok(())
     }
 }
 
 
-async fn decode_data(path: &PathBuf, extractor: &mut impl Extractor<IntervalExtraction>, holding_time_intervals: usize) -> Result<(), Box<dyn Error>> {
+async fn decode_data(path: &PathBuf, extractor: &mut impl Extractor<IntervalExtraction>, holding_time_intervals: usize) -> Result<Vec<IntervalExtractionWithGain>, Box<dyn Error>> {
     let mut decoder = AsyncDbnDecoder::from_zstd_file(path).await?;
-
     let mut all_results: Vec<IntervalExtraction> = Vec::new();
+
+    println!("Holding for {} intervals", holding_time_intervals);
 
     while let Some(mbo) = decoder.decode_record::<MboMsg>().await? {
         let results = extractor.push(mbo).await?;
@@ -72,19 +86,37 @@ async fn decode_data(path: &PathBuf, extractor: &mut impl Extractor<IntervalExtr
         if let Some(future_result) = all_results.get(index + holding_time_intervals) {
             all_results_mapped.push(
                 IntervalExtractionWithGain {
-                    extract: result.clone(),
+                    date_time_nanos: result.date_time_nanos,
+                    bids: result.bids.clone(),
+                    asks: result.asks.clone(),
+                    last_trade_price: result.last_trade_price,
+                    future_trade_price: future_result.last_trade_price,
+                    // extract: result.clone(),
                     gain: ((future_result.last_trade_price / result.last_trade_price) - 1.0) * 100.0,
                 }
             );
         }
     }
 
-    println!("\n\nGot {} results.", all_results.len());
+    Ok(all_results_mapped)
 
-    for rm in all_results_mapped {
-        println!("{}", rm);
-    }
+    // println!("\n\nGot {} results.", all_results.len());
+    //
+    // for rm in all_results_mapped {
+    //     println!("{}", rm);
+    // }
 
+    // write the data as json
+    // let json_data = serde_json::to_string(&all_results_mapped)?;
+
+}
+
+
+
+async fn write_data(path: PathBuf, data: Vec<IntervalExtractionWithGain>) -> Result<(), Box<dyn Error>> {
+    let file = File::create(path)?;
+    let writer = BufWriter::new(file);
+    serde_json::to_writer_pretty(writer, &data)?;
     Ok(())
 }
 
@@ -137,7 +169,10 @@ async fn main() -> Result<(), Box<dyn Error>>
     // number of intervals that we're presuming holding for
     let holding_time_intervals: usize = (args.holding_time_seconds * 1_000_000_000 / args.extraction_interval_nanos) as usize;
 
-    decode_data(inputs.get(0).unwrap(), &mut extractor, holding_time_intervals).await?;
+    let data = decode_data(inputs.get(0).unwrap(), &mut extractor, holding_time_intervals).await?;
+
+    write_data(args.output, data).await?;
+
     // println!("Extractor is {:?}", extractor);
 
     println!("Stats: {}", extractor.stats());
@@ -166,6 +201,11 @@ struct Args {
 
     #[arg(long)]
     holding_time_seconds: u64,
+
+
+    #[arg(long)]
+    output: PathBuf,
+
 
     // Path to settings file
     // #[arg(short, long)]

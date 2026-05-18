@@ -2849,6 +2849,8 @@ dependencies = [
  "dotenv",
  "extractors",
  "order-book",
+ "serde",
+ "serde_json",
  "strategies",
  "thiserror 2.0.18",
  "time",
