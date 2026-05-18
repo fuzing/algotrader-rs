@@ -1,25 +1,22 @@
 use std::error::Error;
 use databento::dbn::{MboMsg, TsSymbolMap};
 use order_book::market::Market;
-use crate::extractpr::{Strategy};
+use crate::extractor::{Extractor};
 
 #[derive(Debug)]
-pub struct DummyStrategy {}
+pub struct DummyExtractor {}
 
-impl DummyStrategy {
+impl DummyExtractor {
     pub fn new() -> Self {
         Self {}
     }
 }
 
-impl Strategy for DummyStrategy {
-    async fn pre_apply(&mut self, msg: &MboMsg, symbol_map: &TsSymbolMap, market: &Market) -> Result<(), Box<dyn Error>> {
-        Ok(())
+impl Extractor<f64> for DummyExtractor {
+    async fn push(&mut self, msg: &MboMsg) -> Result<Vec<f64>, Box<dyn Error>> {
+        Ok(vec![])
     }
 
-    async fn post_apply(&mut self, msg: &MboMsg, symbol_map: &TsSymbolMap, market: &Market) -> Result<(), Box<dyn Error>> {
-        Ok(())
-    }
 }
 
 

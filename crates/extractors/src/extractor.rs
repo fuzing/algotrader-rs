@@ -2,14 +2,13 @@
 use std::error::Error;
 use databento::{
     dbn::{
-        TsSymbolMap,
         MboMsg,
     },
 };
+use order_book::book::Book;
 
-use order_book::market::Market;
 
-
+// generic M denotes the format of the messages that are emitted from the extractor
 pub trait Extractor<M> {
     async fn push(&mut self, msg: &MboMsg) -> Result<Vec<M>, Box<dyn Error>> { Ok(vec![]) }
 }
