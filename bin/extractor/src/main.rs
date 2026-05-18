@@ -158,12 +158,6 @@ async fn main() -> Result<(), Box<dyn Error>>
 #[derive(Debug, ClapParser)]
 struct Args {
     #[arg(long)]
-    start_date: String,
-
-    #[arg(short, long)]
-    end_date: String,
-
-    #[arg(long)]
     extraction_interval_nanos: u64,
 
     #[arg(long)]
