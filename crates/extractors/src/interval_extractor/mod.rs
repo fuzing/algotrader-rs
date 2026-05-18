@@ -57,14 +57,16 @@ impl Display for IntervalExtractorStats {
 
 #[derive(Debug)]
 pub struct IntervalExtractor {
+    // Parameters
     nbr_lob_levels: usize,              // number of LOB bid/ask levels to capture per extraction
     extraction_interval_nanos: u64,            // the interval between extractions (in nanos)
 
+    // Local state
     book: Book,                     // LOB
     last_trade_price: Option<f64>,
     next_extraction_time: Option<u64>,
 
-
+    // Statistics
     total_mbo_messages: usize,
     total_trades: usize,
     total_emitted_intervals: usize,
@@ -79,9 +81,11 @@ impl IntervalExtractor {
         Self {
             nbr_lob_levels,
             extraction_interval_nanos,
+
             book: Book::new(),
             last_trade_price: None,
             next_extraction_time: None,
+
             total_mbo_messages: 0,
             total_trades: 0,
             total_emitted_intervals: 0,
