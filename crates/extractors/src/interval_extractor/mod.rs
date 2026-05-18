@@ -154,6 +154,7 @@ impl Extractor<IntervalExtraction> for IntervalExtractor {
             //
             if let Some(mut next_extraction_time) = self.next_extraction_time {
                 if mbo.ts_recv > next_extraction_time {
+                    // println!("Book: {}", self.book);
 
                     // main processing
                     let mut bid_levels = self.book.bid_levels(self.nbr_lob_levels);
@@ -167,7 +168,7 @@ impl Extractor<IntervalExtraction> for IntervalExtractor {
 
                     for i in 0..self.nbr_lob_levels {
                         // bids
-                        if let Some(bid_level) = bid_levels.nth(i) {
+                        if let Some(bid_level) = bid_levels.next() {
                             last_valid_bid = bid_level.price as f64 / 1_000_000_000_f64;
                             bid_price_volume_levels.push(PriceVolumeLevel {
                                 price: last_valid_bid,
@@ -175,7 +176,6 @@ impl Extractor<IntervalExtraction> for IntervalExtractor {
                             });
                         }
                         else {
-                            let level = bid_price_volume_levels.get(i - 1).unwrap();
                             bid_price_volume_levels.push(PriceVolumeLevel {
                                 price: last_valid_bid,
                                 volume: 0,
@@ -183,7 +183,7 @@ impl Extractor<IntervalExtraction> for IntervalExtractor {
                         }
 
                         // asks
-                        if let Some(ask_level) = ask_levels.nth(i) {
+                        if let Some(ask_level) = ask_levels.next() {
                             last_valid_ask = ask_level.price as f64 / 1_000_000_000_f64;
                             ask_price_volume_levels.push(PriceVolumeLevel {
                                 price: last_valid_ask,

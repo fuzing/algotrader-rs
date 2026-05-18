@@ -118,29 +118,24 @@ impl Book {
         let action = mbo.action().unwrap();
         match action {
             Action::Modify => {
-                // debug!("Modify {:?}", mbo);
                 debug!("Modify {:?} Size({}) Price(${}) - {}", mbo.side().unwrap(), mbo.size, pretty::Px(mbo.price), mbo.ts_recv().unwrap());
                 self.modify(mbo)
             },
             // Action::Trade | Action::Fill | Action::None => {}
             Action::Trade => {
-                // debug!("Trade Price (${}) {:?}", pretty::Px(mbo.price), mbo);
                 debug!("Trade  {:?} Size({}) Price(${}) - {}", mbo.side().unwrap(), mbo.size, pretty::Px(mbo.price), mbo.ts_recv().unwrap());
             },
             Action::Fill => {
-                // debug!("Fill Price (${}) {:?}", pretty::Px(mbo.price), mbo);
                 debug!("Fill   {:?} Size({}) Price(${}) - {}", mbo.side().unwrap(), mbo.size, pretty::Px(mbo.price), mbo.ts_recv().unwrap());
             },
             Action::None => {
                 debug!("None  {:?}", mbo);
             },
             Action::Cancel => {
-                // debug!("Cancel: {:?}", mbo);
                 debug!("Cancel {:?} Size({}) Price(${}) - {}", mbo.side().unwrap(), mbo.size, pretty::Px(mbo.price), mbo.ts_recv().unwrap());
                 self.cancel(mbo)
             },
             Action::Add => {
-                // debug!("Add: {:?}", mbo);
                 debug!("Add   {:?} Size({}) Price(${}) - {}", mbo.side().unwrap(), mbo.size, pretty::Px(mbo.price), mbo.ts_recv().unwrap());
                 self.add(mbo)
             },
@@ -275,16 +270,15 @@ impl Book {
 
 impl Display for Book {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "hello")?;
-        for (price, queue) in self.bids.iter() {
-
-            let mut total = 0;
-            for msg in queue.iter() {
-                total += msg.size;
-            }
-
-            writeln!(f, "   -> Price {:6.2} => {}", pretty::Px(*price), total)?;
-        }
+        write!(f, "Book: {} bid levels, {} ask levels", self.bids.len(), self.offers.len())?;
+        // for (price, queue) in self.bids.iter() {
+        //     let mut total = 0;
+        //     for msg in queue.iter() {
+        //         total += msg.size;
+        //     }
+        //
+        //     writeln!(f, "   -> Price {:6.2} => {}", pretty::Px(*price), total)?;
+        // }
 
         Ok(())
     }
