@@ -2840,6 +2840,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "extractor"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "databento",
+ "dotenv",
+ "order-book",
+ "strategies",
+ "thiserror 2.0.18",
+ "time",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "utilities",
+]
+
+[[package]]
 name = "fallible-iterator"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

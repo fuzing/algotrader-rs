@@ -13,6 +13,7 @@ keywords = ["pdl", "pipelines" ]
 [workspace]
 members = [
     "bin/downloader",
+    "bin/extractor",
     "bin/historical-book",
     "bin/live-book",
     "bin/trainer",

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+#cargo run --bin extractor -- --symbol=KHC --start-date="2026-05-05" --end-date="2026-05-05" "file1" "file2" "${DATA_DIR}/KHC-XNAS.ITCH-2026-05-05 00:00:00 UTC-2026-05-05 23:59:59 UTC-mbo.dbn.zst"
+cargo run --bin extractor -- --symbol=KHC --start-date="2026-05-05" --end-date="2026-05-05" "KHC-XNAS.ITCH-2026-05-05 00:00:00 UTC-2026-05-05 23:59:59 UTC-mbo.dbn.zst"
