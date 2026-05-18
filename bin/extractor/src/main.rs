@@ -89,10 +89,23 @@ async fn decode_data(path: &PathBuf, extractor: &mut impl Extractor<IntervalExtr
 }
 
 
-async fn write_data(path: PathBuf, data: Vec<IntervalExtractionWithGain>) -> Result<(), Box<dyn Error>> {
+#[derive(Debug, Serialize, Deserialize)]
+struct DataFileFormat {
+    holding_time_seconds: u16,
+    interval_nanos: u64,
+    data: Vec<IntervalExtractionWithGain>
+}
+
+async fn write_data(path: PathBuf, holding_time_seconds: u16, interval_nanos: u64, data: Vec<IntervalExtractionWithGain>) -> Result<(), Box<dyn Error>> {
+    let out_data = DataFileFormat {
+        holding_time_seconds,
+        interval_nanos,
+        data,
+    };
+
     let file = File::create(path)?;
     let writer = BufWriter::new(file);
-    serde_json::to_writer_pretty(writer, &data)?;
+    serde_json::to_writer_pretty(writer, &out_data)?;
     Ok(())
 }
 
@@ -133,7 +146,7 @@ async fn main() -> Result<(), Box<dyn Error>>
     println!("inputs: {:?}", inputs);
 
     // number of intervals that we're presuming holding for
-    let holding_time_intervals: usize = (args.holding_time_seconds * 1_000_000_000 / args.extraction_interval_nanos) as usize;
+    let holding_time_intervals: usize = (args.holding_time_seconds as u64 * 1_000_000_000 / args.extraction_interval_nanos) as usize;
 
     let mut all_data: Vec<IntervalExtractionWithGain> = Vec::new();
 
@@ -149,7 +162,7 @@ async fn main() -> Result<(), Box<dyn Error>>
         println!("Stats: {}", extractor.stats());
     }
 
-    write_data(args.output, all_data).await?;
+    write_data(args.output, args.holding_time_seconds, args.extraction_interval_nanos, all_data).await?;
 
     Ok(())
 }
@@ -157,11 +170,13 @@ async fn main() -> Result<(), Box<dyn Error>>
 
 #[derive(Debug, ClapParser)]
 struct Args {
+    // nanoseconds between intervals
     #[arg(long)]
     extraction_interval_nanos: u64,
 
+    // presumed holding time for the data
     #[arg(long)]
-    holding_time_seconds: u64,
+    holding_time_seconds: u16,
 
     #[arg(long)]
     output: PathBuf,

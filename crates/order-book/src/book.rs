@@ -30,20 +30,20 @@ impl Book {
     
     
     // PMB return all bid levels
-    pub fn bid_levels(&self, nlevels: usize) -> impl Iterator<Item = PriceLevel> {
+    pub fn bid_levels(&self, n_levels: usize) -> impl Iterator<Item = PriceLevel> {
         self.bids
             .iter()
             // Reverse to get highest first
             .rev()
-            .take(nlevels)
+            .take(n_levels)
             .map(|(price, orders)| PriceLevel::new(*price, orders.iter()))
     }
 
     // PMB return all ask levels
-    pub fn ask_levels(&self, nlevels: usize) -> impl Iterator<Item = PriceLevel> {
+    pub fn ask_levels(&self, n_levels: usize) -> impl Iterator<Item = PriceLevel> {
         self.offers
             .iter()
-            .take(nlevels)
+            .take(n_levels)
             .map(|(price, orders)| PriceLevel::new(*price, orders.iter()))
     }    
     
@@ -290,36 +290,5 @@ impl Display for Book {
     }
 }
 
-// impl Debug for Book {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         writeln!(f, "")?;
-//         writeln!(f, "Bids")?;
-//         let mut total_bid_shares = 0;
-//         for (price, queue) in self.bids.iter() {
-//             let mut total = 0;
-//             for msg in queue.iter() {
-//                 total += msg.size;
-//                 total_bid_shares += msg.size;
-//             }
-//             writeln!(f, "   -> {} @  {:6.2} | {} orders", total, pretty::Px(*price), queue.len())?;
-//         }
-//         writeln!(f, "   Total Bid Shares: {}", total_bid_shares)?;
-//
-//
-//         writeln!(f, "")?;
-//         writeln!(f, "Asks")?;
-//         let mut total_ask_shares = 0;
-//         for (price, queue) in self.offers.iter() {
-//             let mut total = 0;
-//             for msg in queue.iter() {
-//                 total += msg.size;
-//                 total_ask_shares += msg.size;
-//             }
-//             writeln!(f, "   -> {} @  {:6.2} | {} orders", total, pretty::Px(*price), queue.len())?;
-//         }
-//         writeln!(f, "   Total Ask Shares: {}", total_ask_shares)?;
-//
-//         Ok(())
-//     }
-// }
+
 
