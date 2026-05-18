@@ -85,15 +85,16 @@ async fn main() -> Result<(), Box<dyn Error>>
     println!("inputs: {:?}", inputs);
     
     let mut extractor = IntervalExtractor::builder()
-        .nbr_lob_levels(10)
-        .extraction_interval_nanos(1_000_000_000)
+        .nbr_lob_levels(5)
+        // .extraction_interval_nanos(1_000_000_000)
+        .extraction_interval_nanos(500_000_000)
         .build();
 
     println!("Extractor is {:?}", extractor);
     decode_data(inputs.get(0).unwrap(), &mut extractor).await?;
     println!("Extractor is {:?}", extractor);
 
-    println!("Stats: {:?}", extractor.stats());
+    println!("Stats: {}", extractor.stats());
 
     Ok(())
 }

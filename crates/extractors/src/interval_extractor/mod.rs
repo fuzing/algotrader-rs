@@ -1,5 +1,6 @@
 
 use std::error::Error;
+use std::fmt::Display;
 use databento::{
     dbn::{
         Action,
@@ -15,6 +16,7 @@ use order_book::{
 use crate::extractor::{Extractor};
 use tracing::{debug, info};
 use serde::{ Serialize, Deserialize };
+use time::Weekday;
 use utilities::date_time::nanos_to_offset_date_time_with_tz;
 
 
@@ -29,7 +31,7 @@ struct PriceVolumeLevel {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct IntervalExtraction {
     date_time_nanos: u64,                     // nanos past unix epoch
-    last_trade_price: Option<f64>,
+    last_trade_price: f64,
     bids: Vec<PriceVolumeLevel>,
     asks: Vec<PriceVolumeLevel>,
 }
@@ -37,7 +39,21 @@ pub struct IntervalExtraction {
 #[derive(Debug)]
 pub struct IntervalExtractorStats {
     total_mbo_messages: usize,
+    total_trades: usize,
+    total_emitted_intervals: usize,
 }
+
+impl Display for IntervalExtractorStats {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "Stats:")?;
+        writeln!(f, "  Total MBO Messages: {}", self.total_mbo_messages)?;
+        writeln!(f, "  Total Trades: {}", self.total_trades)?;
+        writeln!(f, "  Total Emitted Intervals: {}", self.total_emitted_intervals)?;
+
+        Ok(())
+    }
+}
+
 
 #[derive(Debug)]
 pub struct IntervalExtractor {
@@ -46,8 +62,13 @@ pub struct IntervalExtractor {
 
     book: Book,                     // LOB
     last_trade_price: Option<f64>,
-    total_mbo_messages: usize,
     next_extraction_time: Option<u64>,
+
+
+    total_mbo_messages: usize,
+    total_trades: usize,
+    total_emitted_intervals: usize,
+
 }
 
 impl IntervalExtractor {
@@ -62,6 +83,8 @@ impl IntervalExtractor {
             last_trade_price: None,
             next_extraction_time: None,
             total_mbo_messages: 0,
+            total_trades: 0,
+            total_emitted_intervals: 0,
         }
     }
 
@@ -71,6 +94,8 @@ impl IntervalExtractor {
     pub fn stats(&self) -> IntervalExtractorStats {
         IntervalExtractorStats {
             total_mbo_messages: self.total_mbo_messages,
+            total_trades: self.total_trades,
+            total_emitted_intervals: self.total_emitted_intervals,
         }
     }
 }
@@ -90,7 +115,11 @@ impl Extractor<IntervalExtraction> for IntervalExtractor {
         // Presume Nasdaq or NYSE, so local time is eastern - either EST or EDT depending upon time of year
         let received_date_time = nanos_to_offset_date_time_with_tz(mbo.ts_recv as i128, "ET")?;
 
-        let day_of_week = received_date_time.monday_based_week();
+        let day = received_date_time.weekday();
+        let valid_day = match day {
+            Weekday::Saturday | Weekday::Sunday => false,
+            _ => true,
+        };
         let local_hour = received_date_time.hour();
         let local_minute = received_date_time.minute();
 
@@ -98,20 +127,27 @@ impl Extractor<IntervalExtraction> for IntervalExtractor {
         // Monday through Friday between 09:40:00 and 15:50:00
         //   i.e. on exchange day between 10 minutes after the open and 10 minutes prior to the close
         //
-        if day_of_week < 5 &&
-            (local_hour > 9 || (local_hour == 9 && local_minute >= 10)) &&
-            (local_hour < 15 || (local_hour == 15 && local_minute <= 50)) {
+        if valid_day &&
+            (local_hour > 9 || (local_hour == 9 && local_minute > 45)) &&
+            (local_hour < 15 || (local_hour == 15 && local_minute < 45)) {
 
             // if this is a trade action then use it to set the last trade price
+            // println!("yep");
             let action = mbo.action().unwrap();
             if action == Action::Trade {
+                self.total_trades += 1;
                 self.last_trade_price = Some(mbo.price_f64());
+                println!("Last trade price: {:?}", self.last_trade_price.unwrap());
 
                 if self.next_extraction_time.is_none() {
-                    self.next_extraction_time = Some(mbo.ts_recv + self.extraction_interval_nanos);
+                    let net = mbo.ts_recv + self.extraction_interval_nanos;
+                    self.next_extraction_time = Some(net - (net % self.extraction_interval_nanos));
                 }
             }
 
+            //
+            // will only have a next_extraction_time if there's a valid last_trade_price
+            //
             if let Some(mut next_extraction_time) = self.next_extraction_time {
                 if mbo.ts_recv > next_extraction_time {
 
@@ -158,10 +194,11 @@ impl Extractor<IntervalExtraction> for IntervalExtractor {
                         }
                     }
 
+                    let last_trade_price = self.last_trade_price.unwrap();
                     while mbo.ts_recv > next_extraction_time {
                         results.push(IntervalExtraction {
                             date_time_nanos: next_extraction_time,
-                            last_trade_price: self.last_trade_price,
+                            last_trade_price,
                             bids: bid_price_volume_levels.clone(),
                             asks: ask_price_volume_levels.clone(),
                         });
@@ -170,11 +207,13 @@ impl Extractor<IntervalExtraction> for IntervalExtractor {
                     }
 
                     self.next_extraction_time = Some(next_extraction_time);
+                    self.total_emitted_intervals += results.len();
                 }
             }
 
         }
         else {
+            // outside business day/hour
             self.last_trade_price = None;
             self.next_extraction_time = None;
         }
