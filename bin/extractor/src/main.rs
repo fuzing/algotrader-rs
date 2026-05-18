@@ -105,7 +105,8 @@ async fn write_data(path: PathBuf, holding_time_seconds: u16, interval_nanos: u6
 
     let file = File::create(path)?;
     let writer = BufWriter::new(file);
-    serde_json::to_writer_pretty(writer, &out_data)?;
+    // serde_json::to_writer_pretty(writer, &out_data)?;
+    serde_json::to_writer(writer, &out_data)?;
     Ok(())
 }
 
@@ -152,7 +153,7 @@ async fn main() -> Result<(), Box<dyn Error>>
 
     for input in inputs {
         let mut extractor = IntervalExtractor::builder()
-            .nbr_lob_levels(10)
+            .nbr_lob_levels(5)
             .extraction_interval_nanos(args.extraction_interval_nanos)
             .build();
 
