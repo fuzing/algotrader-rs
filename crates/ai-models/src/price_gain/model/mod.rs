@@ -3,7 +3,7 @@
 // The model is then trained using Cross-Entropy loss. It contains methods for model initialization
 // (both with and without pre-trained weights), forward pass, inference, training, and validation.
 
-use crate::data::{PriceGainInferenceBatch, PriceGainTrainingBatch};
+use crate::price_gain::data::batcher::{PriceGainInferenceBatch, PriceGainTrainingBatch};
 use burn::{
     nn::{
         Embedding, EmbeddingConfig, Linear, LinearConfig,

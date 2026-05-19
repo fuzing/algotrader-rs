@@ -6,6 +6,7 @@
 // with a machine learning framework for tasks such as training a text classification model.
 
 use burn::data::dataset::{Dataset, SqliteDataset, source::huggingface::HuggingfaceDatasetLoader};
+use derive_new::new;
 
 // Define a struct for text classification items
 #[derive(new, Clone, Debug)]

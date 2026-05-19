@@ -5,6 +5,8 @@
 // This trait represents the common interface for all tokenizer types.
 // The `Send + Sync` bounds are necessary for allowing these operations
 // to work across thread boundaries.
+
+
 #[allow(dead_code)]
 pub trait Tokenizer: Send + Sync {
     /// Converts a text string into a sequence of tokens.

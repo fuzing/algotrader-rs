@@ -28,20 +28,20 @@ pub struct PriceGainBatcher {
 
 /// Struct for training batch in text classification task
 #[derive(Debug, Clone, new)]
-pub struct PriceGainTrainingBatch {
-    pub tokens: Tensor<2, Int>,    // Tokenized text
-    pub labels: Tensor<1, Int>,    // Labels of the text
-    pub mask_pad: Tensor<2, Bool>, // Padding mask for the tokenized text
+pub struct PriceGainTrainingBatch<B: Backend> {
+    pub tokens: Tensor<B, 2, Int>,    // Tokenized text
+    pub labels: Tensor<B, 1, Int>,    // Labels of the text
+    pub mask_pad: Tensor<B, 2, Bool>, // Padding mask for the tokenized text
 }
 
 /// Struct for inference batch in text classification task
 #[derive(Debug, Clone, new)]
-pub struct PriceGainInferenceBatch {
-    pub tokens: Tensor<2, Int>,    // Tokenized text
-    pub mask_pad: Tensor<2, Bool>, // Padding mask for the tokenized text
+pub struct PriceGainInferenceBatch<B: Backend> {
+    pub tokens: Tensor<B, 2, Int>,    // Tokenized text
+    pub mask_pad: Tensor<B, 2, Bool>, // Padding mask for the tokenized text
 }
 
-/// Implement Batcher trait for TextClassificationBatcher struct for training
+/// Implement Batcher trait for PriceGainBatcher struct for training
 impl Batcher<PriceGainItem, PriceGainTrainingBatch>
 for PriceGainBatcher
 {

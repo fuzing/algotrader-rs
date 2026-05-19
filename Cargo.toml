@@ -195,8 +195,8 @@ codegen-units = 1
 [workspace.dependencies]
 ai-models = { path = "crates/ai-models" }
 anyhow = "1.0.102"
-#burn = { version = "0.21.0", features = ["fusion", "metrics", "tch", "std", "train", "tui", "vision", "wgpu", "ndarray", "autotune"] }
-burn = { path = "../burn", features = ["fusion", "metrics", "tch", "std", "train", "tui", "vision", "wgpu", "ndarray", "autotune"] }
+burn = { version = "0.21.0", features = ["fusion", "metrics", "tch", "std", "train", "tui", "vision", "wgpu", "ndarray", "autotune"] }
+#burn = { path = "../burn", features = ["fusion", "metrics", "tch", "std", "train", "tui", "vision", "wgpu", "ndarray", "autotune"] }
 clap = { version = "4.6.1", features = ["default", "derive"] }
 chrono = {  version = "0.4.44", features = ["serde"] }
 chrono-tz = "0.10.4"
@@ -217,6 +217,7 @@ thiserror = "2.0.18"
 time = "0.3.47"
 time_range = "0.0.3-alpha.0"
 time-tz = "3.0.0-rc.5.0.0"
+tokenizers = {  version = "0.23.1", features = ["onig", "http"] }
 tokio = { version = "1.52.2", features = ["full"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
