@@ -1,5 +1,5 @@
 [package]
-name = "trainer"
+name = "train"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -9,6 +9,7 @@ repository.workspace = true
 exclude.workspace = true
 
 [dependencies]
+ai-models = { workspace = true }
 clap.workspace = true
 databento.workspace = true
 dotenv.workspace = true

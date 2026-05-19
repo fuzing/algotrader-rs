@@ -18,7 +18,7 @@ members = [
 #    "bin/extractor",
 #    "bin/historical-book",
 #    "bin/live-book",
-#    "bin/trainer",
+#    "bin/train",
 #    "crates/ai-models",
 #    "crates/models",
 #    "crates/order-book",
