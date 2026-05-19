@@ -205,8 +205,9 @@ codegen-units = 1
 ai-models = { path = "crates/ai-models" }
 anyhow = "1.0.102"
 #burn = { version = "0.21.0", features = ["fusion", "metrics", "tch", "std", "train", "tui", "vision", "wgpu", "ndarray", "autotune"] }
-burn = { version = "0.21.0", default-features = false }
-#burn = { path = "/home/peter/Projects/burn", default-features = false }
+#burn = { version = "0.21.0", default-features = false }
+#burn = { path = "/home/peter/Projects/burn/crates/burn", default-features = false }
+burn = { path = "../burn/crates/burn", default-features = false }
 clap = { version = "4.6.1", features = ["default", "derive"] }
 chrono = {  version = "0.4.44", features = ["serde"] }
 chrono-tz = "0.10.4"

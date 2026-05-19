@@ -13,7 +13,7 @@ anyhow.workspace = true
 #burn.workspace = true
 burn = { workspace = true, features = [
     "train",
-#    "optim",
+    "optim",
     "tui",
     "sqlite-bundled",
     "metrics",
@@ -21,53 +21,30 @@ burn = { workspace = true, features = [
     "autotune",
     "fusion",
     "std",
-] }
+]
+}
 
-
-
-chrono.workspace = true
-chrono-tz.workspace = true
-databento.workspace = true
 derive-new.workspace = true
-dotenv.workspace = true
-order-book.workspace = true
-#reqwest = {workspace = true, features = ["native-tls"]}
 serde.workspace = true
 serde_json.workspace = true
-thiserror.workspace = true
-time.workspace = true
 tokenizers.workspace = true
-tokio.workspace = true
-tracing.workspace = true
-tracing-subscriber.workspace = true
 
-
-
-#burn = {workspace = true, features = ["fusion", "metrics", "std", "train", "tui", "vision", "wgpu", "ndarray", "autotune"] }
-#rand.workspace = true
-#serde = { workspace = true, features = ["std", "derive"] }
 
 [lints]
 workspace = true
 
-[features]
-default = ["burn/wgpu"]
-f16 = []
-flex32 = []
-tch-cpu = ["burn/tch"]
-tch-gpu = ["burn/tch"]
-wgpu = ["burn/wgpu"]
-vulkan = ["burn/vulkan"]
-flex = ["burn/flex"]
-remote = ["burn/remote"]
-cuda = ["burn/cuda"]
-rocm = ["burn/rocm"]
-metal = ["burn/metal"]
-ddp = ["burn/distributed"]
+#[features]
+#default = ["burn/wgpu"]
+#f16 = []
+#flex32 = []
+#tch-cpu = ["burn/tch"]
+#tch-gpu = ["burn/tch"]
+#wgpu = ["burn/wgpu"]
+#vulkan = ["burn/vulkan"]
+#flex = ["burn/flex"]
+#remote = ["burn/remote"]
+#cuda = ["burn/cuda"]
+#rocm = ["burn/rocm"]
+#metal = ["burn/metal"]
+#ddp = ["burn/distributed"]
 
-#[dev-dependencies]
-#criterion.workspace = true
-#
-#[[bench]]
-#name = "order_book_benchmark"
-#harness = false
