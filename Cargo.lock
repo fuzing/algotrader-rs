@@ -52,6 +52,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "ai-models"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "burn",
+ "chrono",
+ "chrono-tz",
+ "databento",
+ "dotenv",
+ "order-book",
+ "thiserror 2.0.18",
+ "time",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "aligned"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"

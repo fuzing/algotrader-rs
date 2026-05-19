@@ -17,6 +17,7 @@ members = [
     "bin/historical-book",
     "bin/live-book",
     "bin/trainer",
+    "crates/ai-models",
     "crates/models",
     "crates/order-book",
     "crates/extractors",
@@ -192,6 +193,7 @@ lto = "fat"
 codegen-units = 1
 
 [workspace.dependencies]
+ai-models = { path = "crates/ai-models" }
 anyhow = "1.0.102"
 burn = { version = "0.21.0", features = ["fusion", "metrics", "tch", "std", "train", "tui", "vision", "wgpu", "ndarray", "autotune"] }
 clap = { version = "4.6.1", features = ["default", "derive"] }

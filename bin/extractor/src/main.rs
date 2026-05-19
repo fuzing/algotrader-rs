@@ -96,7 +96,7 @@ struct DataFileFormat {
     data: Vec<IntervalExtractionWithGain>
 }
 
-async fn write_data(path: PathBuf, holding_time_seconds: u16, interval_nanos: u64, data: Vec<IntervalExtractionWithGain>) -> Result<(), Box<dyn Error>> {
+async fn write_data(path: PathBuf, holding_time_seconds: u16, interval_nanos: u64, data: Vec<IntervalExtractionWithGain>, pretty: bool) -> Result<(), Box<dyn Error>> {
     let out_data = DataFileFormat {
         holding_time_seconds,
         interval_nanos,
@@ -105,8 +105,12 @@ async fn write_data(path: PathBuf, holding_time_seconds: u16, interval_nanos: u6
 
     let file = File::create(path)?;
     let writer = BufWriter::new(file);
-    // serde_json::to_writer_pretty(writer, &out_data)?;
-    serde_json::to_writer(writer, &out_data)?;
+    if pretty {
+        serde_json::to_writer_pretty(writer, &out_data)?;
+    }
+    else {
+        serde_json::to_writer(writer, &out_data)?;
+    }
     Ok(())
 }
 
@@ -163,7 +167,7 @@ async fn main() -> Result<(), Box<dyn Error>>
         println!("Stats: {}", extractor.stats());
     }
 
-    write_data(args.output, args.holding_time_seconds, args.extraction_interval_nanos, all_data).await?;
+    write_data(args.output, args.holding_time_seconds, args.extraction_interval_nanos, all_data, args.pretty).await?;
 
     Ok(())
 }
@@ -181,6 +185,9 @@ struct Args {
 
     #[arg(long)]
     output: PathBuf,
+
+    #[arg(long)]
+    pretty: bool,
 
     #[arg()]
     inputs: Vec<PathBuf>,

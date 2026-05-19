@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+cargo run --bin downloader -- --dataset=XNAS.ITCH --symbols=KHC --start-time="2026-05-04 00:00:00 UTC" --end-time="2026-05-15 23:59:59 UTC"
