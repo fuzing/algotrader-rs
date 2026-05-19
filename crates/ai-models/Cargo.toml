@@ -14,6 +14,7 @@ burn.workspace = true
 chrono.workspace = true
 chrono-tz.workspace = true
 databento.workspace = true
+derive-new.workspace = true
 dotenv.workspace = true
 order-book.workspace = true
 #reqwest = {workspace = true, features = ["native-tls"]}
