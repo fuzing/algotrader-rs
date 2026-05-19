@@ -3,7 +3,7 @@
 // The model is then trained using Cross-Entropy loss. It contains methods for model initialization
 // (both with and without pre-trained weights), forward pass, inference, training, and validation.
 
-use crate::data::{PriceGainInferenceBatch, PriceGainTrainingBatch};
+use super::data::batcher::{PriceGainInferenceBatch, PriceGainTrainingBatch};
 use burn::{
     nn::{
         Embedding, EmbeddingConfig, Linear, LinearConfig,
@@ -15,6 +15,7 @@ use burn::{
     tensor::activation::softmax,
     train::{ClassificationOutput, InferenceStep, TrainOutput, TrainStep},
 };
+use burn::tensor::backend::AutodiffBackend;
 
 // Define the model configuration
 #[derive(Config, Debug)]
@@ -27,18 +28,18 @@ pub struct PriceGainModelConfig {
 
 // Define the model structure
 #[derive(Module, Debug)]
-pub struct PriceGainModel {
-    transformer: TransformerEncoder,
-    embedding_token: Embedding,
-    embedding_pos: Embedding,
-    output: Linear,
+pub struct PriceGainModel<B: Backend> {
+    transformer: TransformerEncoder<B>,
+    embedding_token: Embedding<B>,
+    embedding_pos: Embedding<B>,
+    output: Linear<B>,
     n_classes: usize,
 }
 
 // Define functions for model initialization
 impl PriceGainModelConfig {
     /// Initializes a model with default weights
-    pub fn init(&self, device: &Device) -> PriceGainModel {
+    pub fn init<B: Backend>(&self, device: &Device<B>) -> PriceGainModel<B> {
         let output = LinearConfig::new(self.transformer.d_model, self.n_classes).init(device);
         let transformer = self.transformer.init(device);
         let embedding_token =
@@ -63,9 +64,9 @@ impl PriceGainModelConfig {
 }
 
 /// Define model behavior
-impl PriceGainModel {
+impl<B: Backend> PriceGainModel<B> {
     // Defines forward pass for training
-    pub fn forward(&self, item: PriceGainTrainingBatch) -> ClassificationOutput {
+    pub fn forward(&self, item: PriceGainTrainingBatch<B>) -> ClassificationOutput<B> {
         // Get batch and sequence length, and the device
         let [batch_size, seq_length] = item.tokens.dims();
         let device = &self.embedding_token.devices()[0];
@@ -106,7 +107,7 @@ impl PriceGainModel {
     }
 
     /// Defines forward pass for inference
-    pub fn infer(&self, item: PriceGainInferenceBatch) -> Tensor<2> {
+    pub fn infer(&self, item: PriceGainInferenceBatch<B>) -> Tensor<B, 2> {
         // Get batch and sequence length, and the device
         let [batch_size, seq_length] = item.tokens.dims();
         let device = &self.embedding_token.devices()[0];
@@ -137,11 +138,11 @@ impl PriceGainModel {
 }
 
 /// Define training step
-impl TrainStep for PriceGainModel {
-    type Input = PriceGainTrainingBatch;
-    type Output = ClassificationOutput;
+impl<B: AutodiffBackend> TrainStep for PriceGainModel<B> {
+    type Input = PriceGainTrainingBatch<B>;
+    type Output = ClassificationOutput<B>;
 
-    fn step(&self, item: PriceGainTrainingBatch) -> TrainOutput<ClassificationOutput> {
+    fn step(&self, item: PriceGainTrainingBatch<B>) -> TrainOutput<ClassificationOutput<B>> {
         // Run forward pass, calculate gradients and return them along with the output
         let item = self.forward(item);
         let grads = item.loss.backward();
@@ -151,12 +152,14 @@ impl TrainStep for PriceGainModel {
 }
 
 /// Define validation step
-impl InferenceStep for PriceGainModel {
-    type Input = PriceGainTrainingBatch;
-    type Output = ClassificationOutput;
+impl<B: Backend> InferenceStep for PriceGainModel<B> {
+    type Input = PriceGainTrainingBatch<B>;        // TODO - PMB shouldn't this be PriceGainInferenceBatch??
+    type Output = ClassificationOutput<B>;
 
-    fn step(&self, item: PriceGainTrainingBatch) -> ClassificationOutput {
+    fn step(&self, item: PriceGainTrainingBatch<B>) -> ClassificationOutput<B> {
         // Run forward pass and return the output
         self.forward(item)
     }
 }
+
+

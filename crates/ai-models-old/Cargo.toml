@@ -1,5 +1,5 @@
 [package]
-name = "ai-models"
+name = "ai-models-old"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

@@ -4,8 +4,13 @@
 // on the input samples, and the results are printed out for each sample.
 // Import required modules and types
 
-use crate::{
-    data::{BertCasedTokenizer, PriceGainBatcher, PriceGainDataset, Tokenizer},
+use super::{
+    data::{
+        tokenizer::BertCasedTokenizer,
+        batcher::PriceGainBatcher,
+        dataset::PriceGainDataset,
+        tokenizer::Tokenizer
+    },
     model::PriceGainModelConfig,
     training::ExperimentConfig,
 };
@@ -17,8 +22,8 @@ use burn::{
 use std::sync::Arc;
 
 // Define inference function
-pub fn infer<D: PriceGainDataset + 'static>(
-    device: Device, // Device on which to perform computation (e.g., CPU or CUDA device)
+pub fn infer<B: Backend, D: PriceGainDataset + 'static>(
+    device: Device<B>, // Device on which to perform computation (e.g., CPU or CUDA device)
     artifact_dir: &str, // Directory containing model and config files
     samples: Vec<String>, // Text samples for inference
 ) {

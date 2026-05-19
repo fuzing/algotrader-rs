@@ -1,12 +1,12 @@
-// The module defines two structs PriceGainTrainingBatch and PriceGainInferenceBatch
-// to handle batches of data during training and inference respectively. The PriceGainBatcher
+// The module defines two structs TextClassificationTrainingBatch and TextClassificationInferenceBatch
+// to handle batches of data during training and inference respectively. The TextClassificationBatcher
 // struct is implemented for creating these batches. It is parameterized on the type B: Backend to
 // support different computation backends (e.g., CPU, CUDA).
 
-// Two implementations of the Batcher trait are provided for PriceGainBatcher, one for creating
+// Two implementations of the Batcher trait are provided for TextClassificationBatcher, one for creating
 // training batches and one for creating inference batches. In each implementation, the batch function is
 // defined to convert a vector of items into a batch. For training, the items are instances of
-// PriceGainItem and include both the text and the corresponding label.
+// TextClassificationItem and include both the text and the corresponding label.
 // For inference, the items are simply strings without labels. The function tokenizes the text,
 // generates a padding mask, and returns a batch object.
 
@@ -17,6 +17,7 @@ use burn::{
     prelude::*,
 };
 use std::sync::Arc;
+use derive_new::new;
 
 /// Struct for batching text classification items
 #[derive(Clone, new)]
@@ -27,29 +28,28 @@ pub struct PriceGainBatcher {
 
 /// Struct for training batch in text classification task
 #[derive(Debug, Clone, new)]
-pub struct PriceGainTrainingBatch {
-    pub tokens: Tensor<2, Int>,    // Tokenized text
-    pub labels: Tensor<1, Int>,    // Labels of the text
-    pub mask_pad: Tensor<2, Bool>, // Padding mask for the tokenized text
+pub struct PriceGainTrainingBatch<B: Backend> {
+    pub tokens: Tensor<B, 2, Int>,    // Tokenized text
+    pub labels: Tensor<B, 1, Int>,    // Labels of the text
+    pub mask_pad: Tensor<B, 2, Bool>, // Padding mask for the tokenized text
 }
 
 /// Struct for inference batch in text classification task
 #[derive(Debug, Clone, new)]
-pub struct PriceGainInferenceBatch {
-    pub tokens: Tensor<2, Int>,    // Tokenized text
-    pub mask_pad: Tensor<2, Bool>, // Padding mask for the tokenized text
+pub struct PriceGainInferenceBatch<B: Backend> {
+    pub tokens: Tensor<B, 2, Int>,    // Tokenized text
+    pub mask_pad: Tensor<B, 2, Bool>, // Padding mask for the tokenized text
 }
 
 /// Implement Batcher trait for PriceGainBatcher struct for training
-impl Batcher<PriceGainItem, PriceGainTrainingBatch>
-for PriceGainBatcher
+impl<B: Backend> Batcher<B, PriceGainItem, PriceGainTrainingBatch<B>> for PriceGainBatcher
 {
     /// Batches a vector of text classification items into a training batch
     fn batch(
         &self,
         items: Vec<PriceGainItem>,
-        device: &Device,
-    ) -> PriceGainTrainingBatch {
+        device: &Device<B>,
+    ) -> PriceGainTrainingBatch<B> {
         let mut tokens_list = Vec::with_capacity(items.len());
         let mut labels_list = Vec::with_capacity(items.len());
 
@@ -80,9 +80,9 @@ for PriceGainBatcher
 }
 
 /// Implement Batcher trait for PriceGainBatcher struct for inference
-impl Batcher<String, PriceGainInferenceBatch> for PriceGainBatcher {
+impl<B: Backend> Batcher<B, String, PriceGainInferenceBatch<B>> for PriceGainBatcher {
     /// Batches a vector of strings into an inference batch
-    fn batch(&self, items: Vec<String>, device: &Device) -> PriceGainInferenceBatch {
+    fn batch(&self, items: Vec<String>, device: &Device<B>) -> PriceGainInferenceBatch<B> {
         let mut tokens_list = Vec::with_capacity(items.len());
 
         // Tokenize each string

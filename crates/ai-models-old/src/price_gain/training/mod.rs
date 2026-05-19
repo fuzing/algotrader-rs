@@ -5,8 +5,13 @@
 // to build a learner, which is used to train the model. The trained model and the configuration are
 // then saved to the specified directory.
 
-use crate::{
-    data::{BertCasedTokenizer, PriceGainBatcher, PriceGainDataset, Tokenizer},
+use super::{
+    data::{
+        tokenizer::BertCasedTokenizer,
+        batcher::PriceGainBatcher,
+        dataset::PriceGainDataset,
+        tokenizer::Tokenizer
+    },
     model::PriceGainModelConfig,
 };
 
@@ -23,6 +28,8 @@ use burn::{
     },
 };
 use std::sync::Arc;
+use burn::tensor::backend::AutodiffBackend;
+
 
 // Define configuration struct for the experiment
 #[derive(Config, Debug)]
@@ -44,8 +51,8 @@ fn create_artifact_dir(artifact_dir: &str) {
 }
 
 // Define train function
-pub fn train<D: PriceGainDataset + 'static>(
-    strategy: ExecutionStrategy,
+pub fn train<B: AutodiffBackend, D: PriceGainDataset + 'static>(
+    strategy: ExecutionStrategy<B>,
     dataset_train: D,         // Training dataset
     dataset_test: D,          // Testing dataset
     config: ExperimentConfig, // Experiment configuration

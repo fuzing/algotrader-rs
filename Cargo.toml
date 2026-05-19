@@ -12,17 +12,23 @@ keywords = ["pdl", "pipelines" ]
 
 [workspace]
 members = [
-    "bin/downloader",
-    "bin/extractor",
-    "bin/historical-book",
-    "bin/live-book",
-    "bin/trainer",
-    "crates/ai-models",
-    "crates/models",
-    "crates/order-book",
-    "crates/extractors",
-    "crates/strategies",
-    "crates/utilities",
+    "bin/*",
+    "crates/*",
+#    "bin/downloader",
+#    "bin/extractor",
+#    "bin/historical-book",
+#    "bin/live-book",
+#    "bin/trainer",
+#    "crates/ai-models",
+#    "crates/models",
+#    "crates/order-book",
+#    "crates/extractors",
+#    "crates/strategies",
+#    "crates/utilities",
+]
+
+exclude = [
+    "crates/ai-models-old",
 ]
 
 # add to this for bins/crates that need testing/benching
@@ -35,7 +41,10 @@ members = [
 
 # Explicitly set the resolver to version 2, which is the default for packages with edition >= 2021, but 2024 moved to "3"
 # https://doc.rust-lang.org/edition-guide/rust-2021/default-cargo-resolver.html
-resolver = "3"
+# Try
+# require version 2 to avoid "feature" additiveness for dev-dependencies
+# https://doc.rust-lang.org/cargo/reference/resolver.html#feature-resolver-version-2
+resolver = "2"
 
 
 [workspace.lints.rust]
@@ -207,7 +216,29 @@ databento = { version = "0.50.0", features = ["historical", "live"], default-fea
 derive-new = { version = "0.7.0" }
 extractors = { path = "crates/extractors" }
 order-book = { path = "crates/order-book" }
-rand = "0.10.1" # ""0.10.0"
+rand = "0.10.1" # ""0.10.0"[fusion]
+logger = { file = "/tmp/fusion.log", level = "full" }
+
+[cubecl.profiling]
+logger = { log = "info", level = "disabled" }
+
+[cubecl.autotune]
+level = "balanced"
+cache = "target"
+logger = { info = true, level = "full" }
+
+[cubecl.compilation]
+logger = { level = "disabled" }
+cache = "target"
+check_mode = "auto"
+
+[cubecl.memory]
+logger = { level = "disabled", file = "/tmp/memory.log" }
+persistent_memory = "enabled"
+
+[cubecl.streaming]
+max_streams = 8
+
 reqwest = { version = "0.13.3", features = ["native-tls"] }
 serde = "1.0.228"
 serde_json = "1.0.149"
