@@ -5,7 +5,7 @@
 // to build a learner, which is used to train the model. The trained model and the configuration are
 // then saved to the specified directory.
 
-use crate::price_gain::{
+use super::{
     data::{
         tokenizer::BertCasedTokenizer,
         batcher::PriceGainBatcher,

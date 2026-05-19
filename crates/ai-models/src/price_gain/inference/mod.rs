@@ -4,8 +4,13 @@
 // on the input samples, and the results are printed out for each sample.
 // Import required modules and types
 
-use crate::{
-    data::{BertCasedTokenizer, PriceGainBatcher, PriceGainDataset, Tokenizer},
+use super::{
+    data::{
+        tokenizer::BertCasedTokenizer,
+        batcher::PriceGainBatcher,
+        dataset::PriceGainDataset,
+        tokenizer::Tokenizer
+    },
     model::PriceGainModelConfig,
     training::ExperimentConfig,
 };
