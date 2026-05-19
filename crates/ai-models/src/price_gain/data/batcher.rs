@@ -17,6 +17,7 @@ use burn::{
     prelude::*,
 };
 use std::sync::Arc;
+use derive_new::new;
 
 /// Struct for batching text classification items
 #[derive(Clone, new)]

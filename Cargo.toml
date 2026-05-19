@@ -204,8 +204,9 @@ codegen-units = 1
 [workspace.dependencies]
 ai-models = { path = "crates/ai-models" }
 anyhow = "1.0.102"
-burn = { version = "0.21.0", features = ["fusion", "metrics", "tch", "std", "train", "tui", "vision", "wgpu", "ndarray", "autotune"] }
-#burn = { path = "../burn", features = ["fusion", "metrics", "tch", "std", "train", "tui", "vision", "wgpu", "ndarray", "autotune"] }
+#burn = { version = "0.21.0", features = ["fusion", "metrics", "tch", "std", "train", "tui", "vision", "wgpu", "ndarray", "autotune"] }
+burn = { version = "0.21.0", default-features = false }
+#burn = { path = "/home/peter/Projects/burn", default-features = false }
 clap = { version = "4.6.1", features = ["default", "derive"] }
 chrono = {  version = "0.4.44", features = ["serde"] }
 chrono-tz = "0.10.4"
@@ -217,28 +218,6 @@ derive-new = { version = "0.7.0" }
 extractors = { path = "crates/extractors" }
 order-book = { path = "crates/order-book" }
 rand = "0.10.1" # ""0.10.0"[fusion]
-logger = { file = "/tmp/fusion.log", level = "full" }
-
-[cubecl.profiling]
-logger = { log = "info", level = "disabled" }
-
-[cubecl.autotune]
-level = "balanced"
-cache = "target"
-logger = { info = true, level = "full" }
-
-[cubecl.compilation]
-logger = { level = "disabled" }
-cache = "target"
-check_mode = "auto"
-
-[cubecl.memory]
-logger = { level = "disabled", file = "/tmp/memory.log" }
-persistent_memory = "enabled"
-
-[cubecl.streaming]
-max_streams = 8
-
 reqwest = { version = "0.13.3", features = ["native-tls"] }
 serde = "1.0.228"
 serde_json = "1.0.149"

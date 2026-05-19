@@ -5,8 +5,13 @@
 // to build a learner, which is used to train the model. The trained model and the configuration are
 // then saved to the specified directory.
 
-use crate::{
-    data::{BertCasedTokenizer, PriceGainBatcher, PriceGainDataset, Tokenizer},
+use super::{
+    data::{
+        tokenizer::BertCasedTokenizer,
+        batcher::PriceGainBatcher,
+        dataset::PriceGainDataset,
+        tokenizer::Tokenizer
+    },
     model::PriceGainModelConfig,
 };
 

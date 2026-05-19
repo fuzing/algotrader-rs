@@ -51,7 +51,7 @@ tracing-subscriber.workspace = true
 workspace = true
 
 [features]
-default = []
+default = ["burn/wgpu"]
 f16 = []
 flex32 = []
 tch-cpu = ["burn/tch"]
