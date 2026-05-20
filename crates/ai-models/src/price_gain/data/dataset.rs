@@ -1,14 +1,14 @@
-// The AgNewsDataset and DbPediaDataset structs are examples of specific text
-// classification datasets.  Each dataset struct has a field for the underlying
+// The AgNewsDataset and DbPediaDataset structs are examples of specific price
+// regression datasets.  Each dataset struct has a field for the underlying
 // SQLite dataset and implements methods for accessing and processing the data.
 // Each dataset is also provided with specific information about its classes via
 // the PriceGainDataset trait. These implementations are designed to be used
-// with a machine learning framework for tasks such as training a text classification model.
+// with a machine learning framework for tasks such as training a price regression model.
 
 use burn::data::dataset::{Dataset, SqliteDataset, source::huggingface::HuggingfaceDatasetLoader};
 use derive_new::new;
 
-// Define a struct for text classification items
+// Define a struct for price regression items
 #[derive(new, Clone, Debug)]
 pub struct PriceGainItem {
     pub text: String, // The text for classification

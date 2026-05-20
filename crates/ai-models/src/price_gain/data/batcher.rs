@@ -19,14 +19,14 @@ use burn::{
 use std::sync::Arc;
 use derive_new::new;
 
-/// Struct for batching text classification items
+/// Struct for batching price regression items
 #[derive(Clone, new)]
 pub struct PriceGainBatcher {
     tokenizer: Arc<dyn Tokenizer>, // Tokenizer for converting text to token IDs
     seq_length: SeqLengthOption,   // Sequence length option for tokenized text
 }
 
-/// Struct for training batch in text classification task
+/// Struct for training batch in price regression task
 #[derive(Debug, Clone, new)]
 pub struct PriceGainTrainingBatch {
     pub tokens: Tensor<2, Int>,    // Tokenized text
@@ -34,7 +34,7 @@ pub struct PriceGainTrainingBatch {
     pub mask_pad: Tensor<2, Bool>, // Padding mask for the tokenized text
 }
 
-/// Struct for inference batch in text classification task
+/// Struct for inference batch in price regression task
 #[derive(Debug, Clone, new)]
 pub struct PriceGainInferenceBatch {
     pub tokens: Tensor<2, Int>,    // Tokenized text
@@ -45,7 +45,7 @@ pub struct PriceGainInferenceBatch {
 impl Batcher<PriceGainItem, PriceGainTrainingBatch>
 for PriceGainBatcher
 {
-    /// Batches a vector of text classification items into a training batch
+    /// Batches a vector of price regression items into a training batch
     fn batch(
         &self,
         items: Vec<PriceGainItem>,

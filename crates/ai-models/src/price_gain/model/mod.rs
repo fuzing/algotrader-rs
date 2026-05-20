@@ -1,4 +1,4 @@
-// This is a basic text classification model implemented in Rust using the Burn framework.
+// This is a basic price regression model implemented in Rust using the Burn framework.
 // It uses a Transformer as the base model and applies Linear and Embedding layers.
 // The model is then trained using Cross-Entropy loss. It contains methods for model initialization
 // (both with and without pre-trained weights), forward pass, inference, training, and validation.
@@ -16,7 +16,7 @@ use burn::{
     },
     prelude::*,
     tensor::activation::softmax,
-    train::{ClassificationOutput, InferenceStep, TrainOutput, TrainStep},
+    train::{RegressionOutput, InferenceStep, TrainOutput, TrainStep},
 };
 
 // Define the model configuration
@@ -49,7 +49,7 @@ impl PriceGainModelConfig {
         let max_seq_length = match self.seq_length {
             SeqLengthOption::Fixed(max) | SeqLengthOption::Max(max) => max,
             SeqLengthOption::NoMax => panic!(
-                "Text classification requires a max sequence length because of the embedding strategy."
+                "Price/Volume regression requires a max sequence length because of the embedding strategy."
             ),
         };
         let embedding_pos =
@@ -68,7 +68,7 @@ impl PriceGainModelConfig {
 /// Define model behavior
 impl PriceGainModel {
     // Defines forward pass for training
-    pub fn forward(&self, item: PriceGainTrainingBatch) -> ClassificationOutput {
+    pub fn forward(&self, item: PriceGainTrainingBatch) -> RegressionOutput {
         // Get batch and sequence length, and the device
         let [batch_size, seq_length] = item.tokens.dims();
         let device = &self.embedding_token.devices()[0];
@@ -101,7 +101,7 @@ impl PriceGainModel {
             .forward(output_classification.clone(), labels.clone());
 
         // Return the output and loss
-        ClassificationOutput {
+        RegressionOutput {
             loss,
             output: output_classification,
             targets: labels,
@@ -142,9 +142,9 @@ impl PriceGainModel {
 /// Define training step
 impl TrainStep for PriceGainModel {
     type Input = PriceGainTrainingBatch;
-    type Output = ClassificationOutput;
+    type Output = RegressionOutput;
 
-    fn step(&self, item: PriceGainTrainingBatch) -> TrainOutput<ClassificationOutput> {
+    fn step(&self, item: PriceGainTrainingBatch) -> TrainOutput<RegressionOutput> {
         // Run forward pass, calculate gradients and return them along with the output
         let item = self.forward(item);
         let grads = item.loss.backward();
@@ -156,9 +156,9 @@ impl TrainStep for PriceGainModel {
 /// Define validation step
 impl InferenceStep for PriceGainModel {
     type Input = PriceGainTrainingBatch;
-    type Output = ClassificationOutput;
+    type Output = RegressionOutput;
 
-    fn step(&self, item: PriceGainTrainingBatch) -> ClassificationOutput {
+    fn step(&self, item: PriceGainTrainingBatch) -> RegressionOutput {
         // Run forward pass and return the output
         self.forward(item)
     }

@@ -1,4 +1,4 @@
-// This module defines the inference process for a text classification model.
+// This module defines the inference process for a price regression model.
 // It loads a model and its configuration from a directory, and uses a tokenizer
 // and a batcher to prepare the input data. The model is then used to make predictions
 // on the input samples, and the results are printed out for each sample.

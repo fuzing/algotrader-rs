@@ -29,15 +29,15 @@ pub struct PriceGainBatcher {
 /// Struct for training batch in text classification task
 #[derive(Debug, Clone, new)]
 pub struct PriceGainTrainingBatch {
-    pub tokens: Tensor<2, Float>,    // Tokenized text
-    pub labels: Tensor<1, Float>,    // Labels of the text
+    pub tokens: Tensor<2, Int>,    // Tokenized text
+    pub labels: Tensor<1, Int>,    // Labels of the text
     pub mask_pad: Tensor<2, Bool>, // Padding mask for the tokenized text
 }
 
 /// Struct for inference batch in text classification task
 #[derive(Debug, Clone, new)]
 pub struct PriceGainInferenceBatch {
-    pub tokens: Tensor<2, Float>,    // Tokenized text
+    pub tokens: Tensor<2, Int>,    // Tokenized text
     pub mask_pad: Tensor<2, Bool>, // Padding mask for the tokenized text
 }
 
