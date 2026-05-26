@@ -33,7 +33,6 @@ use databento::{
 
 #[derive(Debug, Serialize, Deserialize)]
 struct IntervalExtractionWithGain {
-    // extract: IntervalExtraction,
     date_time_nanos: u64,               // date_time at time of this snapshot
     last_trade_price: f64,              // last actual trade price at time of this snapshot
     future_trade_price: f64,            // future trade price at time when gain/loss should be calculated
@@ -173,7 +172,7 @@ async fn main() -> Result<(), Box<dyn Error>>
 
     for input in inputs {
         let mut extractor = IntervalExtractor::builder()
-            .nbr_lob_levels(5)
+            .nbr_lob_levels(args.levels)
             .extraction_interval_nanos(args.extraction_interval_nanos)
             .build();
 
@@ -198,6 +197,10 @@ struct Args {
     // presumed holding time for the data
     #[arg(long)]
     holding_time_seconds: u16,
+
+    // levels of each side of the order book to capture (e.g. 5, 10 etc.)
+    #[arg(long)]
+    levels: usize,
 
     #[arg(long)]
     output: PathBuf,

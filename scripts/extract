@@ -7,5 +7,5 @@
 #cargo run --bin extractor -- --output=./shit.json --extraction-interval-nanos=500000000 --holding-time-seconds=300 'AAPL-XNAS.ITCH-2026-05-04 00:00:00 UTC-2026-05-04 23:59:59 UTC-mbo.dbn.zst'
 #cargo run --bin extractor -- --output=./shit.json --extraction-interval-nanos=500000000 --holding-time-seconds=300 'TSLA-XNAS.ITCH-2026-05-04 00:00:00 UTC-2026-05-04 23:59:59 UTC-mbo.dbn.zst'
 #cargo run --bin extractor --  --output=./shit.json --extraction-interval-nanos=500000000 --holding-time-seconds=300 'KHC-XNAS.ITCH-2026-05-04 00:00:00 UTC-2026-05-15 23:59:59 UTC-mbo.dbn.zst'
-cargo run --bin extractor --  --pretty --output=./shit.json --extraction-interval-nanos=500000000 --holding-time-seconds=300 'KHC-XNAS.ITCH-2026-05-04 00:00:00 UTC-2026-05-15 23:59:59 UTC-mbo.dbn.zst'
+cargo run --bin extractor --  --levels=10 --pretty --output=./shit.json --extraction-interval-nanos=500000000 --holding-time-seconds=300 'KHC-XNAS.ITCH-2026-05-04 00:00:00 UTC-2026-05-15 23:59:59 UTC-mbo.dbn.zst'
 
