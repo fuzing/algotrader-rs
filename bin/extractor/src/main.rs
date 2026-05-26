@@ -34,10 +34,13 @@ use databento::{
 #[derive(Debug, Serialize, Deserialize)]
 struct IntervalExtractionWithGain {
     // extract: IntervalExtraction,
-    date_time_nanos: u64,
-    last_trade_price: f64,
-    future_trade_price: f64,
-    gain: f64,
+    date_time_nanos: u64,               // date_time at time of this snapshot
+    last_trade_price: f64,              // last actual trade price at time of this snapshot
+    future_trade_price: f64,            // future trade price at time when gain/loss should be calculated
+    trade_gain: f64,                    // percentage gain/loss at future
+    mid_point_price: f64,               // mid point of current bids/asks for this snapshot (could be calculated later)
+    future_mid_point_price: f64,        // future mid point of bids/asks at time when gain/loss should be calculated
+    mid_point_gain: f64,                // percentage gain/loss of future mid point
     bids: Vec<PriceVolumeLevel>,
     asks: Vec<PriceVolumeLevel>
 }
@@ -47,9 +50,12 @@ impl Display for IntervalExtractionWithGain {
         writeln!(f, "  date_time_nanos: {}", self.date_time_nanos)?;
         writeln!(f, "  last_trade_price: {}", self.last_trade_price)?;
         writeln!(f, "  future_trade_price: {}", self.future_trade_price)?;
+        writeln!(f, "  trade_gain: {}", self.trade_gain)?;
+        writeln!(f, "  mid_point_price: {}", self.mid_point_price)?;
+        writeln!(f, "  future_mid_point_price: {}", self.future_mid_point_price)?;
+        writeln!(f, "  mid_point_gain: {}", self.mid_point_gain)?;
         // writeln!(f, "  bids: {:?}", self.bids)?;
         // writeln!(f, "  asks: {:?}", self.asks)?;
-        writeln!(f, "  gain: {}", self.gain)?;
         Ok(())
     }
 }
@@ -72,14 +78,24 @@ async fn decode_data(path: &PathBuf, extractor: &mut impl Extractor<IntervalExtr
     let mut all_results_mapped: Vec<IntervalExtractionWithGain> = Vec::new();
     for (index, result) in all_results.iter().enumerate() {
         if let Some(future_result) = all_results.get(index + holding_time_intervals) {
+
+            let mid_point_price = (result.bids.get(0).unwrap().price + result.asks.get(0).unwrap().price) / 2.0;
+            let future_mid_point_price = (future_result.bids.get(0).unwrap().price + future_result.asks.get(0).unwrap().price) / 2.0;
+
             all_results_mapped.push(
                 IntervalExtractionWithGain {
                     date_time_nanos: result.date_time_nanos,
-                    bids: result.bids.clone(),
-                    asks: result.asks.clone(),
                     last_trade_price: result.last_trade_price,
                     future_trade_price: future_result.last_trade_price,
-                    gain: ((future_result.last_trade_price / result.last_trade_price) - 1.0) * 100.0,
+                    trade_gain: ((future_result.last_trade_price / result.last_trade_price) - 1.0) * 100.0,
+
+                    // depends upon ordering of bids/asks such as BBO must both be at '0' index
+                    mid_point_price,
+                    future_mid_point_price,
+                    mid_point_gain: ((future_mid_point_price / mid_point_price) - 1.0) * 100.00,
+
+                    bids: result.bids.clone(),
+                    asks: result.asks.clone(),
                 }
             );
         }

@@ -100,8 +100,9 @@ pub fn train<D: PriceGainDataset + 'static>(
         .metric_train(IterationSpeedMetric::new())
         .metric_train_numeric(LossMetric::new())
         .metric_valid_numeric(LossMetric::new())
-        .metric_train_numeric(AccuracyMetric::new())
-        .metric_valid_numeric(AccuracyMetric::new())
+        // PMB had to remove because these are for classification, not regression
+        // .metric_train_numeric(AccuracyMetric::new())
+        // .metric_valid_numeric(AccuracyMetric::new())
         .metric_train_numeric(LearningRateMetric::new())
         .with_file_checkpointer(CompactRecorder::new())
         .with_training_strategy(strategy.into())

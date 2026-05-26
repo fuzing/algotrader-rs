@@ -23,8 +23,8 @@ use utilities::date_time::nanos_to_offset_date_time_with_tz;
 // a price level
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PriceVolumeLevel {
-    price: f64,
-    volume: u32,
+    pub price: f64,
+    pub volume: u32,
 }
 
 

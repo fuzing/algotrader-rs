@@ -5,7 +5,12 @@
 // the PriceGainDataset trait. These implementations are designed to be used
 // with a machine learning framework for tasks such as training a price regression model.
 
-use burn::data::dataset::{Dataset, SqliteDataset, source::huggingface::HuggingfaceDatasetLoader};
+use burn::data::dataset::{
+    Dataset,
+    SqliteDataset,
+    InMemDataset,           // PMB in memory dataset
+    source::huggingface::HuggingfaceDatasetLoader
+};
 use derive_new::new;
 
 // Define a struct for price regression items
