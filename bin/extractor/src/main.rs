@@ -38,6 +38,8 @@ use databento::{
     },
 };
 
+use utilities::date_time::nanos_to_offset_date_time_with_tz;
+
 
 async fn decode_data(path: &PathBuf, extractor: &mut impl Extractor<IntervalExtraction>, holding_time_intervals: usize) -> Result<Vec<IntervalExtractionWithGain>, Box<dyn Error>> {
     let mut decoder = AsyncDbnDecoder::from_zstd_file(path).await?;
@@ -53,32 +55,38 @@ async fn decode_data(path: &PathBuf, extractor: &mut impl Extractor<IntervalExtr
         }
     }
 
-    //
-    // TODO - make sure that forward sample is not for the next (another) day
-    //
     let mut all_results_mapped: Vec<IntervalExtractionWithGain> = Vec::new();
     for (index, result) in all_results.iter().enumerate() {
         if let Some(future_result) = all_results.get(index + holding_time_intervals) {
 
-            let mid_point_price = (result.bids.get(0).unwrap().price + result.asks.get(0).unwrap().price) / 2.0;
-            let future_mid_point_price = (future_result.bids.get(0).unwrap().price + future_result.asks.get(0).unwrap().price) / 2.0;
+            //
+            // Make sure that future data point is from same day
+            //
+            let sample_day = nanos_to_offset_date_time_with_tz(result.date_time_nanos as i128, "ET").unwrap().weekday();
+            let future_day = nanos_to_offset_date_time_with_tz(future_result.date_time_nanos as i128, "ET").unwrap().weekday();
 
-            all_results_mapped.push(
-                IntervalExtractionWithGain {
-                    date_time_nanos: result.date_time_nanos,
-                    last_trade_price: result.last_trade_price,
-                    future_trade_price: future_result.last_trade_price,
-                    trade_gain: ((future_result.last_trade_price / result.last_trade_price) - 1.0) * 100.0,
+            if sample_day == future_day {
 
-                    // depends upon ordering of bids/asks such as BBO must both be at '0' index
-                    mid_point_price,
-                    future_mid_point_price,
-                    mid_point_gain: ((future_mid_point_price / mid_point_price) - 1.0) * 100.00,
+                let mid_point_price = (result.bids.get(0).unwrap().price + result.asks.get(0).unwrap().price) / 2.0;
+                let future_mid_point_price = (future_result.bids.get(0).unwrap().price + future_result.asks.get(0).unwrap().price) / 2.0;
 
-                    bids: result.bids.clone(),
-                    asks: result.asks.clone(),
-                }
-            );
+                all_results_mapped.push(
+                    IntervalExtractionWithGain {
+                        date_time_nanos: result.date_time_nanos,
+                        last_trade_price: result.last_trade_price,
+                        future_trade_price: future_result.last_trade_price,
+                        trade_gain: ((future_result.last_trade_price / result.last_trade_price) - 1.0) * 100.0,
+
+                        // depends upon ordering of bids/asks such as BBO must both be at '0' index
+                        mid_point_price,
+                        future_mid_point_price,
+                        mid_point_gain: ((future_mid_point_price / mid_point_price) - 1.0) * 100.00,
+
+                        bids: result.bids.clone(),
+                        asks: result.asks.clone(),
+                    }
+                );
+            }
         }
     }
 
