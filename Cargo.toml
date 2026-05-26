@@ -23,6 +23,7 @@ members = [
 #    "crates/models",
 #    "crates/order-book",
 #    "crates/extractors",
+#    "crates/shared",
 #    "crates/strategies",
 #    "crates/utilities",
 ]

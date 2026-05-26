@@ -27,7 +27,6 @@ pub struct PriceVolumeLevel {
     pub volume: u32,
 }
 
-
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct IntervalExtraction {
     pub date_time_nanos: u64,                     // nanos past unix epoch
@@ -258,4 +257,57 @@ impl IntervalExtractorBuilder {
         self
     }
 }
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// Storage in extracted file
+////////////////////////////////////////////////////////////////////////////////////////////////
+#[derive(Debug, Serialize, Deserialize)]
+pub struct IntervalExtractionWithGain {
+    pub date_time_nanos: u64,               // date_time at time of this snapshot
+    pub last_trade_price: f64,              // last actual trade price at time of this snapshot
+    pub future_trade_price: f64,            // future trade price at time when gain/loss should be calculated
+    pub trade_gain: f64,                    // percentage gain/loss at future
+    pub mid_point_price: f64,               // mid point of current bids/asks for this snapshot (could be calculated later)
+    pub future_mid_point_price: f64,        // future mid point of bids/asks at time when gain/loss should be calculated
+    pub mid_point_gain: f64,                // percentage gain/loss of future mid point
+    pub bids: Vec<PriceVolumeLevel>,
+    pub asks: Vec<PriceVolumeLevel>
+}
+impl Display for IntervalExtractionWithGain {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "IntervalExtractionWithGain:")?;
+        writeln!(f, "  date_time_nanos: {}", self.date_time_nanos)?;
+        writeln!(f, "  last_trade_price: {}", self.last_trade_price)?;
+        writeln!(f, "  future_trade_price: {}", self.future_trade_price)?;
+        writeln!(f, "  trade_gain: {}", self.trade_gain)?;
+        writeln!(f, "  mid_point_price: {}", self.mid_point_price)?;
+        writeln!(f, "  future_mid_point_price: {}", self.future_mid_point_price)?;
+        writeln!(f, "  mid_point_gain: {}", self.mid_point_gain)?;
+        // writeln!(f, "  bids: {:?}", self.bids)?;
+        // writeln!(f, "  asks: {:?}", self.asks)?;
+        Ok(())
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ExtractedDataFileFormat {
+    pub holding_time_seconds: u16,
+    pub interval_nanos: u64,
+    
+    pub last_trade_price_mean: f64,
+    pub last_trade_price_std_dev: f64,
+    
+    pub mid_point_price_mean: f64,
+    pub mid_point_price_std_dev: f64,
+    
+    pub data: Vec<IntervalExtractionWithGain>
+}
+
+
+
+
+
+
 

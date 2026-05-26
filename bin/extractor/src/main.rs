@@ -2,7 +2,12 @@
 
 use extractors::{
     extractor::Extractor,
-    interval_extractor::{ IntervalExtractor, IntervalExtraction, PriceVolumeLevel },
+    interval_extractor::{
+        IntervalExtractor,
+        IntervalExtraction,
+        IntervalExtractionWithGain,
+        ExtractedDataFileFormat,
+    },
 };
 
 use serde::{Deserialize, Serialize};
@@ -30,34 +35,6 @@ use databento::{
         decode::{AsyncDbnDecoder},
     },
 };
-
-#[derive(Debug, Serialize, Deserialize)]
-struct IntervalExtractionWithGain {
-    date_time_nanos: u64,               // date_time at time of this snapshot
-    last_trade_price: f64,              // last actual trade price at time of this snapshot
-    future_trade_price: f64,            // future trade price at time when gain/loss should be calculated
-    trade_gain: f64,                    // percentage gain/loss at future
-    mid_point_price: f64,               // mid point of current bids/asks for this snapshot (could be calculated later)
-    future_mid_point_price: f64,        // future mid point of bids/asks at time when gain/loss should be calculated
-    mid_point_gain: f64,                // percentage gain/loss of future mid point
-    bids: Vec<PriceVolumeLevel>,
-    asks: Vec<PriceVolumeLevel>
-}
-impl Display for IntervalExtractionWithGain {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "IntervalExtractionWithGain:")?;
-        writeln!(f, "  date_time_nanos: {}", self.date_time_nanos)?;
-        writeln!(f, "  last_trade_price: {}", self.last_trade_price)?;
-        writeln!(f, "  future_trade_price: {}", self.future_trade_price)?;
-        writeln!(f, "  trade_gain: {}", self.trade_gain)?;
-        writeln!(f, "  mid_point_price: {}", self.mid_point_price)?;
-        writeln!(f, "  future_mid_point_price: {}", self.future_mid_point_price)?;
-        writeln!(f, "  mid_point_gain: {}", self.mid_point_gain)?;
-        // writeln!(f, "  bids: {:?}", self.bids)?;
-        // writeln!(f, "  asks: {:?}", self.asks)?;
-        Ok(())
-    }
-}
 
 
 async fn decode_data(path: &PathBuf, extractor: &mut impl Extractor<IntervalExtraction>, holding_time_intervals: usize) -> Result<Vec<IntervalExtractionWithGain>, Box<dyn Error>> {
@@ -104,17 +81,34 @@ async fn decode_data(path: &PathBuf, extractor: &mut impl Extractor<IntervalExtr
 }
 
 
-#[derive(Debug, Serialize, Deserialize)]
-struct DataFileFormat {
+// #[derive(Debug, Serialize, Deserialize)]
+// struct ExtractedDataFileFormat {
+//     holding_time_seconds: u16,
+//     interval_nanos: u64,
+//     data: Vec<IntervalExtractionWithGain>
+// }
+
+async fn write_data(
+    pretty: bool,
+
+    path: PathBuf,
     holding_time_seconds: u16,
     interval_nanos: u64,
-    data: Vec<IntervalExtractionWithGain>
-}
+    data: Vec<IntervalExtractionWithGain>,
 
-async fn write_data(path: PathBuf, holding_time_seconds: u16, interval_nanos: u64, data: Vec<IntervalExtractionWithGain>, pretty: bool) -> Result<(), Box<dyn Error>> {
-    let out_data = DataFileFormat {
+    last_trade_price_mean: f64,
+    last_trade_price_std_dev: f64,
+    mid_point_price_mean: f64,
+    mid_point_price_std_dev: f64,
+) -> Result<(), Box<dyn Error>> {
+    let out_data = ExtractedDataFileFormat {
         holding_time_seconds,
         interval_nanos,
+
+        last_trade_price_mean,
+        last_trade_price_std_dev,
+        mid_point_price_mean,
+        mid_point_price_std_dev,
         data,
     };
 
@@ -182,7 +176,14 @@ async fn main() -> Result<(), Box<dyn Error>>
         println!("Stats: {}", extractor.stats());
     }
 
-    write_data(args.output, args.holding_time_seconds, args.extraction_interval_nanos, all_data, args.pretty).await?;
+    // calculate statistics
+    let last_trade_price_mean = 0.0;
+    let last_trade_price_std_dev = 0.0;
+    let mid_point_price_mean = 0.0;
+    let mid_point_price_std_dev = 0.0;
+
+    write_data(args.pretty, args.output, args.holding_time_seconds, args.extraction_interval_nanos, all_data,
+            last_trade_price_mean, last_trade_price_std_dev, mid_point_price_mean, mid_point_price_std_dev).await?;
 
     Ok(())
 }

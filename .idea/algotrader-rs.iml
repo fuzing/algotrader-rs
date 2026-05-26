@@ -16,6 +16,7 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/ai-models/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/ai-models/examples" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bin/train/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/shared/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
