@@ -38,20 +38,28 @@ use databento::{
     },
 };
 
-use utilities::date_time::nanos_to_offset_date_time_with_tz;
+use utilities::date_time::{nanos_to_offset_date_time_with_tz, str_to_offset_date_time};
 
 
-async fn decode_data(path: &PathBuf, extractor: &mut impl Extractor<IntervalExtraction>, holding_time_intervals: usize) -> Result<Vec<IntervalExtractionWithGain>, Box<dyn Error>> {
+async fn decode_data(
+    path: &PathBuf,
+    extractor: &mut impl Extractor<IntervalExtraction>,
+    holding_time_intervals: usize,
+    start_date_nanos: u64,
+    end_date_nanos: u64,
+) -> Result<Vec<IntervalExtractionWithGain>, Box<dyn Error>> {
     let mut decoder = AsyncDbnDecoder::from_zstd_file(path).await?;
     let mut all_results: Vec<IntervalExtraction> = Vec::new();
 
     println!("Holding for {} intervals", holding_time_intervals);
 
     while let Some(mbo) = decoder.decode_record::<MboMsg>().await? {
-        let results = extractor.push(mbo).await?;
-        if !results.is_empty() {
-            // println!("{:?}\n", results);
-            all_results.append(&mut results.clone());
+        if mbo.ts_recv >= start_date_nanos && mbo.ts_recv <= end_date_nanos {
+            let results = extractor.push(mbo).await?;
+            if !results.is_empty() {
+                // println!("{:?}\n", results);
+                all_results.append(&mut results.clone());
+            }
         }
     }
 
@@ -175,6 +183,9 @@ async fn main() -> Result<(), Box<dyn Error>>
     // number of intervals that we're presuming holding for
     let holding_time_intervals: usize = (args.holding_time_seconds as u64 * 1_000_000_000 / args.extraction_interval_nanos) as usize;
 
+    let start_date_nanos = str_to_offset_date_time(&format!("{} 00:00:00 UTC", args.start_date)).expect("Invalid start date").unix_timestamp_nanos() as u64;
+    let end_date_nanos = str_to_offset_date_time(&format!("{} 23:59:59 UTC", args.end_date)).expect("Invalid end date").unix_timestamp_nanos() as u64;
+
     let mut all_data: Vec<IntervalExtractionWithGain> = Vec::new();
 
     for input in inputs {
@@ -183,7 +194,13 @@ async fn main() -> Result<(), Box<dyn Error>>
             .extraction_interval_nanos(args.extraction_interval_nanos)
             .build();
 
-        let mut data = decode_data(&input, &mut extractor, holding_time_intervals).await?;
+        let mut data = decode_data(
+            &input,
+            &mut extractor,
+            holding_time_intervals,
+            start_date_nanos,
+            end_date_nanos,
+        ).await?;
         all_data.append(&mut data);
 
         println!("Stats: {}", extractor.stats());
@@ -215,6 +232,13 @@ struct Args {
     // levels of each side of the order book to capture (e.g. 5, 10 etc.)
     #[arg(long)]
     levels: usize,
+
+    // start/end dates to extract from/to
+    #[arg(long)]
+    start_date: String,
+
+    #[arg(long)]
+    end_date: String,
 
     #[arg(long)]
     output: PathBuf,
