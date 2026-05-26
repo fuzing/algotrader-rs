@@ -206,7 +206,7 @@ async fn main() -> Result<(), Box<dyn Error>>
         println!("Stats: {}", extractor.stats());
     }
 
-    // calculate statistics
+    // calculate statistics for z-score manipulation later
     let last_trade_price_mean = all_data.iter().map(|i| i.last_trade_price).mean();
     let last_trade_price_std_dev = all_data.iter().map(|i| i.last_trade_price).std_dev();
     let mid_point_price_mean = all_data.iter().map(|i| i.mid_point_price).mean();

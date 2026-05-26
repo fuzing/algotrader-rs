@@ -127,7 +127,7 @@ impl Extractor<IntervalExtraction> for IntervalExtractor {
         let local_minute = received_date_time.minute();
 
         //
-        // Monday through Friday between 09:40:00 and 15:50:00
+        // Monday through Friday between 09:45:00 and 15:45:00
         //   i.e. on exchange day between 10 minutes after the open and 10 minutes prior to the close
         //
         if valid_day &&
