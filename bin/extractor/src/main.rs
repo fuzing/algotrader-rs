@@ -10,6 +10,8 @@ use extractors::{
     },
 };
 
+use statrs::statistics::Statistics;
+
 use serde::{Deserialize, Serialize};
 use anyhow::anyhow;
 
@@ -51,6 +53,9 @@ async fn decode_data(path: &PathBuf, extractor: &mut impl Extractor<IntervalExtr
         }
     }
 
+    //
+    // TODO - make sure that forward sample is not for the next (another) day
+    //
     let mut all_results_mapped: Vec<IntervalExtractionWithGain> = Vec::new();
     for (index, result) in all_results.iter().enumerate() {
         if let Some(future_result) = all_results.get(index + holding_time_intervals) {
@@ -177,10 +182,10 @@ async fn main() -> Result<(), Box<dyn Error>>
     }
 
     // calculate statistics
-    let last_trade_price_mean = 0.0;
-    let last_trade_price_std_dev = 0.0;
-    let mid_point_price_mean = 0.0;
-    let mid_point_price_std_dev = 0.0;
+    let last_trade_price_mean = all_data.iter().map(|i| i.last_trade_price).mean();
+    let last_trade_price_std_dev = all_data.iter().map(|i| i.last_trade_price).std_dev();
+    let mid_point_price_mean = all_data.iter().map(|i| i.mid_point_price).mean();
+    let mid_point_price_std_dev = all_data.iter().map(|i| i.mid_point_price).std_dev();
 
     write_data(args.pretty, args.output, args.holding_time_seconds, args.extraction_interval_nanos, all_data,
             last_trade_price_mean, last_trade_price_std_dev, mid_point_price_mean, mid_point_price_std_dev).await?;
