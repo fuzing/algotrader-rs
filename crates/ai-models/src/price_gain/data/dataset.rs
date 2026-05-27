@@ -32,7 +32,8 @@ pub struct PriceGainDataset {
 }
 
 
-const PATCH_TEMPORAL_WINDOW_SIZE: usize = 3;
+const PATCH_TEMPORAL_WINDOW_SIZE: usize = 4;
+const PATCH_TEMPORAL_STRIDE: usize = PATCH_TEMPORAL_WINDOW_SIZE;
 const LOB_LEVELS: usize = 10;
 
 
@@ -83,14 +84,21 @@ impl PriceGainDataset {
         // lob depth is the number of bid/ask levels in the extracted data
         let lob_depth = data_file.data[0].bids.len();
 
-
-
-
-
         for i in 0..(data_file.data.len() - prediction_window) {
             for j in (0..(prediction_window - patch_window)).step_by(patch_stride) {
+                let mut bid_price_patch: PatchData;
+                let mut ask_price_patch: PatchData;
+                let mut bid_volume_patch: PatchData;
+                let mut ask_volume_patch: PatchData;
                 for k in (0..patch_window) {
-
+                    for (index, bid) in data_file.data[i + j + k].bids.iter().enumerate() {
+                        bid_price_patch[k, index] = (bid.price - price_mean) / price_std_dev;
+                        bid_volume_patch[k] = (bid.volume - volume_mean) / volume_std_dev;
+                    }
+                    for (index, ask) in data_file.data[i + j + k].asks.iter().enumerate() {
+                        ask_price_patch[k, index] = (ask.price - price_mean) / price_std_dev;
+                        ask_volume_patch[k, index] = (ask.volume - volume_mean) / volume_std_dev;
+                    }
                 }
             }
         }
