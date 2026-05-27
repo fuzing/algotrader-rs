@@ -33,15 +33,17 @@ impl PriceGainDataset {
     pub fn new(
         filename: PathBuf,
         window: usize,              // time window in number of consecutive LOB samples
-        lob_depth: usize,           // number of bids/asks to include 
     ) -> PriceGainDataset {
         let file = File::open(filename.clone()).expect(&format!("Couldn't open file {filename:?}"));
         let reader = BufReader::new(file);
         let data_file: ExtractedDataFile = serde_json::from_reader(reader).unwrap();
 
-        // normalization via z-score
+        // normalization factors for z-score, for price and volume
         let (volume_mean, volume_std_dev) = (data_file.volume_mean, data_file.volume_std_dev);
         let (price_mean, price_std_dev) = (data_file.mid_point_price_mean, data_file.mid_point_price_std_dev);
+
+        // lob depth is the number of bid/ask levels in the extracted data
+        let lob_depth = data_file.data[0].bids.len();
 
         for i in 0..(data_file.data.len() - window) {
 
