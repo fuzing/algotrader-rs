@@ -69,9 +69,9 @@ pub struct PriceGainEmbeddable {
 impl PriceGainDataset {
     pub fn new(
         filename: PathBuf,
-        prediction_window: usize,              // time window in number of consecutive LOB samples
-        patch_window: usize,
-        patch_stride: usize,
+        prediction_temporal_window: usize,              // time window in number of consecutive LOB samples
+        patch_temporal_window: usize,
+        patch_temporal_stride: usize,
     ) -> PriceGainDataset {
         let file = File::open(filename.clone()).expect(&format!("Couldn't open file {filename:?}"));
         let reader = BufReader::new(file);
@@ -84,31 +84,43 @@ impl PriceGainDataset {
         // lob depth is the number of bid/ask levels in the extracted data
         let lob_depth = data_file.data[0].bids.len();
 
-        for i in 0..(data_file.data.len() - prediction_window) {
-            for j in (0..(prediction_window - patch_window)).step_by(patch_stride) {
-                let mut bid_price_patch: PatchData;
-                let mut ask_price_patch: PatchData;
-                let mut bid_volume_patch: PatchData;
-                let mut ask_volume_patch: PatchData;
-                for k in (0..patch_window) {
-                    for (index, bid) in data_file.data[i + j + k].bids.iter().enumerate() {
-                        bid_price_patch[k, index] = (bid.price - price_mean) / price_std_dev;
-                        bid_volume_patch[k] = (bid.volume - volume_mean) / volume_std_dev;
+        for i in 0..(data_file.data.len() - prediction_temporal_window) {
+            for j in (0..(prediction_temporal_window - patch_temporal_window)).step_by(patch_temporal_stride) {
+                let mut bid_price_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
+                let mut ask_price_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
+                let mut bid_volume_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
+                let mut ask_volume_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
+                // for k in (0..PATCH_TEMPORAL_WINDOW_SIZE) {
+                //     for (index, bid) in data_file.data[i + j + k].bids.iter().enumerate() {
+                //         bid_price_patch[k, index] = (bid.price - price_mean) / price_std_dev;
+                //         bid_volume_patch[k, index] = (bid.volume - volume_mean) / volume_std_dev;
+                //     }
+                //     for (index, ask) in data_file.data[i + j + k].asks.iter().enumerate() {
+                //         ask_price_patch[k, index] = (ask.price - price_mean) / price_std_dev;
+                //         ask_volume_patch[k, index] = (ask.volume - volume_mean) / volume_std_dev;
+                //     }
+                // }
+
+                for k in (0..PATCH_TEMPORAL_WINDOW_SIZE) {
+                    for l in 0..LOB_LEVELS {
+                        let bid_price = data_file.data[i+j+k].bids[l].price;
+                        let bid_volume = data_file.data[i+j+k].bids[l].volume;
+                        bid_price_patch[k, l] = (bid_price - price_mean) / price_std_dev;
+                        bid_volume_patch[k, l] = (bid_volume - volume_mean) / volume_std_dev;
+
                     }
-                    for (index, ask) in data_file.data[i + j + k].asks.iter().enumerate() {
-                        ask_price_patch[k, index] = (ask.price - price_mean) / price_std_dev;
-                        ask_volume_patch[k, index] = (ask.volume - volume_mean) / volume_std_dev;
-                    }
+
                 }
+
             }
         }
 
         PriceGainDataset {
             items: vec![],
             labels: vec![],
-            prediction_window,
-            patch_window,
-            patch_stride,
+            prediction_window: prediction_temporal_window,
+            patch_window: patch_temporal_window,
+            patch_stride: patch_temporal_stride,
         }
     }
 }

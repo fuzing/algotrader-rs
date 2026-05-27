@@ -14,7 +14,8 @@ keywords = ["pdl", "pipelines" ]
 members = [
     "bin/*",
     "crates/*",
-#    "bin/downloader",
+    #    "bin/test",
+    #    "bin/downloader",
 #    "bin/extractor",
 #    "bin/historical-book",
 #    "bin/live-book",
