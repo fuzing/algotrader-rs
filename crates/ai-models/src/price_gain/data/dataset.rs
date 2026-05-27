@@ -1,177 +1,71 @@
-// The AgNewsDataset and DbPediaDataset structs are examples of specific price
-// regression datasets.  Each dataset struct has a field for the underlying
-// SQLite dataset and implements methods for accessing and processing the data.
-// Each dataset is also provided with specific information about its classes via
-// the PriceGainDataset trait. These implementations are designed to be used
-// with a machine learning framework for tasks such as training a price regression model.
 
+use std::{
+    fs::File,
+    io::BufReader,
+    path::PathBuf
+};
 use burn::data::dataset::{
     Dataset,
-    SqliteDataset,
     InMemDataset,           // PMB in memory dataset
-    source::huggingface::HuggingfaceDatasetLoader
 };
 use derive_new::new;
 
-// Define a struct for price regression items
+use extractors::interval_extractor::{
+    ExtractedDataFile,
+    IntervalExtractionWithGain
+};
+
+
 #[derive(new, Clone, Debug)]
 pub struct PriceGainItem {
-    pub text: String, // The text for classification
-    pub label: usize, // The label of the text (classification category)
+    pub item: Vec<f64>,
+    pub label: f64,
 }
 
-// Trait for text classification datasets
-pub trait PriceGainDataset: Dataset<PriceGainItem> {
-    fn num_classes() -> usize; // Returns the number of unique classes in the dataset
-    fn class_name(label: usize) -> String; // Returns the name of the class given its label
+
+pub struct PriceGainDataset {
+    items: Vec<Vec<f64>>,           // the read in data file
+    labels: Vec<f64>,
+    window: usize,                          // window to aggregate samples over
 }
 
-// Struct for items in the AG News dataset
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct AgNewsItem {
-    pub text: String, // The text for classification
-    pub label: usize, // The label of the text (classification category)
-}
+impl PriceGainDataset {
+    pub fn new(
+        filename: PathBuf,
+        window: usize,              // time window in number of consecutive LOB samples
+        lob_depth: usize,           // number of bids/asks to include 
+    ) -> PriceGainDataset {
+        let file = File::open(filename.clone()).expect(&format!("Couldn't open file {filename:?}"));
+        let reader = BufReader::new(file);
+        let data_file: ExtractedDataFile = serde_json::from_reader(reader).unwrap();
+        
+        let volume_mean = data_file.
 
-// Struct for the AG News dataset
-pub struct AgNewsDataset {
-    dataset: SqliteDataset<AgNewsItem>, // Underlying SQLite dataset
-}
+        for i in 0..(data_file.data.len() - window) {
 
-// Implement the Dataset trait for the AG News dataset
-impl Dataset<PriceGainItem> for AgNewsDataset {
-    /// Returns a specific item from the dataset
-    fn get(&self, index: usize) -> Option<PriceGainItem> {
-        self.dataset
-            .get(index)
-            .map(|item| PriceGainItem::new(item.text, item.label)) // Map AgNewsItems to PriceGainItems
-    }
-
-    /// Returns the length of the dataset
-    fn len(&self) -> usize {
-        self.dataset.len()
-    }
-}
-
-// Implement methods for constructing the AG News dataset
-impl AgNewsDataset {
-    /// Returns the training portion of the dataset
-    pub fn train() -> Self {
-        Self::new("train")
-    }
-
-    /// Returns the testing portion of the dataset
-    pub fn test() -> Self {
-        Self::new("test")
-    }
-
-    /// Constructs the dataset from a split (either "train" or "test")
-    pub fn new(split: &str) -> Self {
-        let dataset: SqliteDataset<AgNewsItem> = HuggingfaceDatasetLoader::new("ag_news")
-            .dataset(split)
-            .unwrap();
-        Self { dataset }
-    }
-}
-
-/// Implements the PriceGainDataset trait for the AG News dataset
-impl PriceGainDataset for AgNewsDataset {
-    /// Returns the number of unique classes in the dataset
-    fn num_classes() -> usize {
-        4
-    }
-
-    /// Returns the name of a class given its label
-    fn class_name(label: usize) -> String {
-        match label {
-            0 => "World",
-            1 => "Sports",
-            2 => "Business",
-            3 => "Technology",
-            _ => panic!("invalid class"),
         }
-            .to_string()
+
+
+        PriceGainDataset {
+            items: vec![],
+            labels: vec![],
+            window,
+        }
     }
 }
 
-/// Struct for items in the DbPedia dataset
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct DbPediaItem {
-    pub title: String,   // The title of the item
-    pub content: String, // The content of the item
-    pub label: usize,    // The label of the item (classification category)
-}
-
-/// Struct for the DbPedia dataset
-pub struct DbPediaDataset {
-    dataset: SqliteDataset<DbPediaItem>, // Underlying SQLite dataset
-}
-
-/// Implements the Dataset trait for the DbPedia dataset
-impl Dataset<PriceGainItem> for DbPediaDataset {
-    /// Returns a specific item from the dataset
+impl Dataset<PriceGainItem> for PriceGainDataset {
     fn get(&self, index: usize) -> Option<PriceGainItem> {
-        self.dataset.get(index).map(|item| {
-            PriceGainItem::new(
-                format!("Title: {} - Content: {}", item.title, item.content),
-                item.label,
-            )
+        // will panic if index out of range
+        Some(PriceGainItem {
+            item: self.items[index],
+            label: self.labels[index],
         })
     }
 
-    /// Returns the length of the dataset
     fn len(&self) -> usize {
-        self.dataset.len()
+        self.items.len()
     }
 }
 
-/// Implement methods for constructing the DbPedia dataset
-impl DbPediaDataset {
-    /// Returns the training portion of the dataset
-    pub fn train() -> Self {
-        Self::new("train")
-    }
 
-    /// Returns the testing portion of the dataset
-    pub fn test() -> Self {
-        Self::new("test")
-    }
-
-    /// Constructs the dataset from a split (either "train" or "test")
-    pub fn new(split: &str) -> Self {
-        let dataset: SqliteDataset<DbPediaItem> = HuggingfaceDatasetLoader::new("dbpedia_14")
-            .dataset(split)
-            .unwrap();
-        Self { dataset }
-    }
-}
-
-/// Implement the PriceGainDataset trait for the DbPedia dataset
-impl PriceGainDataset for DbPediaDataset {
-    /// Returns the number of unique classes in the dataset
-    fn num_classes() -> usize {
-        14
-    }
-
-    /// Returns the name of a class given its label
-    fn class_name(label: usize) -> String {
-        match label {
-            0 => "Company",
-            1 => "EducationalInstitution",
-            2 => "Artist",
-            3 => "Athlete",
-            4 => "OfficeHolder",
-            5 => "MeanOfTransportation",
-            6 => "Building",
-            7 => "NaturalPlace",
-            8 => "Village",
-            9 => "Animal",
-            10 => "Plant",
-            11 => "Album",
-            12 => "Film",
-            13 => "WrittenWork",
-            _ => panic!("invalid class"),
-        }
-            .to_string()
-    }
-}

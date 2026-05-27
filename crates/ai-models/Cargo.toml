@@ -23,6 +23,7 @@ burn = { workspace = true, features = [
     "std",
 ]
 }
+extractors.workspace = true
 
 derive-new.workspace = true
 serde.workspace = true

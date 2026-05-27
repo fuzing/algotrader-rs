@@ -6,7 +6,7 @@ use extractors::{
         IntervalExtractor,
         IntervalExtraction,
         IntervalExtractionWithGain,
-        ExtractedDataFileFormat,
+        ExtractedDataFile,
     },
 };
 
@@ -121,8 +121,11 @@ async fn write_data(
     last_trade_price_std_dev: f64,
     mid_point_price_mean: f64,
     mid_point_price_std_dev: f64,
+    volume_mean: f64,
+    volume_std_dev: f64,
+
 ) -> Result<(), Box<dyn Error>> {
-    let out_data = ExtractedDataFileFormat {
+    let out_data = ExtractedDataFile {
         holding_time_seconds,
         interval_nanos,
 
@@ -130,6 +133,9 @@ async fn write_data(
         last_trade_price_std_dev,
         mid_point_price_mean,
         mid_point_price_std_dev,
+
+        volume_mean,
+        volume_std_dev,
         data,
     };
 
@@ -212,8 +218,22 @@ async fn main() -> Result<(), Box<dyn Error>>
     let mid_point_price_mean = all_data.iter().map(|i| i.mid_point_price).mean();
     let mid_point_price_std_dev = all_data.iter().map(|i| i.mid_point_price).std_dev();
 
+    // All volumes mean and std_dev
+    let mut all_volumes: Vec::<f64> = Vec::new();
+    for d in all_data.iter() {
+        for bid in d.bids.iter() {
+            all_volumes.push(bid.volume as f64)
+        }
+        for ask in d.asks.iter() {
+            all_volumes.push(ask.volume as f64)
+        }
+    }
+    let volume_mean = all_volumes.iter().mean();
+    let volume_std_dev = all_volumes.iter().std_dev();
+
     write_data(args.pretty, args.output, args.holding_time_seconds, args.extraction_interval_nanos, all_data,
-            last_trade_price_mean, last_trade_price_std_dev, mid_point_price_mean, mid_point_price_std_dev).await?;
+            last_trade_price_mean, last_trade_price_std_dev, mid_point_price_mean, mid_point_price_std_dev,
+            volume_mean, volume_std_dev).await?;
 
     Ok(())
 }

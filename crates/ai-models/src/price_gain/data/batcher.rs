@@ -1,14 +1,4 @@
-// The module defines two structs PriceGainTrainingBatch and PriceGainInferenceBatch
-// to handle batches of data during training and inference respectively. The PriceGainBatcher
-// struct is implemented for creating these batches. It is parameterized on the type B: Backend to
-// support different computation backends (e.g., CPU, CUDA).
 
-// Two implementations of the Batcher trait are provided for PriceGainBatcher, one for creating
-// training batches and one for creating inference batches. In each implementation, the batch function is
-// defined to convert a vector of items into a batch. For training, the items are instances of
-// PriceGainItem and include both the text and the corresponding label.
-// For inference, the items are simply strings without labels. The function tokenizes the text,
-// generates a padding mask, and returns a batch object.
 
 use super::{dataset::PriceGainItem, tokenizer::Tokenizer};
 use burn::{
@@ -19,31 +9,25 @@ use burn::{
 use std::sync::Arc;
 use derive_new::new;
 
-/// Struct for batching price regression items
-#[derive(Clone, new)]
+#[derive(Clone, Debug)]
 pub struct PriceGainBatcher {
-    tokenizer: Arc<dyn Tokenizer>, // Tokenizer for converting text to token IDs
-    seq_length: SeqLengthOption,   // Sequence length option for tokenized text
+
 }
 
-/// Struct for training batch in price regression task
+
 #[derive(Debug, Clone, new)]
 pub struct PriceGainTrainingBatch {
-    pub tokens: Tensor<2, Int>,    // Tokenized text
-    pub labels: Tensor<1, Int>,    // Labels of the text
-    pub mask_pad: Tensor<2, Bool>, // Padding mask for the tokenized text
+    pub tokens: Tensor<2, Float>,
+    pub labels: Tensor<1, Float>,
 }
 
-/// Struct for inference batch in price regression task
-#[derive(Debug, Clone, new)]
+#[derive (Debug, Clone, new)]
 pub struct PriceGainInferenceBatch {
-    pub tokens: Tensor<2, Int>,    // Tokenized text
-    pub mask_pad: Tensor<2, Bool>, // Padding mask for the tokenized text
+    pub tokens: Tensor<2, Int>,
 }
 
 /// Implement Batcher trait for PriceGainBatcher struct for training
-impl Batcher<PriceGainItem, PriceGainTrainingBatch>
-for PriceGainBatcher
+impl Batcher<PriceGainItem, PriceGainTrainingBatch> for PriceGainBatcher
 {
     /// Batches a vector of price regression items into a training batch
     fn batch(
@@ -51,58 +35,59 @@ for PriceGainBatcher
         items: Vec<PriceGainItem>,
         device: &Device,
     ) -> PriceGainTrainingBatch {
-        let mut tokens_list = Vec::with_capacity(items.len());
-        let mut labels_list = Vec::with_capacity(items.len());
+        let mut tokens = Vec::with_capacity(items.len());
+        let mut labels = Vec::with_capacity(items.len());
 
-        // Tokenize text and create label tensor for each item
         for item in items {
-            tokens_list.push(self.tokenizer.encode(&item.text));
-            labels_list.push(Tensor::from_data(
-                TensorData::from([item.label as i64]),
-                device,
-            ));
+            tokens.push(
+                Tensor::from_data(
+                    // Fix
+                    TensorData::from([item.item[0], item.item[1]]),
+                    device,
+                )
+            );
+            labels.push(
+                Tensor::from_data(
+                    TensorData::from([item.label as f64])
+                    device,
+                )
+            );
         }
 
-        // Generate padding mask for tokenized text
-        let mask = generate_padding_mask(
-            self.tokenizer.pad_token(),
-            tokens_list,
-            self.seq_length,
-            device,
-        );
 
-        // Create and return training batch
         PriceGainTrainingBatch {
-            tokens: mask.tensor,
-            labels: Tensor::cat(labels_list, 0),
-            mask_pad: mask.mask,
+            tokens: Tensor::cat(tokens, 0),
+            labels: Tensor::cat(labels, 0),
         }
     }
 }
+
 
 /// Implement Batcher trait for PriceGainBatcher struct for inference
-impl Batcher<String, PriceGainInferenceBatch> for PriceGainBatcher {
-    /// Batches a vector of strings into an inference batch
-    fn batch(&self, items: Vec<String>, device: &Device) -> PriceGainInferenceBatch {
-        let mut tokens_list = Vec::with_capacity(items.len());
+impl Batcher<PriceGainItem, PriceGainInferenceBatch> for PriceGainBatcher
+{
+    /// Batches a vector of price regression items into a inference batch
+    fn batch(
+        &self,
+        items: Vec<PriceGainItem>,
+        device: &Device,
+    ) -> PriceGainInferenceBatch {
+        let mut tokens = Vec::with_capacity(items.len());
 
-        // Tokenize each string
         for item in items {
-            tokens_list.push(self.tokenizer.encode(&item));
+            tokens.push(
+                Tensor::from_data(
+                    // Fix
+                    TensorData::from([item.item[0], item.item[1]]),
+                    device,
+                )
+            );
         }
 
-        // Generate padding mask for tokenized text
-        let mask = generate_padding_mask(
-            self.tokenizer.pad_token(),
-            tokens_list,
-            self.seq_length,
-            device,
-        );
-
-        // Create and return inference batch
         PriceGainInferenceBatch {
-            tokens: mask.tensor.to_device(device),
-            mask_pad: mask.mask.to_device(device),
+            tokens: Tensor::cat(tokens, 0),
         }
     }
 }
+
+

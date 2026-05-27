@@ -58,6 +58,7 @@ dependencies = [
  "anyhow",
  "burn",
  "derive-new",
+ "extractors",
  "serde",
  "serde_json",
  "tokenizers",

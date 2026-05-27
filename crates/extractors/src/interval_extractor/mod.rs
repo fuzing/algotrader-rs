@@ -292,7 +292,7 @@ impl Display for IntervalExtractionWithGain {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ExtractedDataFileFormat {
+pub struct ExtractedDataFile {
     pub holding_time_seconds: u16,
     pub interval_nanos: u64,
     
@@ -301,6 +301,9 @@ pub struct ExtractedDataFileFormat {
     
     pub mid_point_price_mean: f64,
     pub mid_point_price_std_dev: f64,
+
+    pub volume_mean: f64,
+    pub volume_std_dev: f64,
     
     pub data: Vec<IntervalExtractionWithGain>
 }
