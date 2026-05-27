@@ -90,14 +90,23 @@ impl PriceGainDataset {
                 let mut ask_price_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
                 let mut bid_volume_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
                 let mut ask_volume_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
+                // for k in (0..PATCH_TEMPORAL_WINDOW_SIZE) {
+                //     for (index, bid) in data_file.data[i + j + k].bids.iter().enumerate() {
+                //         bid_price_patch[k][index] = (bid.price - price_mean) / price_std_dev;
+                //         bid_volume_patch[k][index] = (bid.volume - volume_mean) / volume_std_dev;
+                //     }
+                //     for (index, ask) in data_file.data[i + j + k].asks.iter().enumerate() {
+                //         ask_price_patch[k][index] = (ask.price - price_mean) / price_std_dev;
+                //         ask_volume_patch[k][index] = (ask.volume - volume_mean) / volume_std_dev;
+                //     }
+                // }
+
                 for k in (0..PATCH_TEMPORAL_WINDOW_SIZE) {
-                    for (index, bid) in data_file.data[i + j + k].bids.iter().enumerate() {
-                        bid_price_patch[k][index] = (bid.price - price_mean) / price_std_dev;
-                        bid_volume_patch[k][index] = (bid.volume - volume_mean) / volume_std_dev;
-                    }
-                    for (index, ask) in data_file.data[i + j + k].asks.iter().enumerate() {
-                        ask_price_patch[k][index] = (ask.price - price_mean) / price_std_dev;
-                        ask_volume_patch[k][index] = (ask.volume - volume_mean) / volume_std_dev;
+                    for l in 0..LOB_LEVELS {
+                        bid_price_patch[k][l] = (data_file.data[i + j + k].bids[l].price - price_mean) / price_std_dev;
+                        bid_volume_patch[k][l] = (data_file.data[i + j + k].bids[l].volume - volume_mean) / volume_std_dev;
+                        ask_price_patch[k][l] = (data_file.data[i + j + k].asks[l].price - price_mean) / price_std_dev;
+                        ask_volume_patch[k][l] = (data_file.data[i + j + k].asks[l].volume - volume_mean) / volume_std_dev;
                     }
                 }
             }
