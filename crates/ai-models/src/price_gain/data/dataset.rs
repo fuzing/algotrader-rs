@@ -32,7 +32,37 @@ pub struct PriceGainDataset {
 }
 
 
+const PATCH_TEMPORAL_WINDOW_SIZE: usize = 3;
+const LOB_LEVELS: usize = 10;
+
+
+enum PatchSide {
+    Bid,
+    Ask,
+}
+
+
+type PatchData = [[f64; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
+
+pub struct PatchEmbeddable {
+    pub side: PatchSide,
+    pub data: Box<PatchData>,
+}
+impl PatchEmbeddable {
+    pub fn new(side: PatchSide, data: PatchData) -> Self {
+        let data: PatchData = data.into();
+        Self {
+            side,
+            data: Box::new(data),
+        }
+    }
+}
+
 pub struct PriceGainEmbeddable {
+    ask_price_patches: Vec<PatchEmbeddable>,
+    bid_price_patches: Vec<PatchEmbeddable>,
+    ask_volume_patches: Vec<PatchEmbeddable>,
+    bid_volume_patches: Vec<PatchEmbeddable>,
 }
 
 
@@ -54,6 +84,7 @@ impl PriceGainDataset {
 
         // lob depth is the number of bid/ask levels in the extracted data
         let lob_depth = data_file.data[0].bids.len();
+
 
 
 
