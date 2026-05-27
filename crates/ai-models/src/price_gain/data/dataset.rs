@@ -26,13 +26,23 @@ pub struct PriceGainItem {
 pub struct PriceGainDataset {
     items: Vec<Vec<f64>>,           // the read in data file
     labels: Vec<f64>,
-    window: usize,                          // window to aggregate samples over
+    prediction_window: usize,                          // temporal window necessary to provide prediction
+    patch_window: usize,                                // temporal window for width of patch
+    patch_stride: usize,                                // usually set to same as patch_window
 }
+
+
+pub struct PriceGainEmbeddable {
+}
+
+
 
 impl PriceGainDataset {
     pub fn new(
         filename: PathBuf,
-        window: usize,              // time window in number of consecutive LOB samples
+        prediction_window: usize,              // time window in number of consecutive LOB samples
+        patch_window: usize,
+        patch_stride: usize,
     ) -> PriceGainDataset {
         let file = File::open(filename.clone()).expect(&format!("Couldn't open file {filename:?}"));
         let reader = BufReader::new(file);
@@ -45,14 +55,23 @@ impl PriceGainDataset {
         // lob depth is the number of bid/ask levels in the extracted data
         let lob_depth = data_file.data[0].bids.len();
 
-        for i in 0..(data_file.data.len() - window) {
 
+
+
+        for i in 0..(data_file.data.len() - prediction_window) {
+            for j in (0..(prediction_window - patch_window)).step_by(patch_stride) {
+                for k in (0..patch_window) {
+
+                }
+            }
         }
 
         PriceGainDataset {
             items: vec![],
             labels: vec![],
-            window,
+            prediction_window,
+            patch_window,
+            patch_stride,
         }
     }
 }
