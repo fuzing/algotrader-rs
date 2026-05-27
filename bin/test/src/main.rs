@@ -1,18 +1,18 @@
 
 
-const ROWS: usize = 5;
-const COLS: usize = 10;
+const PATCH_TEMPORAL_WINDOW_SIZE: usize = 5;
+const LOB_LEVELS: usize = 10;
 
 
-type MultiDimensional = [[f64; COLS]; ROWS];
+type MultiDimensional = [[f64; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
 
 
 fn main() {
     println!("Hello, world!");
 
-    let mut m: MultiDimensional = [[0.0; COLS]; ROWS];
-    for i in 0..ROWS {
-        for j in 0..COLS {
+    let mut m: MultiDimensional = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
+    for i in 0..PATCH_TEMPORAL_WINDOW_SIZE {
+        for j in 0..LOB_LEVELS {
             m[i][j] = j as f64;
         }
     }
