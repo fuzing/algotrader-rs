@@ -38,8 +38,10 @@ impl PriceGainDataset {
         let file = File::open(filename.clone()).expect(&format!("Couldn't open file {filename:?}"));
         let reader = BufReader::new(file);
         let data_file: ExtractedDataFile = serde_json::from_reader(reader).unwrap();
-        
-        let volume_mean = data_file.
+
+        // normalization via z-score
+        let (volume_mean, volume_std_dev) = (data_file.volume_mean, data_file.volume_std_dev);
+        let (price_mean, price_std_dev) = (data_file.mid_point_price_mean, data_file.mid_point_price_std_dev);
 
         for i in 0..(data_file.data.len() - window) {
 
