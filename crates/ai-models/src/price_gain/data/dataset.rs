@@ -49,7 +49,6 @@ impl PriceGainDataset {
 
         }
 
-
         PriceGainDataset {
             items: vec![],
             labels: vec![],
