@@ -41,7 +41,6 @@ enum PatchSide {
     Ask,
 }
 
-
 type PatchData = [[f64; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
 
 pub struct PatchEmbeddable {
@@ -50,7 +49,6 @@ pub struct PatchEmbeddable {
 }
 impl PatchEmbeddable {
     pub fn new(side: PatchSide, data: PatchData) -> Self {
-        let data: PatchData = data.into();
         Self {
             side,
             data: Box::new(data),
