@@ -84,34 +84,33 @@ impl PriceGainDataset {
         // lob depth is the number of bid/ask levels in the extracted data
         let lob_depth = data_file.data[0].bids.len();
 
+
+        // // this works for indexing
+        // let mut m: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
+        // for i in 0..PATCH_TEMPORAL_WINDOW_SIZE {
+        //     for j in 0..LOB_LEVELS {
+        //         m[i][j] = j as f64;
+        //     }
+        // }
+
+
+
         for i in 0..(data_file.data.len() - prediction_temporal_window) {
             for j in (0..(prediction_temporal_window - patch_temporal_window)).step_by(patch_temporal_stride) {
                 let mut bid_price_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
                 let mut ask_price_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
                 let mut bid_volume_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
                 let mut ask_volume_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
-                // for k in (0..PATCH_TEMPORAL_WINDOW_SIZE) {
-                //     for (index, bid) in data_file.data[i + j + k].bids.iter().enumerate() {
-                //         bid_price_patch[k, index] = (bid.price - price_mean) / price_std_dev;
-                //         bid_volume_patch[k, index] = (bid.volume - volume_mean) / volume_std_dev;
-                //     }
-                //     for (index, ask) in data_file.data[i + j + k].asks.iter().enumerate() {
-                //         ask_price_patch[k, index] = (ask.price - price_mean) / price_std_dev;
-                //         ask_volume_patch[k, index] = (ask.volume - volume_mean) / volume_std_dev;
-                //     }
-                // }
-
                 for k in (0..PATCH_TEMPORAL_WINDOW_SIZE) {
-                    for l in 0..LOB_LEVELS {
-                        let bid_price = data_file.data[i+j+k].bids[l].price;
-                        let bid_volume = data_file.data[i+j+k].bids[l].volume;
-                        bid_price_patch[k, l] = (bid_price - price_mean) / price_std_dev;
-                        bid_volume_patch[k, l] = (bid_volume - volume_mean) / volume_std_dev;
-
+                    for (index, bid) in data_file.data[i + j + k].bids.iter().enumerate() {
+                        bid_price_patch[k, index] = (bid.price - price_mean) / price_std_dev;
+                        bid_volume_patch[k, index] = (bid.volume - volume_mean) / volume_std_dev;
                     }
-
+                    for (index, ask) in data_file.data[i + j + k].asks.iter().enumerate() {
+                        ask_price_patch[k, index] = (ask.price - price_mean) / price_std_dev;
+                        ask_volume_patch[k, index] = (ask.volume - volume_mean) / volume_std_dev;
+                    }
                 }
-
             }
         }
 
