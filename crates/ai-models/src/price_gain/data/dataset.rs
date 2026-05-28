@@ -48,6 +48,7 @@ pub struct PatchEmbeddable {
     pub side: PatchSide,
     pub data: Box<PatchData>,
 }
+
 impl PatchEmbeddable {
     pub fn new(side: PatchSide, data: PatchData) -> Self {
         Self {
