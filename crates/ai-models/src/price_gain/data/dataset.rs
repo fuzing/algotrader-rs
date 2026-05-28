@@ -18,14 +18,13 @@ use extractors::interval_extractor::{
 
 #[derive(new, Clone, Debug)]
 pub struct PriceGainItem {
-    pub item: Vec<f64>,
+    pub patches: PriceGainEmbeddable,
     pub label: f64,
 }
 
 
 pub struct PriceGainDataset {
-    items: Vec<Vec<f64>>,           // the read in data file
-    labels: Vec<f64>,
+    items: Vec<PriceGainItem>,           // the read in data file
     prediction_window: usize,                          // temporal window necessary to provide prediction
     patch_window: usize,                                // temporal window for width of patch
     patch_stride: usize,                                // usually set to same as patch_window
@@ -42,21 +41,30 @@ enum PatchSide {
     Ask,
 }
 
+enum PatchType {
+    Price,
+    Volume,
+}
+
 type PatchData = [[f64; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
 
+
 pub struct PatchEmbeddable {
+    pub type_: PatchType,
     pub side: PatchSide,
     pub data: Box<PatchData>,
 }
 
 impl PatchEmbeddable {
-    pub fn new(side: PatchSide, data: PatchData) -> Self {
+    pub fn new(type_: PatchType, side: PatchSide, data: PatchData) -> Self {
         Self {
+            type_,
             side,
             data: Box::new(data),
         }
     }
 }
+
 
 pub struct PriceGainEmbeddable {
     ask_price_patches: Vec<PatchEmbeddable>,
@@ -64,7 +72,6 @@ pub struct PriceGainEmbeddable {
     ask_volume_patches: Vec<PatchEmbeddable>,
     bid_volume_patches: Vec<PatchEmbeddable>,
 }
-
 
 
 impl PriceGainDataset {
@@ -85,8 +92,15 @@ impl PriceGainDataset {
         // lob depth is the number of bid/ask levels in the extracted data
         let lob_depth = data_file.data[0].bids.len();
 
-        for i in 0..(data_file.data.len() - prediction_temporal_window) {
-            for j in (0..(prediction_temporal_window - patch_temporal_window)).step_by(patch_temporal_stride) {
+        let mut embeddable: PriceGainEmbeddable = PriceGainEmbeddable {
+            bid_price_patches: Vec::new(),
+            bid_volume_patches: Vec::new(),
+            ask_price_patches: Vec::new(),
+            ask_volume_patches: Vec::new(),
+        };
+
+        for i in 0..=(data_file.data.len() - prediction_temporal_window) {
+            for j in (0..=(prediction_temporal_window - patch_temporal_window)).step_by(patch_temporal_stride) {
                 let mut bid_price_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
                 let mut ask_price_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
                 let mut bid_volume_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
@@ -110,12 +124,48 @@ impl PriceGainDataset {
                         ask_volume_patch[k][l] = (data_file.data[i + j + k].asks[l].volume - volume_mean) / volume_std_dev;
                     }
                 }
+
+                // bid price
+                embeddable.bid_price_patches.push(
+                    PatchEmbeddable::new(
+                        PatchType::Price,
+                        PatchSide::Bid,
+                        bid_price_patch,
+                    )
+                );
+
+                // bid volume
+                embeddable.bid_volume_patches.push(
+                    PatchEmbeddable::new(
+                        PatchType::Volume,
+                        PatchSide::Bid,
+                        bid_volume_patch,
+                    )
+                );
+
+                // ask price
+                embeddable.ask_price_patches.push(
+                    PatchEmbeddable::new(
+                        PatchType::Price,
+                        PatchSide::Ask,
+                        ask_price_patch,
+                    )
+                );
+
+                // ask volume
+                embeddable.ask_volume_patches.push(
+                    PatchEmbeddable::new(
+                        PatchType::Volume,
+                        PatchSide::Ask,
+                        ask_volume_patch,
+                    )
+                );
+
             }
         }
 
         PriceGainDataset {
             items: vec![],
-            labels: vec![],
             prediction_window: prediction_temporal_window,
             patch_window: patch_temporal_window,
             patch_stride: patch_temporal_stride,
@@ -126,10 +176,7 @@ impl PriceGainDataset {
 impl Dataset<PriceGainItem> for PriceGainDataset {
     fn get(&self, index: usize) -> Option<PriceGainItem> {
         // will panic if index out of range
-        Some(PriceGainItem {
-            item: self.items[index],
-            label: self.labels[index],
-        })
+        Some(self.items[index])
     }
 
     fn len(&self) -> usize {
