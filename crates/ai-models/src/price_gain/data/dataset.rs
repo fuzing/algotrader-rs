@@ -60,7 +60,7 @@ pub struct PriceGainPatches {
 impl PriceGainDataset {
     pub fn new(
         filename: PathBuf,
-        prediction_temporal_window: usize,              // time window in number of consecutive LOB samples
+        prediction_temporal_window: usize,              // time window for prediction in number of consecutive LOB samples
     ) -> PriceGainDataset {
         let file = File::open(filename.clone()).expect(&format!("Couldn't open file {filename:?}"));
         let reader = BufReader::new(file);
@@ -125,11 +125,6 @@ impl PriceGainDataset {
             );
 
         }
-
-
-
-
-
 
         PriceGainDataset {
             items,

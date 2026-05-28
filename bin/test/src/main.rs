@@ -1,13 +1,13 @@
 
 
 const PATCH_TEMPORAL_WINDOW_SIZE: usize = 5;
-const PATCH_TEMPORAL_STRIDE: usize = 2;
+const PATCH_TEMPORAL_STRIDE: usize = 1;
 const LOB_LEVELS: usize = 1;
 
 const PREDICTION_TEMPORAL_WINDOW_SIZE: usize = 10;
 
 
-const NUMBER_OF_SNAPSHOTS: usize = 10;
+const NUMBER_OF_SNAPSHOTS: usize = 1_000;
 
 
 type PatchData = [[f64; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
@@ -25,27 +25,10 @@ struct Snapshot {
 
 
 fn main() {
-    println!("Hello, world!");
-
-    let mut n: Option<Box<PatchData>> = None;
-
-    {
-        let mut m: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
-        for i in 0..PATCH_TEMPORAL_WINDOW_SIZE {
-            for j in 0..LOB_LEVELS {
-                m[i][j] = j as f64;
-            }
-        }
-        // println!("{:?}", m);
-        n = Some(Box::new(m));
-    }
-
-    println!("{:?}", n);
-
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Snapshot windows
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    let mut snapshots: Vec<Snapshot> = Vec::new();
+    let mut snapshots: Vec<Snapshot> = Vec::with_capacity(NUMBER_OF_SNAPSHOTS);
     for _ in 0..NUMBER_OF_SNAPSHOTS {
         snapshots.push(Snapshot{
             bids: (0..LOB_LEVELS).map(|i| Level{price: i as f64, volume: i as u32}).collect(),
