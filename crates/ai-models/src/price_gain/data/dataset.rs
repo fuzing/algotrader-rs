@@ -114,8 +114,9 @@ impl PriceGainDataset {
                 patches.ask_volume.push(PriceGainPatch::new(ask_volume_patch));
             }
 
-            // let label = data_file.data[i].trade_gain;
-            let label = data_file.data[i].mid_point_gain;
+            // our label is found in the snapshot at the end of the prediction temporal window
+            // let label = data_file.data[i + prediction_temporal_window - 1].trade_gain;
+            let label = data_file.data[i + prediction_temporal_window - 1].mid_point_gain;
 
             items.push(
                 PriceGainItem {
