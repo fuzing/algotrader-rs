@@ -1,6 +1,6 @@
 
 
-const NUMBER_OF_SNAPSHOTS: usize = 1_000_000;
+const NUMBER_OF_SNAPSHOTS: usize = 10_000_000;
 const PREDICTION_TEMPORAL_WINDOW_SIZE: usize = 100;
 
 

@@ -50,10 +50,10 @@ impl PriceGainPatch {
 
 
 pub struct PriceGainPatches {
-    ask_price: Vec<PriceGainPatch>,
-    bid_price: Vec<PriceGainPatch>,
-    ask_volume: Vec<PriceGainPatch>,
-    bid_volume: Vec<PriceGainPatch>,
+    pub ask_price: Vec<PriceGainPatch>,
+    pub bid_price: Vec<PriceGainPatch>,
+    pub ask_volume: Vec<PriceGainPatch>,
+    pub bid_volume: Vec<PriceGainPatch>,
 }
 
 

@@ -10,9 +10,7 @@ use std::sync::Arc;
 use derive_new::new;
 
 #[derive(Clone, Debug)]
-pub struct PriceGainBatcher {
-
-}
+pub struct PriceGainBatcher {}
 
 
 #[derive(Debug, Clone, new)]
@@ -23,7 +21,7 @@ pub struct PriceGainTrainingBatch {
 
 #[derive (Debug, Clone, new)]
 pub struct PriceGainInferenceBatch {
-    pub tokens: Tensor<2, Int>,
+    pub tokens: Tensor<2, Float>,
 }
 
 /// Implement Batcher trait for PriceGainBatcher struct for training
@@ -39,6 +37,9 @@ impl Batcher<PriceGainItem, PriceGainTrainingBatch> for PriceGainBatcher
         let mut labels = Vec::with_capacity(items.len());
 
         for item in items {
+            
+            // let x = item.patches.ask_price[0].data;
+            
             tokens.push(
                 Tensor::from_data(
                     // Fix
@@ -48,7 +49,7 @@ impl Batcher<PriceGainItem, PriceGainTrainingBatch> for PriceGainBatcher
             );
             labels.push(
                 Tensor::from_data(
-                    TensorData::from([item.label as f64])
+                    TensorData::from([item.label as f64]),
                     device,
                 )
             );
