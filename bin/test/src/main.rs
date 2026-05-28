@@ -87,7 +87,6 @@ fn main() {
             ask_volume: Vec::new(),
         };
 
-
         for j in (0..=(PREDICTION_TEMPORAL_WINDOW_SIZE - PATCH_TEMPORAL_WINDOW_SIZE)).step_by(PATCH_TEMPORAL_STRIDE) {
             let mut bid_price_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
             let mut ask_price_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
