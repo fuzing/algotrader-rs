@@ -215,6 +215,7 @@ chrono = {  version = "0.4.44", features = ["serde"] }
 chrono-tz = "0.10.4"
 console_error_panic_hook = "0.1.7"
 criterion = "0.8.2"
+csv = { version = "1.4.0" }
 dotenv = "0.15.0"
 databento = { version = "0.50.0", features = ["historical", "live"], default-features = true }
 derive-new = { version = "0.7.0" }

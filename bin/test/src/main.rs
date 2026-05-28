@@ -1,30 +1,33 @@
 
 
-const NUMBER_OF_SNAPSHOTS: usize = 10_000_000;
+use serde::{ Serialize, Deserialize };
+use csv;
+
+const NUMBER_OF_SNAPSHOTS: usize = 1_000;
 const PREDICTION_TEMPORAL_WINDOW_SIZE: usize = 100;
 
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Level {
     price: f64,
     volume: u32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Snapshot {
     bids: Vec<Level>,
     asks: Vec<Level>,
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PriceGainItem {
     pub patches: PriceGainPatches,
     pub label: f64,
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PriceGainDataset {
     items: Vec<PriceGainItem>,           // the read in data file
 }
@@ -37,7 +40,7 @@ const LOB_LEVELS: usize = 10;
 type PatchData = [[f64; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
 
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PriceGainPatch {
     pub data: Box<PatchData>,
 }
@@ -50,7 +53,7 @@ impl PriceGainPatch {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PriceGainPatches {
     ask_price: Vec<PriceGainPatch>,
     bid_price: Vec<PriceGainPatch>,
@@ -72,9 +75,9 @@ fn main() {
     }
 
     // just some bogus numbers
-    let price_mean: f64 = 10.0;
+    let price_mean: f64 = 5.0;
     let price_std_dev: f64 = 2.0;
-    let volume_mean: f64 = 10.0;
+    let volume_mean: f64 = 5.0;
     let volume_std_dev: f64 = 2.0;
 
     let mut items: Vec<PriceGainItem> = Vec::new();
@@ -125,6 +128,37 @@ fn main() {
     println!("Total number of snapshots: {}", snapshots.len());
     println!("Total number of items: {}", items.len());
     println!("Total number of patches per item: {}", items[0].patches.ask_price.len() * 4);
+
+
+    // Write CSV file
+    // let mut writer = csv::Writer::from_path("./shit.csv").expect("cannot open csv file");
+    let mut writer = csv::WriterBuilder::new()
+        .has_headers(false)
+        .from_path("./shit.csv").expect("cannot open csv file");
+
+    #[derive(Debug, Serialize, Deserialize)]
+    struct Record {
+        city: String,
+        state: String,
+        country: String,
+        population: Vec<u64>
+    };
+
+    for item in items {
+        // writer.serialize(item.patches.ask_price).expect("cannot serialize item");
+        writer.serialize(item).expect("cannot serialize item");
+        // writer.serialize(Record {
+        //     city: "New York".to_string(),
+        //     state: "NY".to_string(),
+        //     country: "USA".to_string(),
+        //     population: vec![1,2,3],
+        // }).expect("cannot serialize item");
+    }
+    // writer.serialize(&items).expect("cannot write csv file");
+
+    writer.flush().expect("cannot flush csv file");
+
+
 }
 
 
