@@ -120,11 +120,11 @@ async fn decode_data(
 }
 
 fn format_float(val: f64) -> String {
-    // format!("{:.6}", val)
+    format!("{:.6}", val)
     // format!("{}", val)
     //     // .trim_end_matches('0')
     //     .to_string()
-    val.to_string()
+    // val.to_string()
 }
 
 struct PriceGainPatches {
