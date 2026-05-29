@@ -121,9 +121,10 @@ async fn decode_data(
 
 fn format_float(val: f64) -> String {
     // format!("{:.6}", val)
-    format!("{}", val)
-        // .trim_end_matches('0')
-        .to_string()
+    // format!("{}", val)
+    //     // .trim_end_matches('0')
+    //     .to_string()
+    val.to_string()
 }
 
 struct PriceGainPatches {
@@ -139,7 +140,6 @@ async fn convert_and_write_data(
     data: Vec<IntervalExtractionWithGain>,
 ) -> Result<(), Box<dyn Error>> {
     let mut file = File::create(&args.output)?;
-    writeln!(file, "{}", format_float(10.0))?;
 
     let prediction_temporal_window_size = args.prediction_intervals;
     let patch_temporal_window_size = args.patch_intervals;
