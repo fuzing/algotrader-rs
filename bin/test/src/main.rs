@@ -1,6 +1,10 @@
 
 
-use burn::nn::{PositionalEncodingConfig, PositionalEncoding};
+use burn::{
+    prelude::*,
+    nn::{PositionalEncodingConfig, PositionalEncoding},
+    tensor::{Tensor, TensorData, Shape},
+};
 use serde::{ Serialize, Deserialize };
 use csv;
 
@@ -65,6 +69,22 @@ pub struct PriceGainPatches {
 
 
 fn main() {
+
+    let device = Default::default();
+    let values_per_token = 10;
+    let pe = PositionalEncodingConfig::new(values_per_token)
+        .with_max_sequence_size(100)
+        .with_max_timescale(1_000_000)
+        .init(&device);
+
+    const BATCH_SIZE: usize = 16;
+    let t = Tensor::<2>::zeros(Shape::new([BATCH_SIZE, 10]), &device);
+    println!("Tensor {:?}", t);
+    // let x = pe.forward();
+
+
+
+
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Snapshot windows
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
