@@ -240,8 +240,12 @@ async fn convert_and_write_data(
         let tensor_with_positions = positional_encoder.forward(tensor);
         let vec_with_positions = tensor_with_positions.to_data().iter::<f64>().collect::<Vec<_>>();
         assert_eq!(vec_with_positions.len(), 1 * n_tokens * d_model);
+        let mut final_vector = vec_with_positions;
 
-        let line = vec_with_positions.into_iter().map(|v| format_float(v)).collect::<Vec<_>>();
+        // add label as last position for vector
+        final_vector.push(label);
+
+        let line = final_vector.into_iter().map(|v| format_float(v)).collect::<Vec<_>>();
         writeln!(file, "{}", line.join(","))?;
 
         // we can write the line out
@@ -399,7 +403,7 @@ async fn main() -> Result<(), Box<dyn Error>>
 
 #[derive(Debug, ClapParser)]
 struct Args {
-    // nanoseconds between intervals
+    // nanoseconds between intervals - to discretize the snapshots
     #[arg(long)]
     extraction_interval_nanos: u64,
 
