@@ -10,6 +10,7 @@ exclude.workspace = true
 
 [dependencies]
 burn = { workspace = true, features = [
+    "default",
     "train",
     "optim",
     "tui",
@@ -19,6 +20,8 @@ burn = { workspace = true, features = [
     "autotune",
     "fusion",
     "std",
+#    "tch",
+    "wgpu",
 ]
 }
 clap.workspace = true

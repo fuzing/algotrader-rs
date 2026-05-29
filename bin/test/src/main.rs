@@ -3,7 +3,14 @@
 use burn::{
     prelude::*,
     nn::{PositionalEncodingConfig, PositionalEncoding},
-    tensor::{Tensor, TensorData, Shape},
+    tensor::{
+        Device,
+        DeviceConfig,
+        Element,
+        Tensor,
+        TensorData,
+        Shape
+    },
 };
 use serde::{ Serialize, Deserialize };
 use csv;
@@ -11,7 +18,8 @@ use csv;
 const NUMBER_OF_SNAPSHOTS: usize = 400;
 const PREDICTION_TEMPORAL_WINDOW_SIZE: usize = 100;
 
-
+// type Elem = f32;
+type Elem = burn::tensor::f16;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Level {
@@ -67,21 +75,63 @@ pub struct PriceGainPatches {
     bid_volume: Vec<PriceGainPatch>,
 }
 
+#[allow(unreachable_code)]
+fn select_device() -> Device {
+    // #[cfg(feature = "flex")]
+    return Device::flex();
 
-fn main() {
+    #[cfg(all(feature = "tch-gpu", not(target_os = "macos")))]
+    return Device::libtorch_cuda(burn::tensor::DeviceIndex::Default);
 
-    let device = Default::default();
-    let values_per_token = 10;
-    let pe = PositionalEncodingConfig::new(values_per_token)
-        .with_max_sequence_size(100)
+    #[cfg(all(feature = "tch-gpu", target_os = "macos"))]
+    return Device::libtorch_mps();
+
+    #[cfg(feature = "tch-cpu")]
+    return Device::libtorch();
+
+    #[cfg(any(feature = "wgpu", feature = "metal", feature = "vulkan"))]
+    return Device::wgpu(burn::tensor::DeviceKind::DefaultDevice);
+
+    #[cfg(feature = "cuda")]
+    return Device::cuda(burn::tensor::DeviceIndex::Default);
+
+    #[cfg(feature = "rocm")]
+    return Device::rocm(burn::tensor::DeviceIndex::Default);
+
+    unreachable!("At least one backend will be selected.")
+}
+
+fn tensor_ops() {
+    let mut device = select_device();
+    device
+        .configure(DeviceConfig::default().float_dtype(Elem::dtype()))
+        .unwrap();
+
+    // let mut device = Device::
+    let d_model = 4;
+    let n_tokens = 5;
+    let pe = PositionalEncodingConfig::new(d_model)
+        .with_max_sequence_size(n_tokens)
         .with_max_timescale(1_000_000)
         .init(&device);
 
-    const BATCH_SIZE: usize = 16;
-    let t = Tensor::<2>::zeros(Shape::new([BATCH_SIZE, 10]), &device);
-    println!("Tensor {:?}", t);
-    // let x = pe.forward();
+    const BATCH_SIZE: usize = 5;
+    let t = Tensor::<3, Float>::zeros(Shape::new([BATCH_SIZE, n_tokens, d_model]), &device);
+    println!("Tensor {}", t);
+    println!("Tensor Shape {:?}", t.shape());
+    let x = pe.forward(t.clone());
+    println!("Tensor x {}", x);
+    let y = pe.forward(t);
+    println!("Tensor y {}", y);
+}
 
+
+
+
+fn main() {
+
+    tensor_ops();
+    return ();
 
 
 
