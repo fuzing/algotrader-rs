@@ -1,10 +1,12 @@
 
 
+use burn::nn::{PositionalEncodingConfig, PositionalEncoding};
 use serde::{ Serialize, Deserialize };
 use csv;
 
-const NUMBER_OF_SNAPSHOTS: usize = 1_000;
+const NUMBER_OF_SNAPSHOTS: usize = 400;
 const PREDICTION_TEMPORAL_WINDOW_SIZE: usize = 100;
+
 
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -32,8 +34,8 @@ pub struct PriceGainDataset {
     items: Vec<PriceGainItem>,           // the read in data file
 }
 
-const PATCH_TEMPORAL_WINDOW_SIZE: usize = 4;
-const PATCH_TEMPORAL_STRIDE: usize = PATCH_TEMPORAL_WINDOW_SIZE;
+const PATCH_TEMPORAL_WINDOW_SIZE: usize = 8;
+const PATCH_TEMPORAL_STRIDE: usize = 4;
 const LOB_LEVELS: usize = 10;
 
 
@@ -125,40 +127,47 @@ fn main() {
 
     }
 
+    // number of patches per item
+    let predicted_n_patches_per_item = ((PREDICTION_TEMPORAL_WINDOW_SIZE - PATCH_TEMPORAL_WINDOW_SIZE) / PATCH_TEMPORAL_STRIDE) + 1 ;
+    println!("predicted_n_patches: {}", predicted_n_patches_per_item);
+    // 2 sides by 2 channels (i.e. price and volume)
+    let patch_size = LOB_LEVELS * 2 * 2 * PATCH_TEMPORAL_WINDOW_SIZE;
+    let token_size = patch_size * predicted_n_patches_per_item;
+    println!("token_size: {}", token_size);
+
+
     println!("Total number of snapshots: {}", snapshots.len());
     println!("Total number of items: {}", items.len());
-    println!("Total number of patches per item: {}", items[0].patches.ask_price.len() * 4);
+    println!("Total number of patches per item: {}", items[0].patches.ask_price.len() /* * 4*/);
 
 
-    // Write CSV file
-    // let mut writer = csv::Writer::from_path("./shit.csv").expect("cannot open csv file");
-    let mut writer = csv::WriterBuilder::new()
-        .has_headers(false)
-        .from_path("./shit.csv").expect("cannot open csv file");
-
-    #[derive(Debug, Serialize, Deserialize)]
-    struct Record {
-        city: String,
-        state: String,
-        country: String,
-        population: Vec<u64>
-    };
-
-    for item in items {
-        // writer.serialize(item.patches.ask_price).expect("cannot serialize item");
-        writer.serialize(item).expect("cannot serialize item");
-        // writer.serialize(Record {
-        //     city: "New York".to_string(),
-        //     state: "NY".to_string(),
-        //     country: "USA".to_string(),
-        //     population: vec![1,2,3],
-        // }).expect("cannot serialize item");
-    }
-    // writer.serialize(&items).expect("cannot write csv file");
-
-    writer.flush().expect("cannot flush csv file");
-
-
+    // // Write CSV file
+    // // let mut writer = csv::Writer::from_path("./shit.csv").expect("cannot open csv file");
+    // let mut writer = csv::WriterBuilder::new()
+    //     .has_headers(false)
+    //     .from_path("./shit.csv").expect("cannot open csv file");
+    //
+    // #[derive(Debug, Serialize, Deserialize)]
+    // struct Record {
+    //     city: String,
+    //     state: String,
+    //     country: String,
+    //     population: Vec<u64>
+    // };
+    //
+    // for item in items {
+    //     // writer.serialize(item.patches.ask_price).expect("cannot serialize item");
+    //     writer.serialize(item).expect("cannot serialize item");
+    //     // writer.serialize(Record {
+    //     //     city: "New York".to_string(),
+    //     //     state: "NY".to_string(),
+    //     //     country: "USA".to_string(),
+    //     //     population: vec![1,2,3],
+    //     // }).expect("cannot serialize item");
+    // }
+    // // writer.serialize(&items).expect("cannot write csv file");
+    //
+    // writer.flush().expect("cannot flush csv file");
 }
 
 

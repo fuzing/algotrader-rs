@@ -9,6 +9,18 @@ repository.workspace = true
 exclude.workspace = true
 
 [dependencies]
+burn = { workspace = true, features = [
+    "train",
+    "optim",
+    "tui",
+    "sqlite-bundled",
+    "metrics",
+    "flex",
+    "autotune",
+    "fusion",
+    "std",
+]
+}
 clap.workspace = true
 csv.workspace = true
 databento.workspace = true

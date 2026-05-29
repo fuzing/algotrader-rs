@@ -11,6 +11,7 @@ exclude.workspace = true
 [dependencies]
 anyhow.workspace = true
 clap.workspace = true
+csv.workspace = true
 databento.workspace = true
 dotenv.workspace = true
 extractors.workspace = true
