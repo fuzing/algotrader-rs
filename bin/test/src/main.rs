@@ -117,6 +117,9 @@ fn tensor_ops() {
 
     const BATCH_SIZE: usize = 5;
     let t = Tensor::<3, Float>::zeros(Shape::new([BATCH_SIZE, n_tokens, d_model]), &device);
+    // let a = Tensor::<1>::from_floats([1.0], &device);
+    // let t2 = t.clone().add(a);
+    let t = t.clone().add_scalar(1.0);
     println!("Tensor {}", t);
     println!("Tensor Shape {:?}", t.shape());
     let x = pe.forward(t.clone());
