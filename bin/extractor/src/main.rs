@@ -109,6 +109,13 @@ fn format_float(val: f64) -> String {
         .to_string()
 }
 
+struct PriceGainPatches {
+    pub bid_price: Vec<Vec<f64>>,
+    pub bid_volume: Vec<Vec<f64>>,
+    pub ask_price: Vec<Vec<f64>>,
+    pub ask_volume: Vec<Vec<f64>>,
+}
+
 async fn convert_and_write_data(
     args: &Args,
     stats: &DataStatistics,
@@ -127,14 +134,92 @@ async fn convert_and_write_data(
     // };
 
     let mut file = File::create(&args.output)?;
-    // let mut writer = BufWriter::new(file);
-    //
-    // writer.write_fmt()?;
-
     writeln!(file, "{}", format_float(10.0))?;
 
+    let prediction_temporal_window_size = args.prediction_intervals;
+    let patch_temporal_window_size = args.patch_intervals;
+    let patch_temporal_stride = args.patch_stride;
+    let lob_levels = args.lob_levels;
+
+    let price_mean = stats.price_mean;
+    let price_std_dev = stats.price_std_dev;
+    let volume_mean = stats.volume_mean;
+    let volume_std_dev = stats.volume_std_dev;
 
 
+    let predicted_n_patches_per_item = ((prediction_temporal_window_size - patch_temporal_window_size) / patch_temporal_stride) + 1 ;
+    let patch_size = patch_temporal_window_size * lob_levels;
+
+
+
+    for i in 0..=(data.len() - prediction_temporal_window_size) {
+
+        // new embeddable
+        let mut patches = PriceGainPatches {
+            bid_price: Vec::new(),
+            bid_volume: Vec::new(),
+            ask_price: Vec::new(),
+            ask_volume: Vec::new(),
+        };
+
+        for j in (0..=(prediction_temporal_window_size - patch_temporal_window_size)).step_by(patch_temporal_stride) {
+            // let mut bid_price_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
+            // let mut ask_price_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
+            // let mut bid_volume_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
+            // let mut ask_volume_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
+
+            // for k in (0..patch_temporal_window_size) {
+            //     for l in 0..lob_levels {
+            //         bid_price_patch[k][l] = (data[i + j + k].bids[l].price - price_mean) / price_std_dev;
+            //         bid_volume_patch[k][l] = (data[i + j + k].bids[l].volume as f64 - volume_mean) / volume_std_dev;
+            //         ask_price_patch[k][l] = (data[i + j + k].asks[l].price - price_mean) / price_std_dev;
+            //         ask_volume_patch[k][l] = (data[i + j + k].asks[l].volume as f64 - volume_mean) / volume_std_dev;
+            //     }
+            // }
+            //
+            // // add patches
+            // patches.bid_price.push(PriceGainPatch::new(bid_price_patch));
+            // patches.bid_volume.push(PriceGainPatch::new(bid_volume_patch));
+            // patches.ask_price.push(PriceGainPatch::new(ask_price_patch));
+            // patches.ask_volume.push(PriceGainPatch::new(ask_volume_patch));
+
+
+
+            let mut bid_price_patch: Vec<f64> = Vec::new();
+            let mut bid_volume_patch: Vec<f64> = Vec::new();
+            let mut ask_price_patch: Vec<f64> = Vec::new();
+            let mut ask_volume_patch: Vec<f64> = Vec::new();
+
+            for k in (0..patch_temporal_window_size) {
+                for l in 0..lob_levels {
+                    bid_price_patch.push((data[i + j + k].bids[l].price - price_mean) / price_std_dev);
+                    bid_volume_patch.push((data[i + j + k].bids[l].volume as f64 - volume_mean) / volume_std_dev);
+                    ask_price_patch.push((data[i + j + k].asks[l].price - price_mean) / price_std_dev);
+                    ask_volume_patch.push((data[i + j + k].asks[l].volume as f64 - volume_mean) / volume_std_dev);
+                }
+            }
+
+            // add patches
+            patches.bid_price.push(bid_price_patch);
+            patches.bid_volume.push(bid_volume_patch);
+            patches.ask_price.push(ask_price_patch);
+            patches.ask_volume.push(ask_volume_patch);
+        }
+
+        // our label is found in the snapshot at the end of the prediction temporal window
+        // let label = data[i + prediction_temporal_window - 1].trade_gain;
+        let label = data[i + prediction_temporal_window_size - 1].mid_point_gain;
+
+        // we can write the line out
+
+        // items.push(
+        //     PriceGainItem {
+        //         patches,
+        //         label,
+        //     }
+        // );
+
+    }
 
 
 
@@ -299,6 +384,11 @@ struct Args {
     // number of intervals to include per patch
     #[arg(long)]
     patch_intervals: usize,
+
+    // number of intervals to include per patch
+    #[arg(long)]
+    patch_stride: usize,
+
 
     // Governs how the prediction is classified.
     //   If future price >= current_price + gain_percentage then "buy"
