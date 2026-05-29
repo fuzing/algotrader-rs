@@ -126,6 +126,38 @@ fn tensor_ops() {
     println!("Tensor x {}", x);
     let y = pe.forward(t);
     println!("Tensor y {}", y);
+
+    // pull the value at 1,2,1
+    let v = y.clone().slice([1,2,1]);
+    let v: f32 = v.into_scalar();
+    println!("Tensor v 1,2,1 {}", v);
+
+
+    // getting float data out of a tensor
+    let w = y.to_data();
+    println!("Tensor Data {}", w);
+    for x in w.iter::<f64>() {
+        print!("{},", x);
+    }
+    println!("");
+
+    // create a tensor from float data
+    // let mut a: Vec<Vec<f32>> = Vec::new();
+    // a.push(vec![1.0, 2.0, 3.0]);
+    // a.push(vec![4.0, 5.0, 6.0]);
+    // let mut a: Vec<f32> = Vec::new();
+    // a.push(1.0);
+    let mut a: Vec<f32> = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
+
+    let y = Tensor::<2, Float>::from_floats(
+        // TensorData::new(a, vec![2,3]),
+        TensorData::new(a, Shape::new([2,3])),
+        &device
+    );
+
+    println!("Tensor Data {}", y);
+
+
 }
 
 
