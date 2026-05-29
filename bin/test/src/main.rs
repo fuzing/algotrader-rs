@@ -11,10 +11,13 @@ use burn::{
         TensorData,
         Shape
     },
+    data::dataloader::{DataLoader, DataLoaderBuilder},
 };
-use serde::{ Serialize, Deserialize };
-use csv;
-use std::path::PathBuf;
+
+use std::{
+    path::PathBuf,
+    sync::Arc,
+};
 
 use ai_models::price_gain::data::{
     batcher::PriceGainBatcher,
@@ -111,7 +114,6 @@ fn tensor_ops() {
 
 fn stream_data() {
 
-    use burn::data::dataloader::DataLoaderBuilder;
 
     /// Demonstrates how to use the **streaming CSV dataset**.
     ///
@@ -127,7 +129,7 @@ fn stream_data() {
             .unwrap();
 
 
-        let filename = PathBuf::from("/run/peter/media/genetics/algotrader/data/KHC-2024.csv");
+        let filename = PathBuf::from("/run/media/peter/genetics/algotrader/data/KHC-2024.csv");
 
         // ---- Create dataset (streaming, no loading) ----
         println!("Indexing CSV into memory-mapped structure...");
@@ -136,26 +138,26 @@ fn stream_data() {
         // ---- Build DataLoader ----
         // let batcher = CsvBatcher::<MyBackend>::new();
         let batcher = PriceGainBatcher::new();
-        let dataloader = DataLoaderBuilder::new(batcher)
-            .batch_size(4)
-            .shuffle(42)    // Efficient even for huge datasets (shuffles indices)
-            .num_workers(4) // Parallel reading/parsing
-            .build(dataset);
-
-        println!("Starting streaming batch iteration...");
-
-        // ---- Iterate over batches ----
-        for (i, batch) in dataloader.iter().enumerate() {
-            if i == 0 {
-                println!("First batch (inputs): {}", batch.inputs);
-                println!("First batch (targets): {}", batch.targets);
-            }
-
-            if i % 100 == 0 {
-                println!("Processed batch {}", i);
-            }
-        }
-
+        // let dataloader = DataLoaderBuilder::new(batcher)
+        //     .batch_size(4)
+        //     .shuffle(42)    // Efficient even for huge datasets (shuffles indices)
+        //     .num_workers(4) // Parallel reading/parsing
+        //     .build(dataset);
+        //
+        // println!("Starting streaming batch iteration...");
+        //
+        // // ---- Iterate over batches ----
+        // for (i, batch) in dataloader.iter().enumerate() {
+        //     if i == 0 {
+        //         println!("First batch (inputs): {}", batch.inputs);
+        //         println!("First batch (targets): {}", batch.targets);
+        //     }
+        //
+        //     if i % 100 == 0 {
+        //         println!("Processed batch {}", i);
+        //     }
+        // }
+    
 }
 
 
