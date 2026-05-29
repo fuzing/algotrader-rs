@@ -10,6 +10,19 @@ use extractors::{
     },
 };
 
+use burn::{
+    prelude::*,
+    nn::{PositionalEncodingConfig, PositionalEncoding},
+    tensor::{
+        Device,
+        DeviceConfig,
+        Element,
+        Tensor,
+        TensorData,
+        Shape
+    },
+};
+
 use statrs::statistics::Statistics;
 
 use serde::{Deserialize, Serialize};
@@ -40,6 +53,10 @@ use databento::{
 };
 
 use utilities::date_time::{nanos_to_offset_date_time_with_tz, str_to_offset_date_time};
+
+
+type Elem = f32;
+// type Elem = burn::tensor::f16;
 
 
 async fn decode_data(
@@ -121,18 +138,6 @@ async fn convert_and_write_data(
     stats: &DataStatistics,
     data: Vec<IntervalExtractionWithGain>,
 ) -> Result<(), Box<dyn Error>> {
-    // let out_data = ExtractedDataFile {
-    //     holding_time_seconds: args.holding_time_seconds,
-    //     interval_nanos: args.extraction_interval_nanos,
-    //
-    //     price_mean: stats.price_mean,
-    //     price_std_dev: stats.price_std_dev,
-    //
-    //     volume_mean: stats.volume_mean,
-    //     volume_std_dev: stats.volume_std_dev,
-    //     data,
-    // };
-
     let mut file = File::create(&args.output)?;
     writeln!(file, "{}", format_float(10.0))?;
 
@@ -147,8 +152,22 @@ async fn convert_and_write_data(
     let volume_std_dev = stats.volume_std_dev;
 
 
-    let predicted_patches_per_item = ((prediction_temporal_window_size - patch_temporal_window_size) / patch_temporal_stride) + 1 ;
+    let predicted_patches_per_item = ((prediction_temporal_window_size - patch_temporal_window_size) / patch_temporal_stride) + 1;
+    let n_tokens = predicted_patches_per_item;
+
     let patch_size = patch_temporal_window_size * lob_levels;
+    // the model dimension is the sum of the sizes:  ask_price_patch size + ask_volume_patch_size + bid_price_patch size + bid_volume_patch_size
+    let d_model = patch_size * 4;
+
+    // CPU based
+    let mut device = Device::flex();
+    device
+        .configure(DeviceConfig::default().float_dtype(Elem::dtype()))
+        .unwrap();
+    let positional_encoder = PositionalEncodingConfig::new(d_model)
+        .with_max_sequence_size(n_tokens)
+        .with_max_timescale(1_000_000)
+        .init(&device);
 
     for i in 0..=(data.len() - prediction_temporal_window_size) {
 
@@ -186,8 +205,21 @@ async fn convert_and_write_data(
         // let label = data[i + prediction_temporal_window - 1].trade_gain;
         let label = data[i + prediction_temporal_window_size - 1].mid_point_gain;
 
+        assert_eq!(patches.bid_price.len(), predicted_patches_per_item);
+        assert_eq!(patches.bid_volume[0].len(), n_tokens);
 
-        assert_eq!(patches.bid_price.len(), predicted_patches_per_item + 1);
+        let mut tokens: Vec<Vec<f64>> = Vec::with_capacity(n_tokens);
+        for i in 0..n_tokens {
+            let token = [
+                patches.bid_price[i].clone(),
+                patches.bid_volume[i].clone(),
+                patches.ask_price[i].clone(),
+                patches.ask_volume[i].clone(),
+            ].concat();
+
+            assert_eq!(token.len(), d_model);
+            tokens.push(token);
+        }
 
         // we can write the line out
 
