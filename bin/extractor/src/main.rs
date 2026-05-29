@@ -147,10 +147,8 @@ async fn convert_and_write_data(
     let volume_std_dev = stats.volume_std_dev;
 
 
-    let predicted_n_patches_per_item = ((prediction_temporal_window_size - patch_temporal_window_size) / patch_temporal_stride) + 1 ;
+    let predicted_patches_per_item = ((prediction_temporal_window_size - patch_temporal_window_size) / patch_temporal_stride) + 1 ;
     let patch_size = patch_temporal_window_size * lob_levels;
-
-
 
     for i in 0..=(data.len() - prediction_temporal_window_size) {
 
@@ -163,28 +161,6 @@ async fn convert_and_write_data(
         };
 
         for j in (0..=(prediction_temporal_window_size - patch_temporal_window_size)).step_by(patch_temporal_stride) {
-            // let mut bid_price_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
-            // let mut ask_price_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
-            // let mut bid_volume_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
-            // let mut ask_volume_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
-
-            // for k in (0..patch_temporal_window_size) {
-            //     for l in 0..lob_levels {
-            //         bid_price_patch[k][l] = (data[i + j + k].bids[l].price - price_mean) / price_std_dev;
-            //         bid_volume_patch[k][l] = (data[i + j + k].bids[l].volume as f64 - volume_mean) / volume_std_dev;
-            //         ask_price_patch[k][l] = (data[i + j + k].asks[l].price - price_mean) / price_std_dev;
-            //         ask_volume_patch[k][l] = (data[i + j + k].asks[l].volume as f64 - volume_mean) / volume_std_dev;
-            //     }
-            // }
-            //
-            // // add patches
-            // patches.bid_price.push(PriceGainPatch::new(bid_price_patch));
-            // patches.bid_volume.push(PriceGainPatch::new(bid_volume_patch));
-            // patches.ask_price.push(PriceGainPatch::new(ask_price_patch));
-            // patches.ask_volume.push(PriceGainPatch::new(ask_volume_patch));
-
-
-
             let mut bid_price_patch: Vec<f64> = Vec::new();
             let mut bid_volume_patch: Vec<f64> = Vec::new();
             let mut ask_price_patch: Vec<f64> = Vec::new();
@@ -209,6 +185,9 @@ async fn convert_and_write_data(
         // our label is found in the snapshot at the end of the prediction temporal window
         // let label = data[i + prediction_temporal_window - 1].trade_gain;
         let label = data[i + prediction_temporal_window_size - 1].mid_point_gain;
+
+
+        assert_eq!(patches.bid_price.len(), predicted_patches_per_item + 1);
 
         // we can write the line out
 
