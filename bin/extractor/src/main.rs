@@ -151,13 +151,13 @@ async fn convert_and_write_data(
     let volume_mean = stats.volume_mean;
     let volume_std_dev = stats.volume_std_dev;
 
-
     let predicted_patches_per_item = ((prediction_temporal_window_size - patch_temporal_window_size) / patch_temporal_stride) + 1;
     let n_tokens = predicted_patches_per_item;
-
     let patch_size = patch_temporal_window_size * lob_levels;
     // the model dimension is the sum of the sizes:  ask_price_patch size + ask_volume_patch_size + bid_price_patch size + bid_volume_patch_size
+    println!("patch_size: ----------------------> {}", patch_size);
     let d_model = patch_size * 4;
+    println!("d_model: ---------------------------> {}", d_model);
 
     // CPU based
     let mut device = Device::flex();
@@ -170,7 +170,6 @@ async fn convert_and_write_data(
         .init(&device);
 
     for i in 0..=(data.len() - prediction_temporal_window_size) {
-
         // new embeddable
         let mut patches = PriceGainPatches {
             bid_price: Vec::new(),
@@ -194,6 +193,11 @@ async fn convert_and_write_data(
                 }
             }
 
+            assert_eq!(bid_price_patch.len(), patch_size);
+            assert_eq!(bid_volume_patch.len(), patch_size);
+            assert_eq!(ask_price_patch.len(), patch_size);
+            assert_eq!(ask_volume_patch.len(), patch_size);
+
             // add patches
             patches.bid_price.push(bid_price_patch);
             patches.bid_volume.push(bid_volume_patch);
@@ -206,7 +210,7 @@ async fn convert_and_write_data(
         let label = data[i + prediction_temporal_window_size - 1].mid_point_gain;
 
         assert_eq!(patches.bid_price.len(), predicted_patches_per_item);
-        assert_eq!(patches.bid_volume[0].len(), n_tokens);
+        assert_eq!(patches.bid_price.len(), n_tokens);
 
         let mut tokens: Vec<Vec<f64>> = Vec::with_capacity(n_tokens);
         for i in 0..n_tokens {
@@ -217,9 +221,25 @@ async fn convert_and_write_data(
                 patches.ask_volume[i].clone(),
             ].concat();
 
+            // println!("token length {}", token.len());       // 160
+
             assert_eq!(token.len(), d_model);
             tokens.push(token);
         }
+
+        // build a tensor of [batch_size, n_tokens, d_model] with batch size 1 and then add
+        let flat = tokens.into_iter().flatten().collect::<Vec<_>>();
+        assert_eq!(flat.len(), 1 * n_tokens * d_model);
+
+        let tensor = Tensor::<3, Float>::from_floats(
+            // TensorData::new(a, vec![2,3]),
+            TensorData::new(flat,Shape::new([1,n_tokens,d_model])),
+            &device
+        );
+
+        let tensor_with_positions = positional_encoder.forward(tensor);
+        let vec_with_positions = tensor_with_positions.to_data().iter::<f64>().collect::<Vec<_>>();
+        assert_eq!(vec_with_positions.len(), 1 * n_tokens * d_model);
 
         // we can write the line out
 
