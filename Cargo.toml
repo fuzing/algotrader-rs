@@ -220,6 +220,7 @@ dotenv = "0.15.0"
 databento = { version = "0.52.0", features = ["historical", "live"], default-features = true }
 derive-new = { version = "0.7.0" }
 extractors = { path = "crates/extractors" }
+memmap2 = "0.9.10"
 order-book = { path = "crates/order-book" }
 rand = "0.10.1" # ""0.10.0"[fusion]
 reqwest = { version = "0.13.4", features = ["native-tls"] }

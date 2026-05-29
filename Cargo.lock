@@ -59,6 +59,7 @@ dependencies = [
  "burn",
  "derive-new",
  "extractors",
+ "memmap2",
  "serde",
  "serde_json",
  "tokenizers",

@@ -2,8 +2,11 @@
 use std::{
     fs::File,
     io::BufReader,
-    path::PathBuf
+    path::PathBuf,
+    sync::Arc,
 };
+use std::io::BufRead;
+use memmap2::Mmap;
 use burn::data::dataset::{
     Dataset,
     InMemDataset,           // PMB in memory dataset
@@ -18,129 +21,96 @@ use extractors::interval_extractor::{
 
 #[derive(new, Clone, Debug)]
 pub struct PriceGainItem {
-    pub patches: PriceGainPatches,
+    pub features: Vec<f64>,
     pub label: f64,
 }
 
 
 pub struct PriceGainDataset {
-    items: Vec<PriceGainItem>,           // the read in data file
+    // memory mapped file, shareable across threads
+    mmap: Arc<Mmap>,
+
+    // Row index of each line
+    // (start byte, byte_len)
+    index: Vec<(usize, usize)>,
 }
 
 
-const PATCH_TEMPORAL_WINDOW_SIZE: usize = 4;
-const PATCH_TEMPORAL_STRIDE: usize = PATCH_TEMPORAL_WINDOW_SIZE;
-const LOB_LEVELS: usize = 10;
 
 
-type PatchData = [[f64; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
-
-
-pub struct PriceGainPatch {
-    pub data: Box<PatchData>,
-}
-
-impl PriceGainPatch {
-    pub fn new(data: PatchData) -> Self {
-        Self {
-            data: Box::new(data),
-        }
-    }
-}
-
-
-pub struct PriceGainPatches {
-    pub ask_price: Vec<PriceGainPatch>,
-    pub bid_price: Vec<PriceGainPatch>,
-    pub ask_volume: Vec<PriceGainPatch>,
-    pub bid_volume: Vec<PriceGainPatch>,
-}
 
 
 impl PriceGainDataset {
     pub fn new(
-        filename: PathBuf,
-        prediction_temporal_window: usize,              // time window for prediction in number of consecutive LOB samples
+        path: PathBuf,
     ) -> PriceGainDataset {
-        let file = File::open(filename.clone()).expect(&format!("Couldn't open file {filename:?}"));
-        let reader = BufReader::new(file);
-        let data_file: ExtractedDataFile = serde_json::from_reader(reader).unwrap();
+        let file = File::open(path.clone()).expect(&format!("Couldn't open file {path:?}"));
 
-        // normalization factors for z-score, for price and volume
-        let (volume_mean, volume_std_dev) = (data_file.volume_mean, data_file.volume_std_dev);
-        let (price_mean, price_std_dev) = (data_file.mid_point_price_mean, data_file.mid_point_price_std_dev);
+        let mmap = unsafe {
+            Mmap::map(&file).expect("failed to memory map file")
+        };
 
-        let mut items: Vec<PriceGainItem> = Vec::new();
 
-        for i in 0..=(data_file.data.len() - prediction_temporal_window) {
+        let reader = BufReader::new(&file);
 
-            // new embeddable
-            let mut patches = PriceGainPatches {
-                bid_price: Vec::new(),
-                bid_volume: Vec::new(),
-                ask_price: Vec::new(),
-                ask_volume: Vec::new(),
-            };
+        let mut index = Vec::new();
+        let mut cursor = 0;
 
-            for j in (0..=(prediction_temporal_window - PATCH_TEMPORAL_WINDOW_SIZE)).step_by(PATCH_TEMPORAL_STRIDE) {
-                let mut bid_price_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
-                let mut ask_price_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
-                let mut bid_volume_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
-                let mut ask_volume_patch: PatchData = [[0.0; LOB_LEVELS]; PATCH_TEMPORAL_WINDOW_SIZE];
-                // for k in (0..PATCH_TEMPORAL_WINDOW_SIZE) {
-                //     for (index, bid) in data_file.data[i + j + k].bids.iter().enumerate() {
-                //         bid_price_patch[k][index] = (bid.price - price_mean) / price_std_dev;
-                //         bid_volume_patch[k][index] = (bid.volume - volume_mean) / volume_std_dev;
-                //     }
-                //     for (index, ask) in data_file.data[i + j + k].asks.iter().enumerate() {
-                //         ask_price_patch[k][index] = (ask.price - price_mean) / price_std_dev;
-                //         ask_volume_patch[k][index] = (ask.volume - volume_mean) / volume_std_dev;
-                //     }
-                // }
+        for (i, line_result) in reader.lines().enumerate() {
+            let line = line_result.expect("Error reading csv file during indexing");
+            let len = line.len();
 
-                for k in (0..PATCH_TEMPORAL_WINDOW_SIZE) {
-                    for l in 0..LOB_LEVELS {
-                        bid_price_patch[k][l] = (data_file.data[i + j + k].bids[l].price - price_mean) / price_std_dev;
-                        bid_volume_patch[k][l] = (data_file.data[i + j + k].bids[l].volume as f64 - volume_mean) / volume_std_dev;
-                        ask_price_patch[k][l] = (data_file.data[i + j + k].asks[l].price - price_mean) / price_std_dev;
-                        ask_volume_patch[k][l] = (data_file.data[i + j + k].asks[l].volume as f64 - volume_mean) / volume_std_dev;
-                    }
-                }
-
-                // add patches
-                patches.bid_price.push(PriceGainPatch::new(bid_price_patch));
-                patches.bid_volume.push(PriceGainPatch::new(bid_volume_patch));
-                patches.ask_price.push(PriceGainPatch::new(ask_price_patch));
-                patches.ask_volume.push(PriceGainPatch::new(ask_volume_patch));
-            }
-
-            // our label is found in the snapshot at the end of the prediction temporal window
-            // let label = data_file.data[i + prediction_temporal_window - 1].trade_gain;
-            let label = data_file.data[i + prediction_temporal_window - 1].mid_point_gain;
-
-            items.push(
-                PriceGainItem {
-                    patches,
-                    label,
-                }
-            );
-
+            // no need to skip because we have no header
+            // // skip header - first row
+            // if (i == 0) {
+            //     cursor += len + 1;      // +1 for newline
+            //     continue;
+            // }
+            
+            index.push((cursor, len));
+            cursor += len + 1;      // +1 for newline
         }
+        println!("Indexed {} lines during mapping", index.len());
 
-        PriceGainDataset {
-            items,
+        Self {
+            mmap: Arc::new(mmap),
+            index,
         }
     }
 }
 
 impl Dataset<PriceGainItem> for PriceGainDataset {
     fn get(&self, index: usize) -> Option<PriceGainItem> {
-        // will panic if index out of range
-        Some(self.items[index])
+        // Get byte offset -> slice metadata
+        let (start, len) = *self.index.get(index)?;
+
+        // Slice the mmap (looks like reading from RAM)
+        let bytes = &self.mmap[start..start + len];
+
+        // Convert CSV line from UTF-8 bytes
+        let line_str = std::str::from_utf8(bytes).ok()?;
+
+        // Split by comma; fast and simple (no quoting support)
+        let mut values: Vec<f64> = line_str
+            .split(',')
+            .map(|s| s.trim().parse::<f64>().unwrap_or(0.0))
+            .collect();
+
+        if values.is_empty() {
+            return None;
+        }
+
+        // Last value = label
+        let label = values.pop()?; // O(1)
+
+        Some(PriceGainItem {
+            features: values,
+            label,
+        })
     }
 
     fn len(&self) -> usize {
-        self.items.len()
+        self.index.len()
     }
 }
 
