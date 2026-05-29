@@ -6,10 +6,10 @@
 
 use super::{
     data::{
-        tokenizer::BertCasedTokenizer,
+        // tokenizer::BertCasedTokenizer,
         batcher::PriceGainBatcher,
         dataset::PriceGainDataset,
-        tokenizer::Tokenizer
+        // tokenizer::Tokenizer
     },
     model::PriceGainModelConfig,
     training::ExperimentConfig,

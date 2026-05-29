@@ -12,6 +12,12 @@ use derive_new::new;
 #[derive(Clone, Debug)]
 pub struct PriceGainBatcher {}
 
+impl PriceGainBatcher {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
 
 #[derive(Debug, Clone, new)]
 pub struct PriceGainTrainingBatch {
