@@ -29,6 +29,7 @@ use tracing::{debug, info, warn, error, Instrument};
 use tokio;
 use std::error::Error;
 use std::fmt::Display;
+use std::io::Write;
 use dotenv::dotenv;
 
 use databento::{
@@ -101,53 +102,82 @@ async fn decode_data(
     Ok(all_results_mapped)
 }
 
+fn format_float(val: f64) -> String {
+    // format!("{:.6}", val)
+    format!("{}", val)
+        // .trim_end_matches('0')
+        .to_string()
+}
 
-// #[derive(Debug, Serialize, Deserialize)]
-// struct ExtractedDataFileFormat {
-//     holding_time_seconds: u16,
-//     interval_nanos: u64,
-//     data: Vec<IntervalExtractionWithGain>
-// }
+async fn convert_and_write_data(
+    args: &Args,
+    stats: &DataStatistics,
+    data: Vec<IntervalExtractionWithGain>,
+) -> Result<(), Box<dyn Error>> {
+    // let out_data = ExtractedDataFile {
+    //     holding_time_seconds: args.holding_time_seconds,
+    //     interval_nanos: args.extraction_interval_nanos,
+    //
+    //     price_mean: stats.price_mean,
+    //     price_std_dev: stats.price_std_dev,
+    //
+    //     volume_mean: stats.volume_mean,
+    //     volume_std_dev: stats.volume_std_dev,
+    //     data,
+    // };
+
+    let mut file = File::create(&args.output)?;
+    // let mut writer = BufWriter::new(file);
+    //
+    // writer.write_fmt()?;
+
+    writeln!(file, "{}", format_float(10.0))?;
+
+
+
+
+
+
+    Ok(())
+}
+
+
 
 async fn write_data(
-    pretty: bool,
-
-    path: PathBuf,
-    holding_time_seconds: u16,
-    interval_nanos: u64,
+    args: &Args,
+    stats: &DataStatistics,
     data: Vec<IntervalExtractionWithGain>,
-
-    last_trade_price_mean: f64,
-    last_trade_price_std_dev: f64,
-    mid_point_price_mean: f64,
-    mid_point_price_std_dev: f64,
-    volume_mean: f64,
-    volume_std_dev: f64,
-
 ) -> Result<(), Box<dyn Error>> {
     let out_data = ExtractedDataFile {
-        holding_time_seconds,
-        interval_nanos,
+        holding_time_seconds: args.holding_time_seconds,
+        interval_nanos: args.extraction_interval_nanos,
 
-        last_trade_price_mean,
-        last_trade_price_std_dev,
-        mid_point_price_mean,
-        mid_point_price_std_dev,
+        price_mean: stats.price_mean,
+        price_std_dev: stats.price_std_dev,
 
-        volume_mean,
-        volume_std_dev,
+        volume_mean: stats.volume_mean,
+        volume_std_dev: stats.volume_std_dev,
         data,
     };
 
-    let file = File::create(path)?;
+    let file = File::create(&args.output)?;
     let writer = BufWriter::new(file);
-    if pretty {
+    if args.pretty {
         serde_json::to_writer_pretty(writer, &out_data)?;
     }
     else {
         serde_json::to_writer(writer, &out_data)?;
     }
     Ok(())
+}
+
+
+#[derive(Debug)]
+pub struct DataStatistics {
+    price_mean: f64,
+    price_std_dev: f64,
+    volume_mean: f64,
+    volume_std_dev: f64,
 }
 
 
@@ -179,7 +209,7 @@ async fn main() -> Result<(), Box<dyn Error>>
     // Canonicalize all input files, to ensure that the files exists and that
     // the path is valid. Store it in a vector for further processing.
     let inputs = args
-        .inputs
+        .inputs.clone()
         .into_iter()
         .map(|p| Path::new(&root_folder).join("data").join(p).canonicalize())
         .collect::<Result<Vec<_>, _>>().map_err(|e| anyhow!(e))?;
@@ -187,17 +217,17 @@ async fn main() -> Result<(), Box<dyn Error>>
     println!("inputs: {:?}", inputs);
 
     // number of intervals that we're presuming holding for
-    let holding_time_intervals: usize = (args.holding_time_seconds as u64 * 1_000_000_000 / args.extraction_interval_nanos) as usize;
+    let holding_time_intervals: usize = (args.holding_time_seconds as u64 * 1_000_000_000 / &args.extraction_interval_nanos) as usize;
 
-    let start_date_nanos = str_to_offset_date_time(&format!("{} 00:00:00 UTC", args.start_date)).expect("Invalid start date").unix_timestamp_nanos() as u64;
-    let end_date_nanos = str_to_offset_date_time(&format!("{} 23:59:59 UTC", args.end_date)).expect("Invalid end date").unix_timestamp_nanos() as u64;
+    let start_date_nanos = str_to_offset_date_time(&format!("{} 00:00:00 UTC", &args.start_date)).expect("Invalid start date").unix_timestamp_nanos() as u64;
+    let end_date_nanos = str_to_offset_date_time(&format!("{} 23:59:59 UTC", &args.end_date)).expect("Invalid end date").unix_timestamp_nanos() as u64;
 
     let mut all_data: Vec<IntervalExtractionWithGain> = Vec::new();
 
     for input in inputs {
         let mut extractor = IntervalExtractor::builder()
-            .nbr_lob_levels(args.levels)
-            .extraction_interval_nanos(args.extraction_interval_nanos)
+            .nbr_lob_levels(&args.lob_levels)
+            .extraction_interval_nanos(&args.extraction_interval_nanos)
             .build();
 
         let mut data = decode_data(
@@ -212,9 +242,9 @@ async fn main() -> Result<(), Box<dyn Error>>
         println!("Stats: {}", extractor.stats());
     }
 
-    // calculate statistics for z-score manipulation later
-    let last_trade_price_mean = all_data.iter().map(|i| i.last_trade_price).mean();
-    let last_trade_price_std_dev = all_data.iter().map(|i| i.last_trade_price).std_dev();
+    // calculate statistics for z-score manipulation
+    let _last_trade_price_mean = all_data.iter().map(|i| i.last_trade_price).mean();
+    let _last_trade_price_std_dev = all_data.iter().map(|i| i.last_trade_price).std_dev();
     let mid_point_price_mean = all_data.iter().map(|i| i.mid_point_price).mean();
     let mid_point_price_std_dev = all_data.iter().map(|i| i.mid_point_price).std_dev();
 
@@ -231,9 +261,18 @@ async fn main() -> Result<(), Box<dyn Error>>
     let volume_mean = all_volumes.iter().mean();
     let volume_std_dev = all_volumes.iter().std_dev();
 
-    write_data(args.pretty, args.output, args.holding_time_seconds, args.extraction_interval_nanos, all_data,
-            last_trade_price_mean, last_trade_price_std_dev, mid_point_price_mean, mid_point_price_std_dev,
-            volume_mean, volume_std_dev).await?;
+    let stats = DataStatistics {
+        price_mean: mid_point_price_mean,
+        price_std_dev: mid_point_price_std_dev,
+        volume_mean,
+        volume_std_dev
+    };
+
+
+    convert_and_write_data(&args, &stats, all_data).await?;
+
+    // write_data(&args, &stats, all_data).await?;
+
 
     Ok(())
 }
@@ -245,13 +284,33 @@ struct Args {
     #[arg(long)]
     extraction_interval_nanos: u64,
 
-    // presumed holding time for the data
+    // presumed holding time for the data - offset used to compute gain/loss
     #[arg(long)]
     holding_time_seconds: u16,
 
     // levels of each side of the order book to capture (e.g. 5, 10 etc.)
     #[arg(long)]
-    levels: usize,
+    lob_levels: usize,
+
+    // number of intervals used for each prediction
+    #[arg(long)]
+    prediction_intervals: usize,
+
+    // number of intervals to include per patch
+    #[arg(long)]
+    patch_intervals: usize,
+
+    // Governs how the prediction is classified.
+    //   If future price >= current_price + gain_percentage then "buy"
+    //   If future price is in the band gain_percentage to loss_percentage then "neutral" (i.e. don't buy)
+    //   If future price is <= loss_percentage then "sell" (i.e. don't buy)
+    //  Use values such as 0.1 (0.1%), meaning gain of 0.1% at the end of the holding_time
+    //
+    #[arg(long)]
+    gain_percentage: f64,
+
+    #[arg(long)]
+    loss_percentage: f64,
 
     // start/end dates to extract from/to
     #[arg(long)]

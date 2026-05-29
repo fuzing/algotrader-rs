@@ -247,13 +247,13 @@ impl IntervalExtractorBuilder {
         )
     }
 
-    pub fn nbr_lob_levels(&mut self, value: usize) -> &mut Self {
-        self.nbr_lob_levels = value;
+    pub fn nbr_lob_levels(&mut self, value: &usize) -> &mut Self {
+        self.nbr_lob_levels = *value;
         self
     }
 
-    pub fn extraction_interval_nanos(&mut self, value: u64) -> &mut Self {
-        self.extraction_interval_nanos = value;
+    pub fn extraction_interval_nanos(&mut self, value: &u64) -> &mut Self {
+        self.extraction_interval_nanos = *value;
         self
     }
 }
@@ -296,11 +296,13 @@ pub struct ExtractedDataFile {
     pub holding_time_seconds: u16,
     pub interval_nanos: u64,
     
-    pub last_trade_price_mean: f64,
-    pub last_trade_price_std_dev: f64,
-    
-    pub mid_point_price_mean: f64,
-    pub mid_point_price_std_dev: f64,
+    // pub last_trade_price_mean: f64,
+    // pub last_trade_price_std_dev: f64,
+    // 
+    // pub mid_point_price_mean: f64,
+    // pub mid_point_price_std_dev: f64,
+    pub price_mean: f64,
+    pub price_std_dev: f64,
 
     pub volume_mean: f64,
     pub volume_std_dev: f64,

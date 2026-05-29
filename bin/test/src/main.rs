@@ -133,7 +133,7 @@ fn tensor_ops() {
     println!("Tensor v 1,2,1 {}", v);
 
 
-    // getting float data out of a tensor
+    // getting all float data out of a tensor
     let w = y.to_data();
     println!("Tensor Data {}", w);
     for x in w.iter::<f64>() {
@@ -156,8 +156,6 @@ fn tensor_ops() {
     );
 
     println!("Tensor Data {}", y);
-
-
 }
 
 

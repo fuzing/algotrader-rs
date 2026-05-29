@@ -2856,6 +2856,7 @@ name = "extractor"
 version = "1.0.0"
 dependencies = [
  "anyhow",
+ "burn",
  "clap",
  "csv",
  "databento",
