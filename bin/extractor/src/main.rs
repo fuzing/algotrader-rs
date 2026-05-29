@@ -241,6 +241,9 @@ async fn convert_and_write_data(
         let vec_with_positions = tensor_with_positions.to_data().iter::<f64>().collect::<Vec<_>>();
         assert_eq!(vec_with_positions.len(), 1 * n_tokens * d_model);
 
+        let line = vec_with_positions.into_iter().map(|v| format_float(v)).collect::<Vec<_>>();
+        writeln!(file, "{}", line.join(","))?;
+
         // we can write the line out
 
         // items.push(
