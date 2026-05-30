@@ -148,16 +148,16 @@ fn stream_data() {
         println!("Starting streaming batch iteration...");
 
         // ---- Iterate over batches ----
-        for (i, batch) in dataloader.iter().enumerate() {
-            if i == 0 {
-                // println!("First batch (inputs): {}", batch.inputs);
-                // println!("First batch (targets): {}", batch.targets);
-                println!("First batch (inputs): {}", batch.tokens);
-                println!("First batch (targets): {}", batch.labels);
-            }
+        for j in 0..1 {
+            for (i, batch) in dataloader.iter().enumerate() {
+                if i == 0 {
+                    println!("First batch (tokens): {}", batch.tokens);
+                    println!("First batch (labels): {}", batch.labels);
+                }
 
-            if i % 100 == 0 {
-                println!("Processed batch {}", i);
+                if i % 100 == 0 {
+                    println!("Processed batch {}", i);
+                }
             }
         }
     
