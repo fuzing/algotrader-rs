@@ -20,8 +20,8 @@ use std::{
 };
 
 use ai_models::price_gain::data::{
-    batcher::PriceGainBatcher,
-    dataset::PriceGainDataset,
+    batcher::{PriceGainBatcher, PriceGainTrainingBatch},
+    dataset::{PriceGainDataset, PriceGainItem},
 };
 
 
@@ -138,25 +138,28 @@ fn stream_data() {
         // ---- Build DataLoader ----
         // let batcher = CsvBatcher::<MyBackend>::new();
         let batcher = PriceGainBatcher::new();
-        // let dataloader = DataLoaderBuilder::new(batcher)
-        //     .batch_size(4)
-        //     .shuffle(42)    // Efficient even for huge datasets (shuffles indices)
-        //     .num_workers(4) // Parallel reading/parsing
-        //     .build(dataset);
-        //
-        // println!("Starting streaming batch iteration...");
-        //
-        // // ---- Iterate over batches ----
-        // for (i, batch) in dataloader.iter().enumerate() {
-        //     if i == 0 {
-        //         println!("First batch (inputs): {}", batch.inputs);
-        //         println!("First batch (targets): {}", batch.targets);
-        //     }
-        //
-        //     if i % 100 == 0 {
-        //         println!("Processed batch {}", i);
-        //     }
-        // }
+    // let dataloader = DataLoaderBuilder::new(batcher)
+    let dataloader: Arc<dyn DataLoader<PriceGainTrainingBatch>> = DataLoaderBuilder::new(batcher)
+            .batch_size(4)
+            .shuffle(42)    // Efficient even for huge datasets (shuffles indices)
+            .num_workers(4) // Parallel reading/parsing
+            .build(dataset);
+
+        println!("Starting streaming batch iteration...");
+
+        // ---- Iterate over batches ----
+        for (i, batch) in dataloader.iter().enumerate() {
+            if i == 0 {
+                // println!("First batch (inputs): {}", batch.inputs);
+                // println!("First batch (targets): {}", batch.targets);
+                println!("First batch (inputs): {}", batch.tokens);
+                println!("First batch (targets): {}", batch.labels);
+            }
+
+            if i % 100 == 0 {
+                println!("Processed batch {}", i);
+            }
+        }
     
 }
 
