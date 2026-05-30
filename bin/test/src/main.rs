@@ -138,11 +138,11 @@ fn stream_data() {
         // ---- Build DataLoader ----
         // let batcher = CsvBatcher::<MyBackend>::new();
         let batcher = PriceGainBatcher::new();
-    // let dataloader = DataLoaderBuilder::new(batcher)
-    let dataloader: Arc<dyn DataLoader<PriceGainTrainingBatch>> = DataLoaderBuilder::new(batcher)
-            .batch_size(4)
+        // let dataloader = DataLoaderBuilder::new(batcher)
+        let dataloader: Arc<dyn DataLoader<PriceGainTrainingBatch>> = DataLoaderBuilder::new(batcher)
+            .batch_size(64)
             .shuffle(42)    // Efficient even for huge datasets (shuffles indices)
-            .num_workers(4) // Parallel reading/parsing
+            .num_workers(8) // Parallel reading/parsing
             .build(dataset);
 
         println!("Starting streaming batch iteration...");
