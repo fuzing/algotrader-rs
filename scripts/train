@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
-cargo run --bin train -- --dataset=KHC-2024.csv --artifacts=/run/peter/genetics/algotrader/data/artifacts
+cargo run --bin train -- --dataset=KHC-2024.csv --artifacts=/run/media/peter/genetics/algotrader/data/artifacts
 
 

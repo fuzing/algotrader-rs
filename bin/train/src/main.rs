@@ -264,16 +264,6 @@ async fn train(
     //
     // // Initialize batcher
     // let batcher = PriceGainBatcher::new(tokenizer.clone(), config.seq_length);
-
-    // Initialize model
-    let model = PriceGainModelConfig::new(
-        config.transformer.clone(),
-        3, //D::num_classes(),
-        10, // tokenizer.vocab_size(),
-        config.seq_length,
-    )
-        .init(&strategy.main_device().clone().autodiff());
-
     //
     // // Initialize data loaders for training and testing data
     // let dataloader_train = DataLoaderBuilder::new(batcher.clone())
@@ -284,6 +274,16 @@ async fn train(
     //     .batch_size(config.batch_size)
     //     .num_workers(1)
     //     .build(SamplerDataset::new(dataset_test, 5_000));
+
+
+    // Initialize model
+    let model = PriceGainModelConfig::new(
+        config.transformer.clone(),
+        3, //D::num_classes(),
+        10, // tokenizer.vocab_size(),
+        config.seq_length,
+    )
+        .init(&strategy.main_device().clone().autodiff());
 
     // Initialize optimizer
     let optim = config.optimizer.init();
