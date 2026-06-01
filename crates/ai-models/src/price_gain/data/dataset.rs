@@ -41,7 +41,7 @@ pub struct PriceGainDataset {
 
 impl PriceGainDataset {
     pub fn new(
-        path: PathBuf,
+        path: &PathBuf,
     ) -> PriceGainDataset {
         let file = File::open(path.clone()).expect(&format!("Couldn't open file {path:?}"));
 

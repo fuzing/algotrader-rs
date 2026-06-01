@@ -81,6 +81,8 @@ pub struct ExperimentConfig {
     pub seq_length: SeqLengthOption,
     #[config(default = 8)]
     pub batch_size: usize,
+    #[config(default = 8)]
+    pub shuffle_seed: u64,
     #[config(default = 5)]
     pub num_epochs: usize,
 }
@@ -124,31 +126,38 @@ pub fn launch_multi<B: AutodiffBackend + DistributedBackend>() {
     ))
 }
 
-pub fn launch_single(mut device: Device) {
-    device
-        .configure(DeviceConfig::default().float_dtype(ElemType::dtype()))
-        .unwrap();
+// pub async fn launch_single(mut device: Device) {
+//     device
+//         .configure(DeviceConfig::default().float_dtype(ElemType::dtype()))
+//         .unwrap();
+//
+//     launch(ExecutionStrategy::SingleDevice(device)).await?
+// }
 
-    launch(ExecutionStrategy::SingleDevice(device))
-}
 
-
-pub fn launch(strategy: ExecutionStrategy) {
-    let config = ExperimentConfig::new(
-        TransformerEncoderConfig::new(256, 1024, 8, 4)
-            .with_norm_first(true)
-            .with_quiet_softmax(true),
-        AdamConfig::new().with_weight_decay(Some(WeightDecayConfig::new(5e-5))),
-    );
-
-    text_classification::training::train::<AgNewsDataset>(
-        strategy,
-        AgNewsDataset::train(),
-        AgNewsDataset::test(),
-        config,
-        "/tmp/text-classification-ag-news",
-    );
-}
+// pub async fn launch(dataset_path: &PathBuf, artifacts_path: &PathBuf, strategy: ExecutionStrategy) {
+//     let config = ExperimentConfig::new(
+//         TransformerEncoderConfig::new(256, 1024, 8, 4)
+//             .with_norm_first(true)
+//             .with_quiet_softmax(true),
+//         AdamConfig::new().with_weight_decay(Some(WeightDecayConfig::new(5e-5))),
+//     );
+//
+//     // text_classification::training::train::<AgNewsDataset>(
+//     //     strategy,
+//     //     AgNewsDataset::train(),
+//     //     AgNewsDataset::test(),
+//     //     config,
+//     //     "/tmp/text-classification-ag-news",
+//     // );
+//
+//     train(
+//         dataset_path,
+//         artifacts_path,
+//         strategy,
+//         config,
+//     );
+// }
 
 
 
@@ -202,62 +211,79 @@ where
     (train_dataset, test_dataset, validation_dataset)
 }
 
-async fn train(dataset_path: &PathBuf, artifact_path: &PathBuf) -> Result<(), Box<dyn Error>> {
+async fn train(
+    dataset_path: &PathBuf,
+    artifact_path: &PathBuf,
+) -> Result<(), Box<dyn Error>> {
+
+
+    let config = ExperimentConfig::new(
+        TransformerEncoderConfig::new(256, 1024, 8, 4)
+            .with_norm_first(true)
+            .with_quiet_softmax(true),
+        AdamConfig::new().with_weight_decay(Some(WeightDecayConfig::new(5e-5))),
+    );
 
     create_artifact_dir(artifact_path);
 
     let mut device = select_device();
     device
-        .configure(DeviceConfig::default().float_dtype(Element::dtype()))
+        .configure(DeviceConfig::default().float_dtype(ElemType::dtype()))
         .unwrap();
 
+    let strategy = ExecutionStrategy::SingleDevice(device);
 
-    let dataset_filename = PathBuf::from("/run/media/peter/genetics/algotrader/data/KHC-2024.csv");
 
     // ---- Create dataset (streaming, no loading) ----
     println!("Indexing CSV into memory-mapped structure...");
-    let full_dataset = PriceGainDataset::new(dataset_filename);
-    let (train_dataset, test_dataset, validation_dataset) =
+    let full_dataset = PriceGainDataset::new(dataset_path);
+
+    // 80/20/0
+    let (dataset_train, dataset_test, _dataset_validation) =
         create_splits(full_dataset.clone(), (4,1,0));
 
 
-
     // ---- Build DataLoader ----
-    // let batcher = CsvBatcher::<MyBackend>::new();
     let batcher = PriceGainBatcher::new();
-    // let dataloader = DataLoaderBuilder::new(batcher)
-    let dataloader: Arc<dyn DataLoader<PriceGainTrainingBatch>> = DataLoaderBuilder::new(batcher)
-        .batch_size(64)
+
+    let dataloader_train: Arc<dyn DataLoader<PriceGainTrainingBatch>> = DataLoaderBuilder::new(batcher.clone())
+        .batch_size(config.batch_size)
         .shuffle(42)    // Efficient even for huge datasets (shuffles indices)
         .num_workers(4) // Parallel reading/parsing
-        .build(full_dataset);
+        .build(dataset_train);
+
+    let dataloader_test: Arc<dyn DataLoader<PriceGainTrainingBatch>> = DataLoaderBuilder::new(batcher)
+        .batch_size(config.batch_size)
+        .shuffle(42)    // Efficient even for huge datasets (shuffles indices)
+        .num_workers(4) // Parallel reading/parsing
+        .build(dataset_test);
 
 
-
-    // Initialize tokenizer
-    let tokenizer = Arc::new(BertCasedTokenizer::default());
-
-    // Initialize batcher
-    let batcher = PriceGainBatcher::new(tokenizer.clone(), config.seq_length);
+    // // Initialize tokenizer
+    // let tokenizer = Arc::new(BertCasedTokenizer::default());
+    //
+    // // Initialize batcher
+    // let batcher = PriceGainBatcher::new(tokenizer.clone(), config.seq_length);
 
     // Initialize model
     let model = PriceGainModelConfig::new(
         config.transformer.clone(),
-        D::num_classes(),
-        tokenizer.vocab_size(),
+        3, //D::num_classes(),
+        10, // tokenizer.vocab_size(),
         config.seq_length,
     )
         .init(&strategy.main_device().clone().autodiff());
 
-    // Initialize data loaders for training and testing data
-    let dataloader_train = DataLoaderBuilder::new(batcher.clone())
-        .batch_size(config.batch_size)
-        .num_workers(1)
-        .build(SamplerDataset::new(dataset_train, 50_000));
-    let dataloader_test = DataLoaderBuilder::new(batcher)
-        .batch_size(config.batch_size)
-        .num_workers(1)
-        .build(SamplerDataset::new(dataset_test, 5_000));
+    //
+    // // Initialize data loaders for training and testing data
+    // let dataloader_train = DataLoaderBuilder::new(batcher.clone())
+    //     .batch_size(config.batch_size)
+    //     .num_workers(1)
+    //     .build(SamplerDataset::new(dataset_train, 50_000));
+    // let dataloader_test = DataLoaderBuilder::new(batcher)
+    //     .batch_size(config.batch_size)
+    //     .num_workers(1)
+    //     .build(SamplerDataset::new(dataset_test, 5_000));
 
     // Initialize optimizer
     let optim = config.optimizer.init();
@@ -270,15 +296,14 @@ async fn train(dataset_path: &PathBuf, artifact_path: &PathBuf) -> Result<(), Bo
         .unwrap();
 
     // Initialize learner
-    let training = SupervisedTraining::new(artifact_dir, dataloader_train, dataloader_test)
+    let training = SupervisedTraining::new(artifact_path, dataloader_train, dataloader_test)
         .metric_train(CudaMetric::new())
         .metric_valid(CudaMetric::new())
         .metric_train(IterationSpeedMetric::new())
         .metric_train_numeric(LossMetric::new())
         .metric_valid_numeric(LossMetric::new())
-        // PMB had to remove because these are for classification, not regression
-        // .metric_train_numeric(AccuracyMetric::new())
-        // .metric_valid_numeric(AccuracyMetric::new())
+        .metric_train_numeric(AccuracyMetric::new())
+        .metric_valid_numeric(AccuracyMetric::new())
         .metric_train_numeric(LearningRateMetric::new())
         .with_file_checkpointer(CompactRecorder::new())
         .with_training_strategy(strategy.into())
@@ -289,13 +314,12 @@ async fn train(dataset_path: &PathBuf, artifact_path: &PathBuf) -> Result<(), Bo
     let result = training.launch(Learner::new(model, optim, lr_scheduler));
 
     // Save the configuration and the trained model
-    config.save(format!("{artifact_dir}/config.json")).unwrap();
+    config.save(format!("{}/config.json", artifact_path.to_string_lossy()))?;
     CompactRecorder::new()
         .record(
             result.model.into_record(),
-            format!("{artifact_dir}/model").into(),
-        )
-        .unwrap();
+            format!("{}/model", artifact_path.to_string_lossy()).into(),
+        )?;
 
 
     Ok(())
@@ -329,9 +353,11 @@ async fn main() -> Result<(), Box<dyn Error>>
     let args = Args::parse();
     // info!("Run with arguments: {args:#?}");
     let root_folder = env::var("ROOT_FOLDER").expect("no ROOT_FOLDER found in environment");
-    let path: PathBuf = PathBuf::from(std::format!("{}/data/{}", root_folder, args.dataset));
-    
 
+    let dataset_path: PathBuf = PathBuf::from(std::format!("{}/data/{}", root_folder, args.dataset));
+    let artifacts_path: PathBuf = PathBuf::from(args.artifacts);
+
+    train(&dataset_path, &artifacts_path).await?;
 
     Ok(())
 }

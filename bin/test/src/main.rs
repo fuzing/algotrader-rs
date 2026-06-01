@@ -161,7 +161,7 @@ fn stream_data() {
 
     // ---- Create dataset (streaming, no loading) ----
     println!("Indexing CSV into memory-mapped structure...");
-    let full_dataset = PriceGainDataset::new(filename);
+    let full_dataset = PriceGainDataset::new(&filename);
     let (train_dataset, test_dataset, validation_dataset) =
         create_splits(full_dataset.clone(), (4,1,0));
 
