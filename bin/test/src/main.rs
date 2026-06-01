@@ -123,44 +123,44 @@ fn stream_data() {
     /// - Suitable for multi-GB datasets
 
 
-        let mut device = select_device();
-        device
-            .configure(DeviceConfig::default().float_dtype(Elem::dtype()))
-            .unwrap();
+    let mut device = select_device();
+    device
+        .configure(DeviceConfig::default().float_dtype(Elem::dtype()))
+        .unwrap();
 
 
-        let filename = PathBuf::from("/run/media/peter/genetics/algotrader/data/KHC-2024.csv");
+    let filename = PathBuf::from("/run/media/peter/genetics/algotrader/data/KHC-2024.csv");
 
-        // ---- Create dataset (streaming, no loading) ----
-        println!("Indexing CSV into memory-mapped structure...");
-        let dataset = PriceGainDataset::new(filename);
+    // ---- Create dataset (streaming, no loading) ----
+    println!("Indexing CSV into memory-mapped structure...");
+    let full_dataset = PriceGainDataset::new(filename, (1,0,0));
+    let train_dataset = full_dataset.train_set();
 
-        // ---- Build DataLoader ----
-        // let batcher = CsvBatcher::<MyBackend>::new();
-        let batcher = PriceGainBatcher::new();
-        // let dataloader = DataLoaderBuilder::new(batcher)
-        let dataloader: Arc<dyn DataLoader<PriceGainTrainingBatch>> = DataLoaderBuilder::new(batcher)
-            .batch_size(64)
-            .shuffle(42)    // Efficient even for huge datasets (shuffles indices)
-            .num_workers(8) // Parallel reading/parsing
-            .build(dataset);
+    // ---- Build DataLoader ----
+    // let batcher = CsvBatcher::<MyBackend>::new();
+    let batcher = PriceGainBatcher::new();
+    // let dataloader = DataLoaderBuilder::new(batcher)
+    let dataloader: Arc<dyn DataLoader<PriceGainTrainingBatch>> = DataLoaderBuilder::new(batcher)
+        .batch_size(64)
+        .shuffle(42)    // Efficient even for huge datasets (shuffles indices)
+        .num_workers(8) // Parallel reading/parsing
+        .build(train_dataset);
 
-        println!("Starting streaming batch iteration...");
+    println!("Starting streaming batch iteration...");
 
+    for j in 0..1 {
         // ---- Iterate over batches ----
-        for j in 0..1 {
-            for (i, batch) in dataloader.iter().enumerate() {
-                if i == 0 {
-                    println!("First batch (tokens): {}", batch.tokens);
-                    println!("First batch (labels): {}", batch.labels);
-                }
+        for (i, batch) in dataloader.iter().enumerate() {
+            if i == 0 {
+                println!("First batch (tokens): {}", batch.tokens);
+                println!("First batch (labels): {}", batch.labels);
+            }
 
-                if i % 100 == 0 {
-                    println!("Processed batch {}", i);
-                }
+            if i % 100 == 0 {
+                println!("Processed batch {}", i);
             }
         }
-    
+    }
 }
 
 

@@ -10,12 +10,10 @@ exclude.workspace = true
 
 [dependencies]
 ai-models = { workspace = true }
+burn = { workspace = true, features = ["default", "train", "flex", "std", "wgpu"] }
+
 clap.workspace = true
-databento.workspace = true
 dotenv.workspace = true
-order-book.workspace = true
-strategies.workspace = true
-time.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true

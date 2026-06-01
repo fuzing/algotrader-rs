@@ -7800,12 +7800,9 @@ name = "train"
 version = "1.0.0"
 dependencies = [
  "ai-models",
+ "burn",
  "clap",
- "databento",
  "dotenv",
- "order-book",
- "strategies",
- "time",
  "tokio",
  "tracing",
  "tracing-subscriber",

@@ -26,9 +26,15 @@ pub struct PriceGainItem {
 }
 
 
+
+#[derive(Debug)]
 pub struct PriceGainDataset {
     // memory mapped file, shareable across threads
     mmap: Arc<Mmap>,
+
+    train_split: (usize, usize),
+    test_split: (usize, usize),
+    validation_split: (usize, usize),
 
     // Row index of each line
     // (start byte, byte_len)
@@ -37,12 +43,10 @@ pub struct PriceGainDataset {
 
 
 
-
-
-
 impl PriceGainDataset {
     pub fn new(
         path: PathBuf,
+        test_train_validate_shares: (usize, usize, usize),
     ) -> PriceGainDataset {
         let file = File::open(path.clone()).expect(&format!("Couldn't open file {path:?}"));
 
@@ -72,9 +76,44 @@ impl PriceGainDataset {
         }
         println!("Indexed {} lines during mapping", index.len());
 
+
+        let n_samples = index.len();
+        let (train_share, test_share, validation_share) = test_train_validate_shares;
+        let total_share = train_share + test_share + validation_share;
+        let test_size = ((test_share as f64 / total_share as f64) * n_samples as f64).floor() as usize;
+        let validation_size = ((validation_share as f64 / total_share as f64) * n_samples as f64).floor() as usize;
+        let train_size = n_samples - test_size - validation_size;
+
         Self {
+            train_split: (0, train_size),
+            test_split: (train_size, test_size),
+            validation_split: (train_size + test_size, validation_size),
             mmap: Arc::new(mmap),
             index,
+        }
+    }
+
+    pub fn train_set(&mut self) -> PriceGainDatasetSubset {
+        PriceGainDatasetSubset {
+            dataset: self,
+            offset: self.train_split.0,
+            size: self.train_split.1,
+        }
+    }
+
+    pub fn test_set(&self) -> PriceGainDatasetSubset {
+        PriceGainDatasetSubset {
+            dataset: self,
+            offset: self.test_split.0,
+            size: self.test_split.1,
+        }
+    }
+
+    pub fn validation_set(&self) -> PriceGainDatasetSubset {
+        PriceGainDatasetSubset {
+            dataset: self,
+            offset: self.validation_split.0,
+            size: self.validation_split.1,
         }
     }
 }
@@ -113,5 +152,27 @@ impl Dataset<PriceGainItem> for PriceGainDataset {
         self.index.len()
     }
 }
+
+
+#[derive(Debug)]
+pub struct PriceGainDatasetSubset {
+    dataset: PriceGainDataset,
+    offset: usize,
+    size: usize,
+}
+
+impl Dataset<PriceGainItem> for PriceGainDatasetSubset {
+    fn get(&self, index: usize) -> Option<PriceGainItem> {
+        if index >= self.size {
+            return None;
+        }
+        self.dataset.get(self.offset + index)
+    }
+
+    fn len(&self) -> usize {
+        self.size
+    }
+}
+
 
 

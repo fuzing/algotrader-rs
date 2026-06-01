@@ -1,12 +1,8 @@
 
-use order_book::{
-    market::Market,
-};
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Train our AI Model
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-use strategies::{
-    strategy::{Strategy},
-    test_strategy::{TestStrategy},
-};
 
 // use anyhow::anyhow;
 use clap::Parser as ClapParser;
@@ -23,65 +19,259 @@ use tokio;
 use std::error::Error;
 use dotenv::dotenv;
 
-use databento::{
-    HistoricalClient,
-    ReferenceClient,
-    LiveClient,
-    dbn::{
-        Action,
-        BidAskPair,
-        Dataset,
-        MboMsg,
-        Publisher,
-        Record,
-        Schema,
-        Side,
-        SymbolIndex,
-        UNDEF_PRICE,
-        decode::{AsyncDbnDecoder, DbnMetadata},
-        pretty,
+use burn::{
+    data::{
+        dataloader::{DataLoaderBuilder, DataLoader},
+        dataset::transform::SamplerDataset
     },
-    historical::timeseries::GetRangeToFileParams,
-};
-use time::{
-    format_description::well_known::{Rfc3339, Iso8601},
-    macros::{date, datetime},
-};
-
-
-async fn decode_data(path: &PathBuf, strategy: &mut impl Strategy) -> Result<(), Box<dyn Error>> {
-
-    let mut market = Market::default();
-
-    let mut decoder = AsyncDbnDecoder::from_zstd_file(path).await?;
-    let symbol_map = decoder.metadata().symbol_map()?;
-
-    while let Some(mbo) = decoder.decode_record::<MboMsg>().await? {
-
-        strategy.pre_apply(mbo, &symbol_map, &market).await?;
-        market.apply(mbo.clone());
-        strategy.post_apply(mbo, &symbol_map, &market).await?;
-
-        // If it's the last update in an event, print the state of the aggregated book
-        if mbo.flags.is_last() {
-            // let symbol = symbol_map.get_for_rec(mbo).unwrap();
-            // let (best_bid, best_offer) = market.aggregated_bbo(mbo.hd.instrument_id);
-            // println!("{symbol} Aggregated BBO | {}", mbo.ts_recv().unwrap());
-            // if let Some(best_offer) = best_offer {
-            //     println!("    Ask -> {best_offer}");
-            // } else {
-            //     println!("    Ask -> None");
-            // }
-            // if let Some(best_bid) = best_bid {
-            //     println!("    Bid -> {best_bid}");
-            // } else {
-            //     println!("    Bid -> None");
-            // }
-
-            // println!("{}", market);
+    lr_scheduler::noam::NoamLrSchedulerConfig,
+    nn::{attention::SeqLengthOption, transformer::TransformerEncoderConfig},
+    optim::{
+        AdamConfig,
+        decay::{
+            WeightDecayConfig,
         }
+    },
+    prelude::*,
+    record::{CompactRecorder, Recorder},
+    train::{
+        ExecutionStrategy,
+        Learner,
+        SupervisedTraining,
+        metric::{
+            AccuracyMetric, CudaMetric, IterationSpeedMetric, LearningRateMetric, LossMetric,
+        }
+    },
+    tensor::{
+        Tensor,
+        DType,
+        DeviceConfig,
+        Element,
+    },
+};
+use std::sync::Arc;
 
+use ai_models::price_gain::{
+    data::{
+        batcher::{PriceGainBatcher, PriceGainTrainingBatch},
+        dataset::{PriceGainDataset, PriceGainItem},
+    },
+    model::{
+        PriceGainModelConfig,
+        PriceGainModel,
     }
+};
+
+#[cfg(not(any(feature = "f16", feature = "flex32")))]
+#[allow(unused)]
+type ElemType = f32;
+#[cfg(feature = "f16")]
+type ElemType = burn::tensor::f16;
+#[cfg(feature = "flex32")]
+type ElemType = burn::tensor::flex32;
+
+
+// Define configuration struct for the experiment
+#[derive(Config, Debug)]
+pub struct ExperimentConfig {
+    pub transformer: TransformerEncoderConfig,
+    pub optimizer: AdamConfig,
+    #[config(default = "SeqLengthOption::Fixed(256)")]
+    pub seq_length: SeqLengthOption,
+    #[config(default = 8)]
+    pub batch_size: usize,
+    #[config(default = 5)]
+    pub num_epochs: usize,
+}
+
+fn create_artifact_dir(artifact_dir: &PathBuf) {
+    // Remove existing artifacts before to get an accurate learner summary
+    std::fs::remove_dir_all(artifact_dir).ok();
+    std::fs::create_dir_all(artifact_dir).ok();
+}
+
+
+#[cfg(all(feature = "cuda", not(feature = "ddp")))]
+pub fn launch_multi() {
+    let mut devices = Device::enumerate(burn::tensor::DeviceType::Cuda);
+
+    devices.iter_mut().for_each(|d| {
+        d.configure(DeviceConfig::default().float_dtype(ElemType::dtype()))
+            .unwrap()
+    });
+
+    launch(ExecutionStrategy::MultiDevice(
+        devices,
+        burn::train::MultiDeviceOptim::OptimSharded,
+    ))
+}
+
+#[cfg(all(feature = "cuda", feature = "ddp"))]
+pub fn launch_multi<B: AutodiffBackend + DistributedBackend>() {
+    let mut devices = Device::enumerate(burn::tensor::DeviceType::Cuda);
+
+    devices.iter_mut().for_each(|d| {
+        d.configure(DeviceConfig::default().float_dtype(ElemType::dtype()))
+            .unwrap()
+    });
+
+    launch(ExecutionStrategy::ddp(
+        devices,
+        DistributedConfig {
+            all_reduce_op: ReduceOperation::Mean,
+        },
+    ))
+}
+
+pub fn launch_single(mut device: Device) {
+    device
+        .configure(DeviceConfig::default().float_dtype(ElemType::dtype()))
+        .unwrap();
+
+    launch(ExecutionStrategy::SingleDevice(device))
+}
+
+
+pub fn launch(strategy: ExecutionStrategy) {
+    let config = ExperimentConfig::new(
+        TransformerEncoderConfig::new(256, 1024, 8, 4)
+            .with_norm_first(true)
+            .with_quiet_softmax(true),
+        AdamConfig::new().with_weight_decay(Some(WeightDecayConfig::new(5e-5))),
+    );
+
+    text_classification::training::train::<AgNewsDataset>(
+        strategy,
+        AgNewsDataset::train(),
+        AgNewsDataset::test(),
+        config,
+        "/tmp/text-classification-ag-news",
+    );
+}
+
+
+
+
+
+#[allow(unreachable_code)]
+fn select_device() -> Device {
+    // #[cfg(feature = "flex")]
+    return Device::flex();
+
+    #[cfg(all(feature = "tch-gpu", not(target_os = "macos")))]
+    return Device::libtorch_cuda(burn::tensor::DeviceIndex::Default);
+
+    #[cfg(all(feature = "tch-gpu", target_os = "macos"))]
+    return Device::libtorch_mps();
+
+    #[cfg(feature = "tch-cpu")]
+    return Device::libtorch();
+
+    #[cfg(any(feature = "wgpu", feature = "metal", feature = "vulkan"))]
+    return Device::wgpu(burn::tensor::DeviceKind::DefaultDevice);
+
+    #[cfg(feature = "cuda")]
+    return Device::cuda(burn::tensor::DeviceIndex::Default);
+
+    #[cfg(feature = "rocm")]
+    return Device::rocm(burn::tensor::DeviceIndex::Default);
+
+    unreachable!("At least one backend will be selected.")
+}
+
+async fn train(dataset_path: &PathBuf, artifact_path: &PathBuf) -> Result<(), Box<dyn Error>> {
+
+    create_artifact_dir(artifact_path);
+
+    let mut device = select_device();
+    device
+        .configure(DeviceConfig::default().float_dtype(Element::dtype()))
+        .unwrap();
+
+
+    let dataset_filename = PathBuf::from("/run/media/peter/genetics/algotrader/data/KHC-2024.csv");
+
+    // ---- Create dataset (streaming, no loading) ----
+    println!("Indexing CSV into memory-mapped structure...");
+    let dataset = PriceGainDataset::new(dataset_filename);
+
+
+
+    // ---- Build DataLoader ----
+    // let batcher = CsvBatcher::<MyBackend>::new();
+    let batcher = PriceGainBatcher::new();
+    // let dataloader = DataLoaderBuilder::new(batcher)
+    let dataloader: Arc<dyn DataLoader<PriceGainTrainingBatch>> = DataLoaderBuilder::new(batcher)
+        .batch_size(64)
+        .shuffle(42)    // Efficient even for huge datasets (shuffles indices)
+        .num_workers(4) // Parallel reading/parsing
+        .build(dataset);
+
+
+
+    // Initialize tokenizer
+    let tokenizer = Arc::new(BertCasedTokenizer::default());
+
+    // Initialize batcher
+    let batcher = PriceGainBatcher::new(tokenizer.clone(), config.seq_length);
+
+    // Initialize model
+    let model = PriceGainModelConfig::new(
+        config.transformer.clone(),
+        D::num_classes(),
+        tokenizer.vocab_size(),
+        config.seq_length,
+    )
+        .init(&strategy.main_device().clone().autodiff());
+
+    // Initialize data loaders for training and testing data
+    let dataloader_train = DataLoaderBuilder::new(batcher.clone())
+        .batch_size(config.batch_size)
+        .num_workers(1)
+        .build(SamplerDataset::new(dataset_train, 50_000));
+    let dataloader_test = DataLoaderBuilder::new(batcher)
+        .batch_size(config.batch_size)
+        .num_workers(1)
+        .build(SamplerDataset::new(dataset_test, 5_000));
+
+    // Initialize optimizer
+    let optim = config.optimizer.init();
+
+    // Initialize learning rate scheduler
+    let lr_scheduler = NoamLrSchedulerConfig::new(1e-2)
+        .with_warmup_steps(1000)
+        .with_model_size(config.transformer.d_model)
+        .init()
+        .unwrap();
+
+    // Initialize learner
+    let training = SupervisedTraining::new(artifact_dir, dataloader_train, dataloader_test)
+        .metric_train(CudaMetric::new())
+        .metric_valid(CudaMetric::new())
+        .metric_train(IterationSpeedMetric::new())
+        .metric_train_numeric(LossMetric::new())
+        .metric_valid_numeric(LossMetric::new())
+        // PMB had to remove because these are for classification, not regression
+        // .metric_train_numeric(AccuracyMetric::new())
+        // .metric_valid_numeric(AccuracyMetric::new())
+        .metric_train_numeric(LearningRateMetric::new())
+        .with_file_checkpointer(CompactRecorder::new())
+        .with_training_strategy(strategy.into())
+        .num_epochs(config.num_epochs)
+        .summary();
+
+    // Train the model
+    let result = training.launch(Learner::new(model, optim, lr_scheduler));
+
+    // Save the configuration and the trained model
+    config.save(format!("{artifact_dir}/config.json")).unwrap();
+    CompactRecorder::new()
+        .record(
+            result.model.into_record(),
+            format!("{artifact_dir}/model").into(),
+        )
+        .unwrap();
+
 
     Ok(())
 }
@@ -114,25 +304,9 @@ async fn main() -> Result<(), Box<dyn Error>>
     let args = Args::parse();
     // info!("Run with arguments: {args:#?}");
     let root_folder = env::var("ROOT_FOLDER").expect("no ROOT_FOLDER found in environment");
-    let path: PathBuf = PathBuf::from(std::format!("{}/data/{}-{}-{}-{}-mbo.dbn.zst", root_folder, args.symbols.join(":"), args.dataset, args.start_time, args.end_time));
+    let path: PathBuf = PathBuf::from(std::format!("{}/data/{}", root_folder, args.dataset));
     
-    // let mut strategy = TestStrategyBuilder::default()
-    let mut strategy = TestStrategy::builder()
-        .purchase_shares(100)
-        .minimum_ask_shares_in_book(1_000)
-        .maximum_holding_time(24 * 60 * 60)
-        .bid_ask_volume_ratio(1.5)
-        .desired_gain_percentage(0.35)
-        .stop_loss_percentage(2.0)
-        .build();
 
-    println!("Strategy is {:?}", strategy);
-
-    decode_data(&path, &mut strategy).await?;
-
-
-    println!("Total Profit/Loss {:.2}", strategy.profit_loss());
-    println!("Total Shares Traded for the Period {}", strategy.total_shares_traded());
 
     Ok(())
 }
@@ -144,17 +318,14 @@ struct Args {
     // #[arg(short, long)]
     // enable_debug_output: bool,
 
-    #[arg(long, value_delimiter = ',')]
-    symbols: Vec<String>,
-
-    #[arg(long)]
-    start_time: String,
-
-    #[arg(short, long)]
-    end_time: String,
 
     #[arg(short, long)]
     dataset: String,
+
+
+    #[arg(short, long)]
+    artifacts: String,
+
 
     // Path to settings file
     // #[arg(short, long)]
