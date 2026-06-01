@@ -11,7 +11,13 @@ use burn::{
         TensorData,
         Shape
     },
-    data::dataloader::{DataLoader, DataLoaderBuilder},
+    data::{
+        dataloader::{DataLoader, DataLoaderBuilder},
+        dataset::{
+            Dataset,
+            transform::PartialDataset
+        },
+    },
 };
 
 use std::{
@@ -112,6 +118,28 @@ fn tensor_ops() {
     println!("Tensor Data {}", y);
 }
 
+fn create_splits<D, I>(dataset: D, train_test_validation_shares: (usize, usize, usize)) -> (PartialDataset<D, I>, PartialDataset<D, I>, PartialDataset<D, I>)
+where
+    D: Dataset<I> + Clone,
+    I: Clone + Send + Sync,
+{
+    let total_len = dataset.len();
+
+    let (train_share, test_share, validation_share) = train_test_validation_shares;
+    let total_shares = train_share + test_share + validation_share;
+
+    let test_size = (test_share as f64 / total_shares as f64 * total_len as f64).floor() as usize;
+    let validation_size = (validation_share as f64 / total_shares as f64 * total_len as f64).floor() as usize;
+    let train_size = total_len - test_size - validation_size;
+
+    let train_dataset = PartialDataset::new(dataset.clone(), 0, train_size);
+    let test_dataset = PartialDataset::new(dataset.clone(), train_size, train_size + test_size);
+    let validation_dataset = PartialDataset::new(dataset, train_size + test_size, total_len);
+
+    (train_dataset, test_dataset, validation_dataset)
+}
+
+
 fn stream_data() {
 
 
@@ -133,8 +161,11 @@ fn stream_data() {
 
     // ---- Create dataset (streaming, no loading) ----
     println!("Indexing CSV into memory-mapped structure...");
-    let full_dataset = PriceGainDataset::new(filename, (1,0,0));
-    let train_dataset = full_dataset.train_set();
+    let full_dataset = PriceGainDataset::new(filename);
+    let (train_dataset, test_dataset, validation_dataset) =
+        create_splits(full_dataset.clone(), (4,1,0));
+
+    println!("Full Set {}.  Train Set {}.  Test Set {}.  Validation Set {}", full_dataset.len(), train_dataset.len(), test_dataset.len(), validation_dataset.len());
 
     // ---- Build DataLoader ----
     // let batcher = CsvBatcher::<MyBackend>::new();

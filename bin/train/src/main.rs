@@ -50,7 +50,8 @@ use burn::{
     },
 };
 use std::sync::Arc;
-
+use burn::data::dataloader::Dataset;
+use burn::data::dataset::transform::PartialDataset;
 use ai_models::price_gain::{
     data::{
         batcher::{PriceGainBatcher, PriceGainTrainingBatch},
@@ -179,6 +180,28 @@ fn select_device() -> Device {
     unreachable!("At least one backend will be selected.")
 }
 
+
+fn create_splits<D, I>(dataset: D, train_test_validation_shares: (usize, usize, usize)) -> (PartialDataset<D, I>, PartialDataset<D, I>, PartialDataset<D, I>)
+where
+    D: Dataset<I> + Clone,
+    I: Clone + Send + Sync,
+{
+    let total_len = dataset.len();
+
+    let (train_share, test_share, validation_share) = train_test_validation_shares;
+    let total_shares = train_share + test_share + validation_share;
+
+    let test_size = (test_share as f64 / total_shares as f64 * total_len as f64).floor() as usize;
+    let validation_size = (validation_share as f64 / total_shares as f64 * total_len as f64).floor() as usize;
+    let train_size = total_len - test_size - validation_size;
+
+    let train_dataset = PartialDataset::new(dataset.clone(), 0, train_size);
+    let test_dataset = PartialDataset::new(dataset.clone(), train_size, train_size + test_size);
+    let validation_dataset = PartialDataset::new(dataset, train_size + test_size, total_len);
+
+    (train_dataset, test_dataset, validation_dataset)
+}
+
 async fn train(dataset_path: &PathBuf, artifact_path: &PathBuf) -> Result<(), Box<dyn Error>> {
 
     create_artifact_dir(artifact_path);
@@ -193,7 +216,9 @@ async fn train(dataset_path: &PathBuf, artifact_path: &PathBuf) -> Result<(), Bo
 
     // ---- Create dataset (streaming, no loading) ----
     println!("Indexing CSV into memory-mapped structure...");
-    let dataset = PriceGainDataset::new(dataset_filename);
+    let full_dataset = PriceGainDataset::new(dataset_filename);
+    let (train_dataset, test_dataset, validation_dataset) =
+        create_splits(full_dataset.clone(), (4,1,0));
 
 
 
@@ -205,7 +230,7 @@ async fn train(dataset_path: &PathBuf, artifact_path: &PathBuf) -> Result<(), Bo
         .batch_size(64)
         .shuffle(42)    // Efficient even for huge datasets (shuffles indices)
         .num_workers(4) // Parallel reading/parsing
-        .build(dataset);
+        .build(full_dataset);
 
 
 
