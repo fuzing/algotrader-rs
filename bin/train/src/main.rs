@@ -77,13 +77,10 @@ type ElemType = burn::tensor::flex32;
 pub struct ExperimentConfig {
     pub transformer: TransformerEncoderConfig,
     pub optimizer: AdamConfig,
-    // #[config(default = "SeqLengthOption::Fixed(256)")]
-    // pub seq_length: SeqLengthOption,
-    #[config(default = 64)]
-     pub batch_size: usize,
-    #[config(default = 8)]
+    pub batch_size: usize,
+    // #[config(default = 8)]
     pub shuffle_seed: u64,
-    #[config(default = 10)]
+    // #[config(default = 10)]
     pub num_epochs: usize,
 }
 
@@ -220,11 +217,13 @@ async fn train(
     let full_dataset = PriceGainDataset::new(spec_path, dataset_path);
 
     let config = ExperimentConfig::new(
-        // TransformerEncoderConfig::new(256, 1024, 8, 4)
         TransformerEncoderConfig::new(full_dataset.spec.token_size, 1024, 8, 4)
             .with_norm_first(true)
             .with_quiet_softmax(true),
         AdamConfig::new().with_weight_decay(Some(WeightDecayConfig::new(5e-5))),
+        64,         // batch size
+        42,         // shuffle seed
+        1,          // number of epochs
     );
 
     create_artifact_dir(artifact_path);
@@ -250,40 +249,21 @@ async fn train(
 
     let dataloader_train: Arc<dyn DataLoader<PriceGainTrainingBatch>> = DataLoaderBuilder::new(batcher.clone())
         .batch_size(config.batch_size)
-        .shuffle(42)    // Efficient even for huge datasets (shuffles indices)
+        .shuffle(config.shuffle_seed)    // Efficient even for huge datasets (shuffles indices)
         .num_workers(8) // Parallel reading/parsing
         .build(dataset_train);
 
     let dataloader_test: Arc<dyn DataLoader<PriceGainTrainingBatch>> = DataLoaderBuilder::new(batcher)
         .batch_size(config.batch_size)
-        .shuffle(42)    // Efficient even for huge datasets (shuffles indices)
+        .shuffle(config.shuffle_seed)    // Efficient even for huge datasets (shuffles indices)
         .num_workers(8) // Parallel reading/parsing
         .build(dataset_test);
-
-
-    // // Initialize tokenizer
-    // let tokenizer = Arc::new(BertCasedTokenizer::default());
-    //
-    // // Initialize batcher
-    // let batcher = PriceGainBatcher::new(tokenizer.clone(), config.seq_length);
-    //
-    // // Initialize data loaders for training and testing data
-    // let dataloader_train = DataLoaderBuilder::new(batcher.clone())
-    //     .batch_size(config.batch_size)
-    //     .num_workers(1)
-    //     .build(SamplerDataset::new(dataset_train, 50_000));
-    // let dataloader_test = DataLoaderBuilder::new(batcher)
-    //     .batch_size(config.batch_size)
-    //     .num_workers(1)
-    //     .build(SamplerDataset::new(dataset_test, 5_000));
 
 
     // Initialize model
     let model = PriceGainModelConfig::new(
         config.transformer.clone(),
         PriceGainDataset::num_classes(),
-        // 10, // tokenizer.vocab_size(),
-        // config.seq_length,
     )
         .init(&strategy.main_device().clone().autodiff());
 
@@ -358,7 +338,7 @@ async fn main() -> Result<(), Box<dyn Error>>
 
     let spec_path: PathBuf = PathBuf::from(std::format!("{}/data/{}", root_folder, args.spec_file));
     let dataset_path: PathBuf = PathBuf::from(std::format!("{}/data/{}", root_folder, args.dataset_file));
-    let artifacts_path: PathBuf = PathBuf::from(args.artifacts);
+    let artifacts_path: PathBuf = PathBuf::from(args.artifacts_folder);
 
     train(&spec_path, &dataset_path, &artifacts_path).await?;
 
@@ -380,18 +360,7 @@ struct Args {
 
 
     #[arg(short, long)]
-    artifacts: String,
+    artifacts_folder: String,
 
-
-    // Path to settings file
-    // #[arg(short, long)]
-    // settings: PathBuf,
-    // /// Path to write the generated code to.
-    // #[arg()]
-    // output: PathBuf,
-    //
-    // /// Paths to read the schemas files from.
-    // #[arg()]
-    // inputs: Vec<PathBuf>,
 }
 
