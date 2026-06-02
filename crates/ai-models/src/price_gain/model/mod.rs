@@ -32,10 +32,11 @@ pub struct PriceGainModelConfig {
 #[derive(Module, Debug)]
 pub struct PriceGainModel {
     transformer: TransformerEncoder,
-    // embedding_token: Embedding,
+    embedding_token: Embedding,
     // embedding_pos: Embedding,
     output: Linear,
     n_classes: usize,
+
 }
 
 // Define functions for model initialization
@@ -57,7 +58,7 @@ impl PriceGainModelConfig {
 
         PriceGainModel {
             transformer,
-            // embedding_token,
+            embedding_token,
             // embedding_pos,
             output,
             n_classes: self.n_classes,
@@ -68,14 +69,18 @@ impl PriceGainModelConfig {
 /// Define model behavior
 impl PriceGainModel {
     // Defines forward pass for training
-    // pub fn forward(&self, item: PriceGainTrainingBatch) -> ClassificationOutput {
-    pub fn forward(&self, item: PriceGainTrainingBatch, device: &Device) -> ClassificationOutput {
+    pub fn forward(&self, item: PriceGainTrainingBatch) -> ClassificationOutput {
         // // Get batch and sequence length, and the device
         let [batch_size, seq_length] = item.tokens.dims();
+        // let [batch_size, seq_length, _tokens] = item.tokens.dims();
 
         println!("Batch size: {}, Sequence length {}", batch_size, seq_length);
 
+
+        // PMB device from transformer instead of from the embedding_token layer
         // let device = &self.embedding_token.devices()[0];
+        let device = &self.transformer.devices()[0];
+
         //
         // Move tensors to the correct device
         let tokens = item.tokens.to_device(device);
@@ -91,11 +96,16 @@ impl PriceGainModel {
         // let embedding_tokens = self.embedding_token.forward(tokens);
         // let embedding = (embedding_positions + embedding_tokens) / 2;
         //
-        // // Perform transformer encoding, calculate output and loss
+        // Perform transformer encoding, calculate output and loss
         // let encoded = self
         //     .transformer
         //     .forward(TransformerEncoderInput::new(embedding).mask_pad(mask_pad));
+        let encoded = self
+            .transformer
+            .forward(TransformerEncoderInput::new(tokens));
         // let output = self.output.forward(encoded);
+
+
         //
         // let output_classification = output
         //     .slice([0..batch_size, 0..1])

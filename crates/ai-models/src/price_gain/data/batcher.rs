@@ -22,12 +22,16 @@ impl PriceGainBatcher {
 #[derive(Debug, Clone, new)]
 pub struct PriceGainTrainingBatch {
     pub tokens: Tensor<2, Float>,
+    // pub tokens: Tensor<3, Float>,               // [batch size, sequence, token]
     pub labels: Tensor<1, Float>,
+
+    // pub mask_pad: Tensor<2, Bool>,      // padding mask for the tokenized text
 }
 
 #[derive (Debug, Clone, new)]
 pub struct PriceGainInferenceBatch {
     pub tokens: Tensor<2, Float>,
+    // pub tokens: Tensor<3, Float>,               // [batch size, sequence, token]
 }
 
 /// Implement Batcher trait for PriceGainBatcher struct for training
