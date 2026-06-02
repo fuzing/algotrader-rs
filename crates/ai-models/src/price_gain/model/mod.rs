@@ -24,15 +24,15 @@ use burn::{
 pub struct PriceGainModelConfig {
     transformer: TransformerEncoderConfig,
     n_classes: usize,
-    vocab_size: usize,
-    seq_length: SeqLengthOption,
+    // vocab_size: usize,
+    // seq_length: SeqLengthOption,
 }
 
 // Define the model structure
 #[derive(Module, Debug)]
 pub struct PriceGainModel {
     transformer: TransformerEncoder,
-    embedding_token: Embedding,
+    // embedding_token: Embedding,
     // embedding_pos: Embedding,
     output: Linear,
     n_classes: usize,
@@ -45,20 +45,20 @@ impl PriceGainModelConfig {
     pub fn init(&self, device: &Device) -> PriceGainModel {
         let output = LinearConfig::new(self.transformer.d_model, self.n_classes).init(device);
         let transformer = self.transformer.init(device);
-        let embedding_token =
-            EmbeddingConfig::new(self.vocab_size, self.transformer.d_model).init(device);
-        let max_seq_length = match self.seq_length {
-            SeqLengthOption::Fixed(max) | SeqLengthOption::Max(max) => max,
-            SeqLengthOption::NoMax => panic!(
-                "Price/Volume category requires a max sequence length because of the embedding strategy."
-            ),
-        };
-        let embedding_pos =
-            EmbeddingConfig::new(max_seq_length, self.transformer.d_model).init(device);
+        // let embedding_token =
+        //     EmbeddingConfig::new(self.vocab_size, self.transformer.d_model).init(device);
+        // let max_seq_length = match self.seq_length {
+        //     SeqLengthOption::Fixed(max) | SeqLengthOption::Max(max) => max,
+        //     SeqLengthOption::NoMax => panic!(
+        //         "Price/Volume category requires a max sequence length because of the embedding strategy."
+        //     ),
+        // };
+        // let embedding_pos =
+        //     EmbeddingConfig::new(max_seq_length, self.transformer.d_model).init(device);
 
         PriceGainModel {
             transformer,
-            embedding_token,
+            // embedding_token,
             // embedding_pos,
             output,
             n_classes: self.n_classes,

@@ -77,13 +77,13 @@ type ElemType = burn::tensor::flex32;
 pub struct ExperimentConfig {
     pub transformer: TransformerEncoderConfig,
     pub optimizer: AdamConfig,
-    #[config(default = "SeqLengthOption::Fixed(256)")]
-    pub seq_length: SeqLengthOption,
-    #[config(default = 8)]
+    // #[config(default = "SeqLengthOption::Fixed(256)")]
+    // pub seq_length: SeqLengthOption,
+    #[config(default = 64)]
     pub batch_size: usize,
     #[config(default = 8)]
     pub shuffle_seed: u64,
-    #[config(default = 5)]
+    #[config(default = 10)]
     pub num_epochs: usize,
 }
 
@@ -282,8 +282,8 @@ async fn train(
     let model = PriceGainModelConfig::new(
         config.transformer.clone(),
         PriceGainDataset::num_classes(),
-        10, // tokenizer.vocab_size(),
-        config.seq_length,
+        // 10, // tokenizer.vocab_size(),
+        // config.seq_length,
     )
         .init(&strategy.main_device().clone().autodiff());
 

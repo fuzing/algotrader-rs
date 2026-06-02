@@ -252,16 +252,17 @@ async fn convert_and_write_data(
         }
 
         // build a tensor of [batch_size, n_tokens, d_model] with batch size 1 and then add
+        // positional encodings
         let flat = tokens.into_iter().flatten().collect::<Vec<_>>();
         assert_eq!(flat.len(), 1 * n_tokens * d_model);
 
         let tensor = Tensor::<3, Float>::from_floats(
-            // TensorData::new(a, vec![2,3]),
-            TensorData::new(flat,Shape::new([1,n_tokens,d_model])),
+            TensorData::new(flat,Shape::new([1, n_tokens, d_model])),
             &device
         );
 
-        let tensor_with_positions = positional_encoder.forward(tensor);
+        // add positional encodings and divide by 2.0 to normalize
+        let tensor_with_positions = positional_encoder.forward(tensor).div_scalar(2.0);
         let vec_with_positions = tensor_with_positions.to_data().iter::<f64>().collect::<Vec<_>>();
         assert_eq!(vec_with_positions.len(), 1 * n_tokens * d_model);
         let mut final_vector = vec_with_positions;
@@ -269,54 +270,43 @@ async fn convert_and_write_data(
         // add label as last position for vector
         final_vector.push(label);
 
+        // format the line as a comma separated list of floats and write to the file
         let line = final_vector.into_iter().map(|v| format_float(v)).collect::<Vec<_>>();
         writeln!(csv_filename, "{}", line.join(","))?;
-
-        // we can write the line out
-
-        // items.push(
-        //     PriceGainItem {
-        //         patches,
-        //         label,
-        //     }
-        // );
-
     }
-
-
 
     Ok(())
 }
 
 
 
-async fn write_data(
-    args: &Args,
-    stats: &DataStatistics,
-    data: Vec<IntervalExtractionWithGain>,
-) -> Result<(), Box<dyn Error>> {
-    let out_data = ExtractedDataFile {
-        holding_time_seconds: args.holding_time_seconds,
-        interval_nanos: args.extraction_interval_nanos,
-
-        price_mean: stats.price_mean,
-        price_std_dev: stats.price_std_dev,
-
-        volume_mean: stats.volume_mean,
-        volume_std_dev: stats.volume_std_dev,
-        data,
-    };
-
-    let file = File::create(&args.output_spec)?;
-    let writer = BufWriter::new(file);
-    if args.pretty {
-        serde_json::to_writer_pretty(writer, &out_data)?;
-    }
-    else {
-        serde_json::to_writer(writer, &out_data)?;
-    }
-    Ok(())
-}
+// async fn write_data(
+//     args: &Args,
+//     stats: &DataStatistics,
+//     data: Vec<IntervalExtractionWithGain>,
+// ) -> Result<(), Box<dyn Error>> {
+//     let out_data = ExtractedDataFile {
+//         holding_time_seconds: args.holding_time_seconds,
+//         interval_nanos: args.extraction_interval_nanos,
+//
+//         price_mean: stats.price_mean,
+//         price_std_dev: stats.price_std_dev,
+//
+//         volume_mean: stats.volume_mean,
+//         volume_std_dev: stats.volume_std_dev,
+//         data,
+//     };
+//
+//     let file = File::create(&args.output_spec)?;
+//     let writer = BufWriter::new(file);
+//     if args.pretty {
+//         serde_json::to_writer_pretty(writer, &out_data)?;
+//     }
+//     else {
+//         serde_json::to_writer(writer, &out_data)?;
+//     }
+//     Ok(())
+// }
 
 
 #[derive(Debug)]
