@@ -190,9 +190,9 @@ fn stream_data() {
             let vec = batch.labels.to_data().iter::<i32>().collect::<Vec<_>>();
             println!("labels: {:?}", vec);
 
-            if i % 100 == 0 {
-                println!("Processed batch {}", i);
-            }
+            // if i % 100 == 0 {
+            //     println!("Processed batch {}", i);
+            // }
         }
     }
 }
