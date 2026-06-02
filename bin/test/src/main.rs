@@ -183,10 +183,12 @@ fn stream_data() {
     for j in 0..1 {
         // ---- Iterate over batches ----
         for (i, batch) in dataloader.iter().enumerate() {
-            if i == 0 {
-                println!("First batch (tokens): {}", batch.tokens);
-                println!("First batch (labels): {}", batch.labels);
-            }
+            // if i == 0 {
+            //     println!("First batch (tokens): {}", batch.tokens);
+            //     println!("First batch (labels): {}", batch.labels);
+            // }
+            let vec = batch.labels.to_data().iter::<i32>().collect::<Vec<_>>();
+            println!("labels: {:?}", vec);
 
             if i % 100 == 0 {
                 println!("Processed batch {}", i);

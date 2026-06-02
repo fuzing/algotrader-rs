@@ -36,7 +36,7 @@ pub struct PriceGainDataset {
     // (start byte, byte_len)
     index: Vec<(usize, usize)>,
 
-    spec: DataSpec,
+    pub spec: DataSpec,
 }
 
 

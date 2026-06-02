@@ -216,11 +216,12 @@ async fn train(
     dataset_path: &PathBuf,
     artifact_path: &PathBuf,
 ) -> Result<(), Box<dyn Error>> {
-
+    println!("Indexing CSV into memory-mapped structure...");
+    let full_dataset = PriceGainDataset::new(spec_path, dataset_path);
 
     let config = ExperimentConfig::new(
         // TransformerEncoderConfig::new(256, 1024, 8, 4)
-        TransformerEncoderConfig::new(160, 1024, 8, 4)
+        TransformerEncoderConfig::new(full_dataset.spec.token_size, 1024, 8, 4)
             .with_norm_first(true)
             .with_quiet_softmax(true),
         AdamConfig::new().with_weight_decay(Some(WeightDecayConfig::new(5e-5))),
@@ -237,8 +238,7 @@ async fn train(
 
 
     // ---- Create dataset (streaming, no loading) ----
-    println!("Indexing CSV into memory-mapped structure...");
-    let full_dataset = PriceGainDataset::new(spec_path, dataset_path);
+
 
     // 80/20/0
     let (dataset_train, dataset_test, _dataset_validation) =
