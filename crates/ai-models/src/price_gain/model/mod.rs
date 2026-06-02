@@ -71,8 +71,8 @@ impl PriceGainModel {
     // Defines forward pass for training
     pub fn forward(&self, item: PriceGainTrainingBatch) -> ClassificationOutput {
         // // Get batch and sequence length, and the device
-        let [batch_size, seq_length] = item.tokens.dims();
-        // let [batch_size, seq_length, _tokens] = item.tokens.dims();
+        // let [batch_size, seq_length] = item.tokens.dims();
+        let [batch_size, seq_length, d_model] = item.tokens.dims();
 
         println!("Batch size: {}, Sequence length {}", batch_size, seq_length);
 
@@ -100,9 +100,9 @@ impl PriceGainModel {
         // let encoded = self
         //     .transformer
         //     .forward(TransformerEncoderInput::new(embedding).mask_pad(mask_pad));
-        let encoded = self
-            .transformer
-            .forward(TransformerEncoderInput::new(tokens));
+        // let encoded = self
+        //     .transformer
+        //     .forward(TransformerEncoderInput::new(tokens));
         // let output = self.output.forward(encoded);
 
 

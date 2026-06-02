@@ -28,6 +28,8 @@ use statrs::statistics::Statistics;
 use serde::{Deserialize, Serialize};
 use anyhow::anyhow;
 
+use ai_models::price_gain::data::data_spec::DataSpec;
+
 use clap::Parser as ClapParser;
 use std::{
     env,
@@ -139,7 +141,7 @@ async fn convert_and_write_data(
     stats: &DataStatistics,
     data: Vec<IntervalExtractionWithGain>,
 ) -> Result<(), Box<dyn Error>> {
-    let mut file = File::create(&args.output)?;
+    let mut csv_filename = File::create(&args.output_csv)?;
 
     let prediction_temporal_window_size = args.prediction_intervals;
     let patch_temporal_window_size = args.patch_intervals;
@@ -159,7 +161,19 @@ async fn convert_and_write_data(
     let d_model = patch_size * 4;
     println!("d_model: ---------------------------> {}", d_model);
 
-    // CPU based
+    // write the spec file
+    let data_spec = DataSpec::new(
+        predicted_patches_per_item,
+        patch_size,
+        d_model,
+    );
+    let spec_file = File::create(&args.output_spec)?;
+    let spec_writer = BufWriter::new(spec_file);
+    serde_json::to_writer_pretty(spec_writer, &data_spec)?;
+
+
+
+    // CPU based positional encoder
     let mut device = Device::flex();
     device
         .configure(DeviceConfig::default().float_dtype(Elem::dtype()))
@@ -169,6 +183,10 @@ async fn convert_and_write_data(
         .with_max_timescale(1_000_000)
         .init(&device);
 
+
+    //
+    // send it
+    //
     for i in 0..=(data.len() - prediction_temporal_window_size) {
         // new embeddable
         let mut patches = PriceGainPatches {
@@ -246,7 +264,7 @@ async fn convert_and_write_data(
         final_vector.push(label);
 
         let line = final_vector.into_iter().map(|v| format_float(v)).collect::<Vec<_>>();
-        writeln!(file, "{}", line.join(","))?;
+        writeln!(csv_filename, "{}", line.join(","))?;
 
         // we can write the line out
 
@@ -283,7 +301,7 @@ async fn write_data(
         data,
     };
 
-    let file = File::create(&args.output)?;
+    let file = File::create(&args.output_spec)?;
     let writer = BufWriter::new(file);
     if args.pretty {
         serde_json::to_writer_pretty(writer, &out_data)?;
@@ -448,7 +466,10 @@ struct Args {
     end_date: String,
 
     #[arg(long)]
-    output: PathBuf,
+    output_csv: PathBuf,
+
+    #[arg(long)]
+    output_spec: PathBuf,
 
     #[arg(long)]
     pretty: bool,

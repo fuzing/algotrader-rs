@@ -17,11 +17,11 @@ use extractors::interval_extractor::{
     ExtractedDataFile,
     IntervalExtractionWithGain
 };
-
+use crate::price_gain::data::data_spec::DataSpec;
 
 #[derive(new, Clone, Debug)]
 pub struct PriceGainItem {
-    pub features: Vec<f64>,
+    pub features: Vec<Vec<f64>>,        // [sequence_length, token_size]
     pub label: f64,
 }
 
@@ -35,15 +35,28 @@ pub struct PriceGainDataset {
     // Row index of each line
     // (start byte, byte_len)
     index: Vec<(usize, usize)>,
+
+    spec: DataSpec,
 }
 
 
 
 impl PriceGainDataset {
     pub fn new(
-        path: &PathBuf,
+        spec_path: &PathBuf,
+        data_path: &PathBuf,
     ) -> PriceGainDataset {
-        let file = File::open(path.clone()).expect(&format!("Couldn't open file {path:?}"));
+
+        //
+        // access specs
+        //
+        let spec_file_content = std::fs::read_to_string(spec_path).expect(&format!("Couldn't open spec file {spec_path:?}"));
+        let spec: DataSpec = serde_json::from_str(&spec_file_content).expect(&format!("Couldn't parse spec file {spec_path:?}"));
+
+        //
+        // now process data
+        //
+        let file = File::open(data_path.clone()).expect(&format!("Couldn't open data file {data_path:?}"));
 
         let mmap = unsafe {
             Mmap::map(&file).expect("failed to memory map file")
@@ -72,10 +85,17 @@ impl PriceGainDataset {
         println!("Indexed {} lines during mapping", index.len());
 
         Self {
+            spec,
             mmap: Arc::new(mmap),
             index,
         }
     }
+
+
+    pub fn specs(&self) -> DataSpec {
+        self.spec.clone()
+    }
+
 
     pub fn num_classes() -> usize { 3 }
 
@@ -113,8 +133,19 @@ impl Dataset<PriceGainItem> for PriceGainDataset {
         // Last value = label
         let label = values.pop()?; // O(1)
 
+
+        // now arrange into [sequence_length, d_model]
+        if values.len() != self.spec.sequence_length * self.spec.token_size {
+            panic!("values is the wrong length: ({}) vs expect size of ({})", values.len(), self.spec.sequence_length * self.spec.token_size);
+        }
+        let chunks = values
+            .chunks(self.spec.token_size)
+            .map(|slice| slice.to_vec())
+            .collect();
+
+
         Some(PriceGainItem {
-            features: values,
+            features: chunks,
             label,
         })
     }

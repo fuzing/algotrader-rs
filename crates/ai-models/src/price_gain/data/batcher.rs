@@ -21,8 +21,8 @@ impl PriceGainBatcher {
 
 #[derive(Debug, Clone, new)]
 pub struct PriceGainTrainingBatch {
-    pub tokens: Tensor<2, Float>,
-    // pub tokens: Tensor<3, Float>,               // [batch size, sequence, token]
+    // pub tokens: Tensor<2, Float>,
+    pub tokens: Tensor<3, Float>,               // [batch size, sequence, token]
     pub labels: Tensor<1, Float>,
 
     // pub mask_pad: Tensor<2, Bool>,      // padding mask for the tokenized text
@@ -30,8 +30,8 @@ pub struct PriceGainTrainingBatch {
 
 #[derive (Debug, Clone, new)]
 pub struct PriceGainInferenceBatch {
-    pub tokens: Tensor<2, Float>,
-    // pub tokens: Tensor<3, Float>,               // [batch size, sequence, token]
+    // pub tokens: Tensor<2, Float>,
+    pub tokens: Tensor<3, Float>,               // [batch size, sequence, token]
 }
 
 /// Implement Batcher trait for PriceGainBatcher struct for training
@@ -82,19 +82,27 @@ impl Batcher<PriceGainItem, PriceGainTrainingBatch> for PriceGainBatcher
         device: &Device,
     ) -> PriceGainTrainingBatch {
         let batch_size = items.len();
-        let feature_dim = items.first().map(|i| i.features.len()).unwrap_or(0);
+
+        // let feature_dim = items.first().map(|i| i.features.len()).unwrap_or(0);
+        let sequence_length = items.first().map(|i| i.features.len()).unwrap_or(0);
+        let token_length = items.first().map(|i| i.features.first().unwrap().len()).unwrap_or(0);
+        println!("==================> batch_size: {}", batch_size);
+        println!("==================> sequence_length: {}", sequence_length);
+        println!("==================> token_length: {}", token_length);
 
         // Flatten feature vectors
         let flattened_features: Vec<f64> = items
             .iter()
             .flat_map(|item| item.features.clone())
+            .flatten()      // PMB added to flatten again
             .collect();
 
         let flattened_labels: Vec<f64> = items.iter().map(|item| item.label).collect();
 
         // Construct tensors
         let inputs = Tensor::from_floats(
-            TensorData::new(flattened_features, vec![batch_size, feature_dim]),
+            // TensorData::new(flattened_features, vec![batch_size, feature_dim]),
+            TensorData::new(flattened_features, vec![batch_size, sequence_length, token_length]),
             device,
         );
 

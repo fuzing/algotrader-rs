@@ -2854,6 +2854,7 @@ dependencies = [
 name = "extractor"
 version = "1.0.0"
 dependencies = [
+ "ai-models",
  "anyhow",
  "burn",
  "clap",

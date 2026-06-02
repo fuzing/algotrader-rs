@@ -212,6 +212,7 @@ where
 }
 
 async fn train(
+    spec_path: &PathBuf,
     dataset_path: &PathBuf,
     artifact_path: &PathBuf,
 ) -> Result<(), Box<dyn Error>> {
@@ -236,7 +237,7 @@ async fn train(
 
     // ---- Create dataset (streaming, no loading) ----
     println!("Indexing CSV into memory-mapped structure...");
-    let full_dataset = PriceGainDataset::new(dataset_path);
+    let full_dataset = PriceGainDataset::new(spec_path, dataset_path);
 
     // 80/20/0
     let (dataset_train, dataset_test, _dataset_validation) =
@@ -354,10 +355,11 @@ async fn main() -> Result<(), Box<dyn Error>>
     // info!("Run with arguments: {args:#?}");
     let root_folder = env::var("ROOT_FOLDER").expect("no ROOT_FOLDER found in environment");
 
-    let dataset_path: PathBuf = PathBuf::from(std::format!("{}/data/{}", root_folder, args.dataset));
+    let spec_path: PathBuf = PathBuf::from(std::format!("{}/data/{}", root_folder, args.spec_file));
+    let dataset_path: PathBuf = PathBuf::from(std::format!("{}/data/{}", root_folder, args.dataset_file));
     let artifacts_path: PathBuf = PathBuf::from(args.artifacts);
 
-    train(&dataset_path, &artifacts_path).await?;
+    train(&spec_path, &dataset_path, &artifacts_path).await?;
 
     Ok(())
 }
@@ -369,9 +371,11 @@ struct Args {
     // #[arg(short, long)]
     // enable_debug_output: bool,
 
+    #[arg(short, long)]
+    spec_file: String,
 
     #[arg(short, long)]
-    dataset: String,
+    dataset_file: String,
 
 
     #[arg(short, long)]
