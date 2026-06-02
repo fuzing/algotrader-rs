@@ -157,11 +157,12 @@ fn stream_data() {
         .unwrap();
 
 
-    let filename = PathBuf::from("/run/media/peter/genetics/algotrader/data/KHC-2024.csv");
+    let spec_filename = PathBuf::from("/run/media/peter/genetics/algotrader/data/KHC-2024.json");
+    let dataset_filename = PathBuf::from("/run/media/peter/genetics/algotrader/data/KHC-2024.csv");
 
     // ---- Create dataset (streaming, no loading) ----
     println!("Indexing CSV into memory-mapped structure...");
-    let full_dataset = PriceGainDataset::new(&filename);
+    let full_dataset = PriceGainDataset::new(&spec_filename, &dataset_filename);
     let (train_dataset, test_dataset, validation_dataset) =
         create_splits(full_dataset.clone(), (4,1,0));
 
