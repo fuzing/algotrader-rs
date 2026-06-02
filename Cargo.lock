@@ -595,7 +595,6 @@ dependencies = [
  "burn-ir",
  "burn-nn",
  "burn-optim",
- "burn-remote",
  "burn-rl",
  "burn-rocm",
  "burn-std",
@@ -687,7 +686,6 @@ dependencies = [
  "burn-dispatch",
  "burn-std",
  "burn-tensor",
- "data-encoding",
  "derive-new",
  "flate2",
  "half",
@@ -702,7 +700,6 @@ dependencies = [
  "serde",
  "serde_json",
  "spin 0.10.0",
- "uuid",
 ]
 
 [[package]]
@@ -907,7 +904,6 @@ dependencies = [
  "burn-router",
  "burn-std",
  "bytes",
- "derive-new",
  "futures-util",
  "log",
  "rmp-serde",
@@ -959,6 +955,7 @@ dependencies = [
  "bytes",
  "cubecl-common",
  "cubecl-zspace",
+ "data-encoding",
  "derive-new",
  "enumset",
  "half",
@@ -971,6 +968,7 @@ dependencies = [
  "smallvec",
  "spin 0.10.0",
  "thiserror 2.0.18",
+ "uuid",
 ]
 
 [[package]]

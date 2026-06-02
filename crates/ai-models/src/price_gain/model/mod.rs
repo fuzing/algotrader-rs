@@ -32,8 +32,8 @@ pub struct PriceGainModelConfig {
 #[derive(Module, Debug)]
 pub struct PriceGainModel {
     transformer: TransformerEncoder,
-    embedding_token: Embedding,
-    embedding_pos: Embedding,
+    // embedding_token: Embedding,
+    // embedding_pos: Embedding,
     output: Linear,
     n_classes: usize,
 }
@@ -57,8 +57,8 @@ impl PriceGainModelConfig {
 
         PriceGainModel {
             transformer,
-            embedding_token,
-            embedding_pos,
+            // embedding_token,
+            // embedding_pos,
             output,
             n_classes: self.n_classes,
         }
@@ -68,14 +68,19 @@ impl PriceGainModelConfig {
 /// Define model behavior
 impl PriceGainModel {
     // Defines forward pass for training
-    pub fn forward(&self, item: PriceGainTrainingBatch) -> ClassificationOutput {
+    // pub fn forward(&self, item: PriceGainTrainingBatch) -> ClassificationOutput {
+    pub fn forward(&self, item: PriceGainTrainingBatch, device: &Device) -> ClassificationOutput {
         // // Get batch and sequence length, and the device
-        // let [batch_size, seq_length] = item.tokens.dims();
+        let [batch_size, seq_length] = item.tokens.dims();
+
+        println!("Batch size: {}, Sequence length {}", batch_size, seq_length);
+
         // let device = &self.embedding_token.devices()[0];
         //
-        // // Move tensors to the correct device
-        // let tokens = item.tokens.to_device(device);
-        // let labels = item.labels.to_device(device);
+        // Move tensors to the correct device
+        let tokens = item.tokens.to_device(device);
+        let labels = item.labels.to_device(device);
+
         // let mask_pad = item.mask_pad.to_device(device);
         //
         // // Calculate token and position embeddings, and combine them

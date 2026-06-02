@@ -279,7 +279,7 @@ async fn train(
     // Initialize model
     let model = PriceGainModelConfig::new(
         config.transformer.clone(),
-        3, //D::num_classes(),
+        PriceGainDataset::num_classes(),
         10, // tokenizer.vocab_size(),
         config.seq_length,
     )

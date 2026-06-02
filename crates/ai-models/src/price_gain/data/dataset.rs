@@ -76,6 +76,17 @@ impl PriceGainDataset {
             index,
         }
     }
+
+    pub fn num_classes() -> usize { 3 }
+
+    pub fn class_name(label: usize) -> String {
+        match label {
+            0 => "Loss",
+            1 => "Neutral",
+            2 => "Gain",
+            _ => panic!("Invalid class label {}", label)
+        }.to_string()
+    }
 }
 
 impl Dataset<PriceGainItem> for PriceGainDataset {
