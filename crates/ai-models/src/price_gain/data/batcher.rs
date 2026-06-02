@@ -23,7 +23,8 @@ impl PriceGainBatcher {
 pub struct PriceGainTrainingBatch {
     // pub tokens: Tensor<2, Float>,
     pub tokens: Tensor<3, Float>,               // [batch size, sequence, token]
-    pub labels: Tensor<1, Float>,
+    // pub labels: Tensor<1, Float>,
+    pub labels: Tensor<1, Int>,
 
     // pub mask_pad: Tensor<2, Bool>,      // padding mask for the tokenized text
 }
@@ -91,13 +92,18 @@ impl Batcher<PriceGainItem, PriceGainTrainingBatch> for PriceGainBatcher
         println!("==================> token_length: {}", token_length);
 
         // Flatten feature vectors
+        // let flattened_features: Vec<f64> = items
+        //     .iter()
+        //     .flat_map(|item| item.features.clone())
+        //     .collect();
         let flattened_features: Vec<f64> = items
             .iter()
-            .flat_map(|item| item.features.clone())
-            .flatten()      // PMB added to flatten again
+            .map(|item| item.features.clone())
+            .flatten()
+            .flatten()
             .collect();
 
-        let flattened_labels: Vec<f64> = items.iter().map(|item| item.label).collect();
+        let flattened_labels: Vec<i64> = items.iter().map(|item| item.label as i64).collect();
 
         // Construct tensors
         let inputs = Tensor::from_floats(
@@ -106,7 +112,7 @@ impl Batcher<PriceGainItem, PriceGainTrainingBatch> for PriceGainBatcher
             device,
         );
 
-        let targets = Tensor::from_floats(
+        let targets = Tensor::from_ints(
             TensorData::new(flattened_labels, vec![batch_size]),
             device,
         );
@@ -148,37 +154,44 @@ impl Batcher<PriceGainItem, PriceGainTrainingBatch> for PriceGainBatcher
 // }
 impl Batcher<PriceGainItem, PriceGainInferenceBatch> for PriceGainBatcher
 {
-    /// Batches a vector of price regression items into a inference batch
+    /// Batches a vector of price regression items into a training batch
     fn batch(
         &self,
         items: Vec<PriceGainItem>,
         device: &Device,
     ) -> PriceGainInferenceBatch {
         let batch_size = items.len();
-        let feature_dim = items.first().map(|i| i.features.len()).unwrap_or(0);
+
+        // let feature_dim = items.first().map(|i| i.features.len()).unwrap_or(0);
+        let sequence_length = items.first().map(|i| i.features.len()).unwrap_or(0);
+        let token_length = items.first().map(|i| i.features.first().unwrap().len()).unwrap_or(0);
+        println!("==================> batch_size: {}", batch_size);
+        println!("==================> sequence_length: {}", sequence_length);
+        println!("==================> token_length: {}", token_length);
 
         // Flatten feature vectors
+        // let flattened_features: Vec<f64> = items
+        //     .iter()
+        //     .flat_map(|item| item.features.clone())
+        //     .collect();
         let flattened_features: Vec<f64> = items
             .iter()
-            .flat_map(|item| item.features.clone())
+            .map(|item| item.features.clone())
+            .flatten()
+            .flatten()
             .collect();
-
-        // let flattened_labels: Vec<f64> = items.iter().map(|item| item.label).collect();
-
+        
         // Construct tensors
         let inputs = Tensor::from_floats(
-            TensorData::new(flattened_features, vec![batch_size, feature_dim]),
+            // TensorData::new(flattened_features, vec![batch_size, feature_dim]),
+            TensorData::new(flattened_features, vec![batch_size, sequence_length, token_length]),
             device,
         );
-
-        // let targets = Tensor::from_floats(
-        //     TensorData::new(flattened_labels, vec![batch_size]),
-        //     device,
-        // );
 
         PriceGainInferenceBatch {
             tokens: inputs,
         }
     }
 }
+
 

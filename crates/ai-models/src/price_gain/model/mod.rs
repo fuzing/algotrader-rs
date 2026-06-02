@@ -100,35 +100,35 @@ impl PriceGainModel {
         // let encoded = self
         //     .transformer
         //     .forward(TransformerEncoderInput::new(embedding).mask_pad(mask_pad));
-        // let encoded = self
-        //     .transformer
-        //     .forward(TransformerEncoderInput::new(tokens));
-        // let output = self.output.forward(encoded);
+
+        let encoded = self
+            .transformer
+            .forward(TransformerEncoderInput::new(tokens));
+        let output = self.output.forward(encoded);
 
 
-        //
-        // let output_classification = output
-        //     .slice([0..batch_size, 0..1])
-        //     .reshape([batch_size, self.n_classes]);
-        //
-        // let loss = CrossEntropyLossConfig::new()
-        //     .init(&output_classification.device())
-        //     .forward(output_classification.clone(), labels.clone());
-        // // Return the output and loss
-        // ClassificationOutput {
-        //     loss,
-        //     output: output_classification,
-        //     targets: labels,
-        // }
+        let output_classification = output
+            .slice([0..batch_size, 0..1])
+            .reshape([batch_size, self.n_classes]);
 
-        let device = Device::default();
-
-        // Return the output and loss - PMB
+        let loss = CrossEntropyLossConfig::new()
+            .init(&output_classification.device())
+            .forward(output_classification.clone(), labels.clone());
+        // Return the output and loss
         ClassificationOutput {
-            loss: Tensor::<1, Float>::zeros(Shape::new([1]), &device),
-            output: Tensor::<2, Float>::zeros(Shape::new([1,1]), &device),
-            targets: Tensor::<1, Int>::zeros(Shape::new([1]), &device),
+            loss,
+            output: output_classification,
+            targets: labels,
         }
+
+        // let device = Device::default();
+        //
+        // // Return the output and loss - PMB
+        // ClassificationOutput {
+        //     loss: Tensor::<1, Float>::zeros(Shape::new([1]), &device),
+        //     output: Tensor::<2, Float>::zeros(Shape::new([1,1]), &device),
+        //     targets: Tensor::<1, Int>::zeros(Shape::new([1]), &device),
+        // }
     }
 
     /// Defines forward pass for inference
