@@ -87,9 +87,9 @@ impl Batcher<PriceGainItem, PriceGainTrainingBatch> for PriceGainBatcher
         // let feature_dim = items.first().map(|i| i.features.len()).unwrap_or(0);
         let sequence_length = items.first().map(|i| i.features.len()).unwrap_or(0);
         let token_length = items.first().map(|i| i.features.first().unwrap().len()).unwrap_or(0);
-        println!("==================> batch_size: {}", batch_size);
-        println!("==================> sequence_length: {}", sequence_length);
-        println!("==================> token_length: {}", token_length);
+        // println!("==================> batch_size: {}", batch_size);
+        // println!("==================> sequence_length: {}", sequence_length);
+        // println!("==================> token_length: {}", token_length);
 
         // Flatten feature vectors
         // let flattened_features: Vec<f64> = items
@@ -165,9 +165,9 @@ impl Batcher<PriceGainItem, PriceGainInferenceBatch> for PriceGainBatcher
         // let feature_dim = items.first().map(|i| i.features.len()).unwrap_or(0);
         let sequence_length = items.first().map(|i| i.features.len()).unwrap_or(0);
         let token_length = items.first().map(|i| i.features.first().unwrap().len()).unwrap_or(0);
-        println!("==================> batch_size: {}", batch_size);
-        println!("==================> sequence_length: {}", sequence_length);
-        println!("==================> token_length: {}", token_length);
+        // println!("==================> batch_size: {}", batch_size);
+        // println!("==================> sequence_length: {}", sequence_length);
+        // println!("==================> token_length: {}", token_length);
 
         // Flatten feature vectors
         // let flattened_features: Vec<f64> = items

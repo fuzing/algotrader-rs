@@ -74,7 +74,7 @@ impl PriceGainModel {
         // let [batch_size, seq_length] = item.tokens.dims();
         let [batch_size, seq_length, d_model] = item.tokens.dims();
 
-        println!("Batch size: {}, Sequence length {}", batch_size, seq_length);
+        // println!("Batch size: {}, Sequence length {}, D_Model {}", batch_size, seq_length, d_model);
 
 
         // PMB device from transformer instead of from the embedding_token layer
