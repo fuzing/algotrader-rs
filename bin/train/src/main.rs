@@ -80,7 +80,7 @@ pub struct ExperimentConfig {
     // #[config(default = "SeqLengthOption::Fixed(256)")]
     // pub seq_length: SeqLengthOption,
     #[config(default = 64)]
-    pub batch_size: usize,
+     pub batch_size: usize,
     #[config(default = 8)]
     pub shuffle_seed: u64,
     #[config(default = 10)]
@@ -251,13 +251,13 @@ async fn train(
     let dataloader_train: Arc<dyn DataLoader<PriceGainTrainingBatch>> = DataLoaderBuilder::new(batcher.clone())
         .batch_size(config.batch_size)
         .shuffle(42)    // Efficient even for huge datasets (shuffles indices)
-        .num_workers(4) // Parallel reading/parsing
+        .num_workers(8) // Parallel reading/parsing
         .build(dataset_train);
 
     let dataloader_test: Arc<dyn DataLoader<PriceGainTrainingBatch>> = DataLoaderBuilder::new(batcher)
         .batch_size(config.batch_size)
         .shuffle(42)    // Efficient even for huge datasets (shuffles indices)
-        .num_workers(4) // Parallel reading/parsing
+        .num_workers(8) // Parallel reading/parsing
         .build(dataset_test);
 
 
