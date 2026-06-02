@@ -77,7 +77,6 @@ async fn decode_data(
         if mbo.ts_recv >= start_date_nanos && mbo.ts_recv <= end_date_nanos {
             let results = extractor.push(mbo).await?;
             if !results.is_empty() {
-                // println!("{:?}\n", results);
                 all_results.append(&mut results.clone());
             }
         }
@@ -94,9 +93,10 @@ async fn decode_data(
             let future_day = nanos_to_offset_date_time_with_tz(future_result.date_time_nanos as i128, "ET").unwrap().weekday();
 
             if sample_day == future_day {
-
-                let mid_point_price = (result.bids.get(0).unwrap().price + result.asks.get(0).unwrap().price) / 2.0;
-                let future_mid_point_price = (future_result.bids.get(0).unwrap().price + future_result.asks.get(0).unwrap().price) / 2.0;
+                // let mid_point_price = (result.bids.get(0).unwrap().price + result.asks.get(0).unwrap().price) / 2.0;
+                // let future_mid_point_price = (future_result.bids.get(0).unwrap().price + future_result.asks.get(0).unwrap().price) / 2.0;
+                let mid_point_price = (result.bids[0].price + result.asks[0].price) / 2.0;
+                let future_mid_point_price = (future_result.bids[0].price + future_result.asks[0].price) / 2.0;
 
                 all_results_mapped.push(
                     IntervalExtractionWithGain {
