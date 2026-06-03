@@ -145,6 +145,16 @@ fn initialize_model(
 }
 
 
+async fn inference(
+    model: &PriceGainModel,
+    spec: &DataSpec,
+    snapshot_queue: &VecDeque<IntervalExtraction>
+) -> Result<bool, Box<dyn Error>> {
+
+    Ok(true)
+}
+
+
 
 async fn decode_data(
     model: &PriceGainModel,
@@ -176,7 +186,15 @@ async fn decode_data(
                 }
 
                 if queue.len() == spec.prediction_intervals {
-                    println!("Predict");
+                    let r = inference(
+                        model,
+                        spec,
+                        &queue,
+                    ).await?;
+
+                    if r {
+                        println!("Success");
+                    }
                 }
             }
         }
