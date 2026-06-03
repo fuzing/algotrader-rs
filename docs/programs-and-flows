@@ -1,0 +1,18 @@
+
+
+
+downloader
+used to download historical data for training and backtesting
+
+extractor
+extracts and formats data for local training and testing
+
+train
+trains a model
+
+historical-inference
+inference using historical data
+
+live-inference
+inference using live data
+
