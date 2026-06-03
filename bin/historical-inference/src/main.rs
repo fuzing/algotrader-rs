@@ -149,12 +149,12 @@ fn initialize_model(
         .init(&device)
         .load_record(record); // Initialize model with loaded weights
 
-
     let d_model = spec.token_size;
     let n_tokens = spec.sequence_length;
+    let positional_max_timescale = spec.positional_max_timescale;
     let positional_encoder = PositionalEncodingConfig::new(d_model)
         .with_max_sequence_size(n_tokens)
-        .with_max_timescale(spec.positional_max_timescale)
+        .with_max_timescale(positional_max_timescale)
         .init(&device);
     
     Ok((model, batcher, positional_encoder))
@@ -174,14 +174,13 @@ fn prepare_sample(
     let mut ask_price_patches: Vec<Vec<f64>> = Vec::new();
     let mut ask_volume_patches: Vec<Vec<f64>> = Vec::new();
 
-
     for j in (0..queue.len()).step_by(spec.patch_stride) {
         let mut bid_price_patch: Vec<f64> = Vec::new();
         let mut bid_volume_patch: Vec<f64> = Vec::new();
         let mut ask_price_patch: Vec<f64> = Vec::new();
         let mut ask_volume_patch: Vec<f64> = Vec::new();
 
-        for k in (0..spec.patch_intervals) {
+        for k in 0..spec.patch_intervals {
             for l in 0..spec.lob_levels {
                 bid_price_patch.push((queue[j + k].bids[l].price - spec.price_mean) / spec.price_std_dev);
                 bid_volume_patch.push((queue[j + k].bids[l].volume as f64 - spec.volume_mean) / spec.volume_std_dev);
@@ -212,8 +211,6 @@ fn prepare_sample(
             ask_price_patches[i].clone(),
             ask_volume_patches[i].clone(),
         ].concat();
-
-        // println!("token length {}", token.len());       // 160
 
         assert_eq!(token.len(), spec.token_size);
         tokens.push(token);
@@ -249,6 +246,7 @@ fn prepare_sample(
         nested_vec,
         0.0
     );
+    println!("Sample: {:?}", sample);
 
     Ok(sample)
 }
@@ -269,19 +267,22 @@ async fn inference(
         queue,
         spec
     )?);
+    println!("Samples: {:?}", samples);
 
-    // println!("shape: [{}, {}]", samples.len(), samples[0].len());
-
-    // Run inference on the given text samples
+    // Run inference on the given samples
     println!("Running inference ...");
     let batch: PriceGainInferenceBatch = batcher.batch(samples, &device); // Batch samples using the batcher
+
     println!("Got batch {}", batch.tokens);
+
     let predictions = model.infer(batch); // Get model predictions
     println!("Got predictions {:?}", predictions);
 
-    let prediction = predictions.slice(0..1);
-    let logits = prediction.to_data();
+    let prediction = predictions.clone().slice(0..1);
+    // let logits = prediction.to_data();
     let class_index: i32 = prediction.argmax(1).squeeze_dim::<1>(1).into_scalar();
+    let class_name = PriceGainDataset::class_name(class_index as usize);
+    println!("Class: {}", class_name);
 
     if class_index == 2 {
         Ok(true)

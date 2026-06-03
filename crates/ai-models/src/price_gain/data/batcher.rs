@@ -21,58 +21,17 @@ impl PriceGainBatcher {
 
 #[derive(Debug, Clone, new)]
 pub struct PriceGainTrainingBatch {
-    // pub tokens: Tensor<2, Float>,
-    pub tokens: Tensor<3, Float>,               // [batch size, sequence, token]
-    // pub labels: Tensor<1, Float>,
-    pub labels: Tensor<1, Int>,
+    pub tokens: Tensor<3, Float>,           // [batch_size, sequence_length, token_size]
+    pub labels: Tensor<1, Int>,             // [batch_size]
 
-    // pub mask_pad: Tensor<2, Bool>,      // padding mask for the tokenized text
+    // pub mask_pad: Tensor<2, Bool>,       // padding mask for the tokenized text
 }
 
 #[derive (Debug, Clone, new)]
 pub struct PriceGainInferenceBatch {
-    // pub tokens: Tensor<2, Float>,
-    pub tokens: Tensor<3, Float>,               // [batch size, sequence, token]
+    pub tokens: Tensor<3, Float>,           // [batch_size, sequence_length, token_size]
 }
 
-/// Implement Batcher trait for PriceGainBatcher struct for training
-// impl Batcher<PriceGainItem, PriceGainTrainingBatch> for PriceGainBatcher
-// {
-//     /// Batches a vector of price regression items into a training batch
-//     fn batch(
-//         &self,
-//         items: Vec<PriceGainItem>,
-//         device: &Device,
-//     ) -> PriceGainTrainingBatch {
-//         let mut tokens = Vec::with_capacity(items.len());
-//         let mut labels = Vec::with_capacity(items.len());
-//
-//         for item in items {
-//
-//             // let x = item.patches.ask_price[0].data;
-//
-//             tokens.push(
-//                 Tensor::from_data(
-//                     // Fix
-//                     TensorData::from([item.item[0], item.item[1]]),
-//                     device,
-//                 )
-//             );
-//             labels.push(
-//                 Tensor::from_data(
-//                     TensorData::from([item.label as f64]),
-//                     device,
-//                 )
-//             );
-//         }
-//
-//
-//         PriceGainTrainingBatch {
-//             tokens: Tensor::cat(tokens, 0),
-//             labels: Tensor::cat(labels, 0),
-//         }
-//     }
-// }
 
 impl Batcher<PriceGainItem, PriceGainTrainingBatch> for PriceGainBatcher
 {
@@ -83,9 +42,9 @@ impl Batcher<PriceGainItem, PriceGainTrainingBatch> for PriceGainBatcher
         device: &Device,
     ) -> PriceGainTrainingBatch {
         let batch_size = items.len();
-
         let sequence_length = items.first().map(|i| i.features.len()).unwrap_or(0);
         let token_length = items.first().map(|i| i.features.first().unwrap().len()).unwrap_or(0);
+
         let flattened_features: Vec<f64> = items
             .iter()
             .map(|item| item.features.clone())
@@ -97,7 +56,6 @@ impl Batcher<PriceGainItem, PriceGainTrainingBatch> for PriceGainBatcher
 
         // Construct tensors
         let inputs = Tensor::from_floats(
-            // TensorData::new(flattened_features, vec![batch_size, feature_dim]),
             TensorData::new(flattened_features, vec![batch_size, sequence_length, token_length]),
             device,
         );
@@ -133,7 +91,9 @@ impl Batcher<PriceGainItem, PriceGainInferenceBatch> for PriceGainBatcher
             .flatten()
             .flatten()
             .collect();
-        
+
+
+        // Construct tensors
         let inputs = Tensor::from_floats(
             TensorData::new(flattened_features, vec![batch_size, sequence_length, token_length]),
             device,
