@@ -84,18 +84,8 @@ impl Batcher<PriceGainItem, PriceGainTrainingBatch> for PriceGainBatcher
     ) -> PriceGainTrainingBatch {
         let batch_size = items.len();
 
-        // let feature_dim = items.first().map(|i| i.features.len()).unwrap_or(0);
         let sequence_length = items.first().map(|i| i.features.len()).unwrap_or(0);
         let token_length = items.first().map(|i| i.features.first().unwrap().len()).unwrap_or(0);
-        // println!("==================> batch_size: {}", batch_size);
-        // println!("==================> sequence_length: {}", sequence_length);
-        // println!("==================> token_length: {}", token_length);
-
-        // Flatten feature vectors
-        // let flattened_features: Vec<f64> = items
-        //     .iter()
-        //     .flat_map(|item| item.features.clone())
-        //     .collect();
         let flattened_features: Vec<f64> = items
             .iter()
             .map(|item| item.features.clone())
@@ -125,33 +115,6 @@ impl Batcher<PriceGainItem, PriceGainTrainingBatch> for PriceGainBatcher
 }
 
 
-
-/// Implement Batcher trait for PriceGainBatcher struct for inference
-// impl Batcher<PriceGainItem, PriceGainInferenceBatch> for PriceGainBatcher
-// {
-//     /// Batches a vector of price regression items into a inference batch
-//     fn batch(
-//         &self,
-//         items: Vec<PriceGainItem>,
-//         device: &Device,
-//     ) -> PriceGainInferenceBatch {
-//         let mut tokens = Vec::with_capacity(items.len());
-//
-//         for item in items {
-//             tokens.push(
-//                 Tensor::from_data(
-//                     // Fix
-//                     TensorData::from([item.item[0], item.item[1]]),
-//                     device,
-//                 )
-//             );
-//         }
-//
-//         PriceGainInferenceBatch {
-//             tokens: Tensor::cat(tokens, 0),
-//         }
-//     }
-// }
 impl Batcher<PriceGainItem, PriceGainInferenceBatch> for PriceGainBatcher
 {
     /// Batches a vector of price regression items into a training batch
@@ -161,19 +124,9 @@ impl Batcher<PriceGainItem, PriceGainInferenceBatch> for PriceGainBatcher
         device: &Device,
     ) -> PriceGainInferenceBatch {
         let batch_size = items.len();
-
-        // let feature_dim = items.first().map(|i| i.features.len()).unwrap_or(0);
         let sequence_length = items.first().map(|i| i.features.len()).unwrap_or(0);
         let token_length = items.first().map(|i| i.features.first().unwrap().len()).unwrap_or(0);
-        // println!("==================> batch_size: {}", batch_size);
-        // println!("==================> sequence_length: {}", sequence_length);
-        // println!("==================> token_length: {}", token_length);
 
-        // Flatten feature vectors
-        // let flattened_features: Vec<f64> = items
-        //     .iter()
-        //     .flat_map(|item| item.features.clone())
-        //     .collect();
         let flattened_features: Vec<f64> = items
             .iter()
             .map(|item| item.features.clone())
@@ -181,9 +134,7 @@ impl Batcher<PriceGainItem, PriceGainInferenceBatch> for PriceGainBatcher
             .flatten()
             .collect();
         
-        // Construct tensors
         let inputs = Tensor::from_floats(
-            // TensorData::new(flattened_features, vec![batch_size, feature_dim]),
             TensorData::new(flattened_features, vec![batch_size, sequence_length, token_length]),
             device,
         );

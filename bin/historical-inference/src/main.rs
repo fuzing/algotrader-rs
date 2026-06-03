@@ -31,9 +31,19 @@ use anyhow::anyhow;
 
 use ai_models::price_gain::{
     data::{
-        batcher::PriceGainBatcher,
-        dataset::PriceGainDataset,
+        batcher::{
+            PriceGainBatcher,
+            PriceGainInferenceBatch,
+        },
+        dataset::{
+            PriceGainItem,
+            PriceGainDataset,
+        },
         data_spec::{DataSpec, DataSpecBuilder}
+    },
+    model::{
+        PriceGainModel,
+        PriceGainModelConfig,
     },
     training::ExperimentConfig,
 };
@@ -55,6 +65,7 @@ use tokio;
 use std::error::Error;
 use std::fmt::Display;
 use std::io::Write;
+use burn::data::dataloader::batcher::Batcher;
 use dotenv::dotenv;
 
 use databento::{
@@ -63,10 +74,7 @@ use databento::{
         decode::{AsyncDbnDecoder},
     },
 };
-use ai_models::price_gain::model::{
-    PriceGainModel,
-    PriceGainModelConfig,
-};
+
 use utilities::date_time::{nanos_to_offset_date_time_with_tz, str_to_offset_date_time};
 
 
@@ -153,7 +161,36 @@ async fn inference(
 ) -> Result<bool, Box<dyn Error>> {
 
 
+    
+    
+    
+    
+    
+    
+    
+    let device = model.devices()[0].clone();
 
+    let samples: Vec<PriceGainItem> = Vec::new();
+
+    // Run inference on the given text samples
+    println!("Running inference ...");
+    let item = batcher.batch(samples.clone(), &device); // Batch samples using the batcher
+    let predictions = model.infer(item); // Get model predictions
+
+    // Print out predictions for each sample
+    for (i, text) in samples.into_iter().enumerate() {
+        #[allow(clippy::single_range_in_vec_init)]
+        let prediction = predictions.clone().slice([i..i + 1]); // Get prediction for current sample
+        let logits = prediction.to_data(); // Convert prediction tensor to data
+        let class_index: i32 = prediction.argmax(1).squeeze_dim::<1>(1).into_scalar(); // Get class index with the highest value
+        let class = PriceGainDataset::class_name(class_index as usize); // Get class name
+
+        // Print sample text, predicted logits and predicted class
+        println!(
+            "\n=== Item {i} ===\n- Text: {text}\n- Logits: {logits}\n- Prediction: \
+             {class}\n================"
+        );
+    }
 
 
 
