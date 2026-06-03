@@ -13,6 +13,7 @@ use extractors::{
 use burn::{
     prelude::*,
     nn::{PositionalEncodingConfig, PositionalEncoding},
+    record::{CompactRecorder, Recorder},
     tensor::{
         Device,
         DeviceConfig,
@@ -28,7 +29,14 @@ use statrs::statistics::Statistics;
 use serde::{Deserialize, Serialize};
 use anyhow::anyhow;
 
-use ai_models::price_gain::data::data_spec::{DataSpec, DataSpecBuilder};
+use ai_models::price_gain::{
+    data::{
+        batcher::PriceGainBatcher,
+        dataset::PriceGainDataset,
+        data_spec::{DataSpec, DataSpecBuilder}
+    },
+    training::ExperimentConfig,
+};
 
 use clap::Parser as ClapParser;
 use std::{
@@ -37,6 +45,7 @@ use std::{
     io::{ BufWriter, Read, stderr, stdin, stdout },
     fs::File,
     path::{Path, PathBuf},
+    sync::Arc,
     process::exit,
     time::Duration,
 };
@@ -54,15 +63,91 @@ use databento::{
         decode::{AsyncDbnDecoder},
     },
 };
-
+use ai_models::price_gain::model::{
+    PriceGainModel,
+    PriceGainModelConfig,
+};
 use utilities::date_time::{nanos_to_offset_date_time_with_tz, str_to_offset_date_time};
 
 
-type Elem = f32;
-// type Elem = burn::tensor::f16;
+#[cfg(not(any(feature = "f16", feature = "flex32")))]
+#[allow(unused)]
+type ElemType = f32;
+#[cfg(feature = "f16")]
+type ElemType = burn::tensor::f16;
+#[cfg(feature = "flex32")]
+type ElemType = burn::tensor::flex32;
+
+
+#[allow(unreachable_code)]
+fn select_device() -> Device {
+    // #[cfg(feature = "flex")]
+    return Device::flex();
+
+    #[cfg(all(feature = "tch-gpu", not(target_os = "macos")))]
+    return Device::libtorch_cuda(burn::tensor::DeviceIndex::Default);
+
+    #[cfg(all(feature = "tch-gpu", target_os = "macos"))]
+    return Device::libtorch_mps();
+
+    #[cfg(feature = "tch-cpu")]
+    return Device::libtorch();
+
+    #[cfg(any(feature = "wgpu", feature = "metal", feature = "vulkan"))]
+    return Device::wgpu(burn::tensor::DeviceKind::DefaultDevice);
+
+    #[cfg(feature = "cuda")]
+    return Device::cuda(burn::tensor::DeviceIndex::Default);
+
+    #[cfg(feature = "rocm")]
+    return Device::rocm(burn::tensor::DeviceIndex::Default);
+
+    unreachable!("At least one backend will be selected.")
+}
+
+fn initialize_model(
+    args: &Args,
+) -> Result<PriceGainModel, Box<dyn Error>> {
+    // Load experiment configuration
+    let config = ExperimentConfig::load(format!("{}/config.json", args.artifacts_folder.to_string_lossy()).as_str())
+        .expect("Config file present");
+
+    // Get number of classes from dataset
+    let n_classes = PriceGainDataset::num_classes();
+
+    // Initialize batcher for batching samples
+    let batcher = Arc::new(PriceGainBatcher::new());
+
+    let mut device = select_device();
+    device
+        .configure(DeviceConfig::default().float_dtype(ElemType::dtype()))
+        .unwrap();
+    
+    // Load pre-trained model weights
+    println!("Loading weights ...");
+    let record = CompactRecorder::new()
+        .load(format!("{}/model", args.artifacts_folder.to_string_lossy()).into(), &device)
+        .expect("Trained model weights tb");
+
+    // Create model using loaded weights
+    println!("Creating model ...");
+    let model = PriceGainModelConfig::new(
+        config.transformer,
+        n_classes,
+        // tokenizer.vocab_size(),
+        // config.seq_length,
+    )
+        .init(&device)
+        .load_record(record); // Initialize model with loaded weights
+    
+    
+    Ok(model)
+}
+
 
 
 async fn decode_data(
+    model: &PriceGainModel,
     path: &PathBuf,
     extractor: &mut impl Extractor<IntervalExtraction>,
     spec: &DataSpec,
@@ -348,6 +433,8 @@ async fn main() -> Result<(), Box<dyn Error>>
     let end_date_nanos = str_to_offset_date_time(&format!("{} 23:59:59 UTC", &args.end_date)).expect("Invalid end date").unix_timestamp_nanos() as u64;
 
     // let mut all_data: Vec<IntervalExtractionWithGain> = Vec::new();
+    
+    let model = initialize_model(&args)?;
 
     for input in inputs {
         let mut extractor = IntervalExtractor::builder()
@@ -356,6 +443,7 @@ async fn main() -> Result<(), Box<dyn Error>>
             .build();
 
         decode_data(
+            &model,
             &input,
             &mut extractor,
             &specs,

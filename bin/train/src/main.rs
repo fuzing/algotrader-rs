@@ -60,7 +60,8 @@ use ai_models::price_gain::{
     model::{
         PriceGainModelConfig,
         PriceGainModel,
-    }
+    },
+    training::ExperimentConfig,
 };
 
 #[cfg(not(any(feature = "f16", feature = "flex32")))]
@@ -72,17 +73,15 @@ type ElemType = burn::tensor::f16;
 type ElemType = burn::tensor::flex32;
 
 
-// Define configuration struct for the experiment
-#[derive(Config, Debug)]
-pub struct ExperimentConfig {
-    pub transformer: TransformerEncoderConfig,
-    pub optimizer: AdamConfig,
-    pub batch_size: usize,
-    // #[config(default = 8)]
-    pub shuffle_seed: u64,
-    // #[config(default = 10)]
-    pub num_epochs: usize,
-}
+// // Define configuration struct for the experiment
+// #[derive(Config, Debug)]
+// pub struct ExperimentConfig {
+//     pub transformer: TransformerEncoderConfig,
+//     pub optimizer: AdamConfig,
+//     pub batch_size: usize,
+//     pub shuffle_seed: u64,
+//     pub num_epochs: usize,
+// }
 
 fn create_artifact_dir(artifact_dir: &PathBuf) {
     // Remove existing artifacts before to get an accurate learner summary
