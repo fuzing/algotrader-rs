@@ -107,7 +107,7 @@ fn select_device() -> Device {
 
 fn initialize_model(
     args: &Args,
-) -> Result<PriceGainModel, Box<dyn Error>> {
+) -> Result<(PriceGainModel, Arc<PriceGainBatcher>), Box<dyn Error>> {
     // Load experiment configuration
     let config = ExperimentConfig::load(format!("{}/config.json", args.artifacts_folder.to_string_lossy()).as_str())
         .expect("Config file present");
@@ -141,12 +141,13 @@ fn initialize_model(
         .load_record(record); // Initialize model with loaded weights
     
     
-    Ok(model)
+    Ok((model, batcher))
 }
 
 
 async fn inference(
     model: &PriceGainModel,
+    batcher: &Arc<PriceGainBatcher>,
     spec: &DataSpec,
     snapshot_queue: &VecDeque<IntervalExtraction>
 ) -> Result<bool, Box<dyn Error>> {
@@ -165,6 +166,7 @@ async fn inference(
 
 async fn decode_data(
     model: &PriceGainModel,
+    batcher: &Arc<PriceGainBatcher>,
     path: &PathBuf,
     extractor: &mut impl Extractor<IntervalExtraction>,
     spec: &DataSpec,
@@ -208,6 +210,7 @@ async fn decode_data(
                 if holding_intervals == 0 && queue.len() == spec.prediction_intervals {
                     let r = inference(
                         model,
+                        batcher,
                         spec,
                         &queue,
                     ).await?;
@@ -472,7 +475,7 @@ async fn main() -> Result<(), Box<dyn Error>>
 
     // let mut all_data: Vec<IntervalExtractionWithGain> = Vec::new();
     
-    let model = initialize_model(&args)?;
+    let (model, batcher) = initialize_model(&args)?;
 
     for input in inputs {
         let mut extractor = IntervalExtractor::builder()
@@ -482,6 +485,7 @@ async fn main() -> Result<(), Box<dyn Error>>
 
         decode_data(
             &model,
+            &batcher,
             &input,
             &mut extractor,
             &specs,
