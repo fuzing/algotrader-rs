@@ -165,34 +165,29 @@ async fn train(
     spec_path: &PathBuf,
     dataset_path: &PathBuf,
     artifact_path: &PathBuf,
+    args: &Args,
 ) -> Result<(), Box<dyn Error>> {
     println!("Indexing CSV into memory-mapped structure...");
     let full_dataset = PriceGainDataset::new(spec_path, dataset_path);
 
     let config = ExperimentConfig::new(
-        TransformerEncoderConfig::new(full_dataset.spec.token_size, 1024, 8, 4)
+        TransformerEncoderConfig::new(full_dataset.spec.token_size, args.feed_forward_size, args.transformer_heads, args.transformer_layers)
             .with_norm_first(true)
             .with_quiet_softmax(true),
         AdamConfig::new().with_weight_decay(Some(WeightDecayConfig::new(5e-5))),
-        64,         // batch size
-        42,         // shuffle seed
-        1,          // number of epochs
+        args.batch_size,         // batch size
+        args.shuffle_seed,         // shuffle seed
+        args.num_epochs,          // number of epochs
     );
 
     create_artifact_dir(artifact_path);
 
     let mut device = select_device();
     device
-        .configure(DeviceConfig::default().float_dtype(ElemType::dtype()))
-        .unwrap();
+        .configure(DeviceConfig::default().float_dtype(ElemType::dtype()))?;
 
     let strategy = ExecutionStrategy::SingleDevice(device);
 
-
-    // ---- Create dataset (streaming, no loading) ----
-
-
-    // 80/20/0
     let (dataset_train, dataset_test, _dataset_validation) =
         create_splits(full_dataset.clone(), (4,1,0));
 
@@ -212,7 +207,6 @@ async fn train(
         .num_workers(8) // Parallel reading/parsing
         .build(dataset_test);
 
-
     // Initialize model
     let model = PriceGainModelConfig::new(
         config.transformer.clone(),
@@ -225,10 +219,9 @@ async fn train(
 
     // Initialize learning rate scheduler
     let lr_scheduler = NoamLrSchedulerConfig::new(1e-2)
-        .with_warmup_steps(1000)
+        .with_warmup_steps(1_000)
         .with_model_size(config.transformer.d_model)
-        .init()
-        .unwrap();
+        .init()?;
 
     // Initialize learner
     let training = SupervisedTraining::new(artifact_path, dataloader_train, dataloader_test)
@@ -289,11 +282,11 @@ async fn main() -> Result<(), Box<dyn Error>>
     // info!("Run with arguments: {args:#?}");
     let root_folder = env::var("ROOT_FOLDER").expect("no ROOT_FOLDER found in environment");
 
-    let spec_path: PathBuf = PathBuf::from(std::format!("{}/data/{}", root_folder, args.spec_file));
-    let dataset_path: PathBuf = PathBuf::from(std::format!("{}/data/{}", root_folder, args.dataset_file));
-    let artifacts_path: PathBuf = PathBuf::from(args.artifacts_folder);
+    let spec_path: PathBuf = PathBuf::from(std::format!("{}/data/{}", root_folder, &args.spec_file));
+    let dataset_path: PathBuf = PathBuf::from(std::format!("{}/data/{}", root_folder, &args.dataset_file));
+    let artifacts_path: PathBuf = PathBuf::from(&args.artifacts_folder);
 
-    train(&spec_path, &dataset_path, &artifacts_path).await?;
+    train(&spec_path, &dataset_path, &artifacts_path, &args).await?;
 
     Ok(())
 }
@@ -311,9 +304,28 @@ struct Args {
     #[arg(short, long)]
     dataset_file: String,
 
+    #[arg(short, long)]
+    batch_size: usize,
+
+    #[arg(short, long)]
+    num_epochs: usize,
+
+    #[arg(short, long)]
+    shuffle_seed: u64,
+
+    #[arg(short, long)]
+    transformer_heads: usize,
+
+    #[arg(short, long)]
+    transformer_layers: usize,
+
+    #[arg(short, long)]
+    feed_forward_size: usize,
 
     #[arg(short, long)]
     artifacts_folder: String,
+
+
 
 }
 
