@@ -161,6 +161,8 @@ async fn convert_and_write_data(
     let d_model = patch_size * 4;
     println!("d_model: ---------------------------> {}", d_model);
 
+    let positional_max_timescale = 1_000_000;
+
     // write the spec file
     let data_spec = DataSpecBuilder::new()
         .sequence_length(predicted_patches_per_item)
@@ -178,6 +180,7 @@ async fn convert_and_write_data(
         .price_std_dev(price_std_dev)
         .volume_mean(volume_mean)
         .volume_std_dev(volume_std_dev)
+        .positional_max_timescale(positional_max_timescale)
         .build();
     data_spec.to_file(&args.output_spec)?;
 
@@ -190,7 +193,7 @@ async fn convert_and_write_data(
         .unwrap();
     let positional_encoder = PositionalEncodingConfig::new(d_model)
         .with_max_sequence_size(n_tokens)
-        .with_max_timescale(1_000_000)
+        .with_max_timescale(positional_max_timescale)
         .init(&device);
 
 

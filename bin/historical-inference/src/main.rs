@@ -115,7 +115,8 @@ fn select_device() -> Device {
 
 fn initialize_model(
     args: &Args,
-) -> Result<(PriceGainModel, Arc<PriceGainBatcher>), Box<dyn Error>> {
+    spec: &DataSpec,
+) -> Result<(PriceGainModel, Arc<PriceGainBatcher>, PositionalEncoding), Box<dyn Error>> {
     // Load experiment configuration
     let config = ExperimentConfig::load(format!("{}/config.json", args.artifacts_folder.to_string_lossy()).as_str())
         .expect("Config file present");
@@ -147,17 +148,50 @@ fn initialize_model(
     )
         .init(&device)
         .load_record(record); // Initialize model with loaded weights
+
+
+    let d_model = spec.token_size;
+    let n_tokens = spec.sequence_length;
+    let positional_encoder = PositionalEncodingConfig::new(d_model)
+        .with_max_sequence_size(n_tokens)
+        .with_max_timescale(spec.positional_max_timescale)
+        .init(&device);
     
-    
-    Ok((model, batcher))
+    Ok((model, batcher, positional_encoder))
+}
+
+
+fn prepare_sample(
+    positional_encoder: &PositionalEncoding,
+    queue: &VecDeque<IntervalExtraction>,
+    spec: &DataSpec,
+
+) -> Result<PriceGainItem, Box<dyn Error>> {
+    assert_eq!(spec.prediction_intervals, queue.len());
+
+    for data in queue.iter() {
+
+
+
+
+    }
+
+
+    let sample = PriceGainItem::new(
+        Vec::new(),
+        2.0
+    );
+
+    Ok(sample)
 }
 
 
 async fn inference(
     model: &PriceGainModel,
     batcher: &Arc<PriceGainBatcher>,
+    positional_encoder: &PositionalEncoding,
     spec: &DataSpec,
-    snapshot_queue: &VecDeque<IntervalExtraction>
+    queue: &VecDeque<IntervalExtraction>
 ) -> Result<bool, Box<dyn Error>> {
 
 
@@ -170,33 +204,44 @@ async fn inference(
     
     let device = model.devices()[0].clone();
 
-    let samples: Vec<PriceGainItem> = Vec::new();
+    let mut samples: Vec<PriceGainItem> = Vec::new();
+    samples.push(prepare_sample(
+        positional_encoder,
+        queue,
+        spec
+    )?);
 
     // Run inference on the given text samples
     println!("Running inference ...");
     let item = batcher.batch(samples.clone(), &device); // Batch samples using the batcher
     let predictions = model.infer(item); // Get model predictions
 
-    // Print out predictions for each sample
-    for (i, text) in samples.into_iter().enumerate() {
-        #[allow(clippy::single_range_in_vec_init)]
-        let prediction = predictions.clone().slice([i..i + 1]); // Get prediction for current sample
-        let logits = prediction.to_data(); // Convert prediction tensor to data
-        let class_index: i32 = prediction.argmax(1).squeeze_dim::<1>(1).into_scalar(); // Get class index with the highest value
-        let class = PriceGainDataset::class_name(class_index as usize); // Get class name
+    let prediction = predictions.slice(0..1);
+    let logits = prediction.to_data();
+    let class_index: i32 = prediction.argmax(1).squeeze_dim::<1>(1).into_scalar();
 
-        // Print sample text, predicted logits and predicted class
-        println!(
-            "\n=== Item {i} ===\n- Text: {text}\n- Logits: {logits}\n- Prediction: \
-             {class}\n================"
-        );
+    if class_index == 2 {
+        Ok(true)
+    }
+    else {
+        Ok(false)
     }
 
-
-
-
-
-    Ok(true)
+    // // Print out predictions for each sample
+    // for (i, text) in samples.into_iter().enumerate() {
+    //     #[allow(clippy::single_range_in_vec_init)]
+    //     let prediction = predictions.clone().slice([i..i + 1]); // Get prediction for current sample
+    //     let logits = prediction.to_data(); // Convert prediction tensor to data
+    //     let class_index: i32 = prediction.argmax(1).squeeze_dim::<1>(1).into_scalar(); // Get class index with the highest value
+    //     let class = PriceGainDataset::class_name(class_index as usize); // Get class name
+    //
+    //     // Print sample text, predicted logits and predicted class
+    //     println!(
+    //         "\n=== Item {i} ===\n- Text: {text}\n- Logits: {logits}\n- Prediction: \
+    //          {class}\n================"
+    //     );
+    // }
+    // Ok(true)
 }
 
 
@@ -204,6 +249,7 @@ async fn inference(
 async fn decode_data(
     model: &PriceGainModel,
     batcher: &Arc<PriceGainBatcher>,
+    positional_encoder: &PositionalEncoding,
     path: &PathBuf,
     extractor: &mut impl Extractor<IntervalExtraction>,
     spec: &DataSpec,
@@ -248,6 +294,7 @@ async fn decode_data(
                     let r = inference(
                         model,
                         batcher,
+                        positional_encoder,
                         spec,
                         &queue,
                     ).await?;
@@ -512,7 +559,7 @@ async fn main() -> Result<(), Box<dyn Error>>
 
     // let mut all_data: Vec<IntervalExtractionWithGain> = Vec::new();
     
-    let (model, batcher) = initialize_model(&args)?;
+    let (model, batcher, positional_encoder) = initialize_model(&args, &specs)?;
 
     for input in inputs {
         let mut extractor = IntervalExtractor::builder()
@@ -523,6 +570,7 @@ async fn main() -> Result<(), Box<dyn Error>>
         decode_data(
             &model,
             &batcher,
+            &positional_encoder,
             &input,
             &mut extractor,
             &specs,

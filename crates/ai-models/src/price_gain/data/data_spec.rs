@@ -28,6 +28,9 @@ pub struct DataSpec {
     pub price_std_dev: f64,             // price standard deviation
     pub volume_mean: f64,               // mean volume for all of the samples
     pub volume_std_dev: f64,            // volume standard deviation
+
+    pub positional_max_timescale: usize,    // parameter for positional encoder
+
 }
 
 
@@ -49,6 +52,8 @@ impl DataSpec {
         price_std_dev: f64,
         volume_mean: f64,
         volume_std_dev: f64,
+
+        positional_max_timescale: usize,
     ) -> Self {
         Self {
             sequence_length,
@@ -67,6 +72,8 @@ impl DataSpec {
             price_std_dev,
             volume_mean,
             volume_std_dev,
+
+            positional_max_timescale,
         }
     }
 
@@ -105,6 +112,8 @@ pub struct DataSpecBuilder {
     pub volume_mean: f64,               // mean volume for all of the samples
     pub volume_std_dev: f64,            // volume standard deviation
 
+    pub positional_max_timescale: usize,    // parameter for positional encoder
+
 }
 
 
@@ -126,6 +135,8 @@ impl DataSpecBuilder {
             price_std_dev: 0.0,
             volume_mean: 0.0,
             volume_std_dev: 0.0,
+
+            positional_max_timescale: 1_000_000,
         }
     }
 
@@ -204,7 +215,12 @@ impl DataSpecBuilder {
         self.volume_std_dev = volume_std_dev;
         self
     }
-    
+
+    pub fn positional_max_timescale(mut self, positional_max_timescale: usize) -> Self {
+        self.positional_max_timescale = positional_max_timescale;
+        self
+    }
+
     pub fn build(&self) -> DataSpec {
         DataSpec::new(
             self.sequence_length,
@@ -222,6 +238,7 @@ impl DataSpecBuilder {
             self.price_std_dev,
             self.volume_mean,
             self.volume_std_dev,
+            self.positional_max_timescale,
         )
     }
 }
