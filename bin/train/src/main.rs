@@ -298,31 +298,31 @@ struct Args {
     // #[arg(short, long)]
     // enable_debug_output: bool,
 
-    #[arg(short, long)]
+    #[arg(long)]
     spec_file: String,
 
-    #[arg(short, long)]
+    #[arg(long)]
     dataset_file: String,
 
-    #[arg(short, long)]
+    #[arg(long)]
     batch_size: usize,
 
-    #[arg(short, long)]
+    #[arg(long)]
     num_epochs: usize,
 
-    #[arg(short, long)]
+    #[arg(long)]
     shuffle_seed: u64,
 
-    #[arg(short, long)]
+    #[arg(long)]
     transformer_heads: usize,
 
-    #[arg(short, long)]
+    #[arg(long)]
     transformer_layers: usize,
 
-    #[arg(short, long)]
+    #[arg(long)]
     feed_forward_size: usize,
 
-    #[arg(short, long)]
+    #[arg(long)]
     artifacts_folder: String,
 
 

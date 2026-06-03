@@ -2,10 +2,11 @@
 cargo run --bin train -- --spec-file=KHC-spec.json \
   --dataset-file=KHC-train.csv \
   --batch-size=128 \
-  --num-epochs=4 \
+  --num-epochs=2 \
   --shuffle-seed=42 \
   --transformer-heads=8 \
   --transformer-layers=4 \
   --feed-forward-size=1024 \
   --artifacts-folder=/run/media/peter/genetics/algotrader/data/artifacts
+
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# note that positional-max-timescale can be the sequence length (i.e. 128/4) ==
+# note that positional-max-timescale can be the sequence length * 2 (i.e. 128/4*2) == 64
 cargo run --bin extractor --  \
   --prediction-intervals=128 --patch-intervals=4 --patch-stride=4 --gain-percentage=0.05 --loss-percentage=0.05 \
   --positional-max-timescale=64 \
