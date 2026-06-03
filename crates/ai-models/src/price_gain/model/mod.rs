@@ -131,36 +131,65 @@ impl PriceGainModel {
         // }
     }
 
+    // /// Defines forward pass for inference
+    // pub fn infer(&self, item: PriceGainInferenceBatch) -> Tensor<2> {
+    //     // Get batch and sequence length, and the device
+    //     // let [batch_size, seq_length] = item.tokens.dims();
+    //     // let device = &self.embedding_token.devices()[0];
+    //
+    //     // Move tensors to the correct device
+    //     // let tokens = item.tokens.to_device(device);
+    //     // let mask_pad = item.mask_pad.to_device(device);
+    //     // // Calculate token and position embeddings, and combine them
+    //     // let index_positions = Tensor::arange(0..seq_length as i64, device)
+    //     //     .reshape([1, seq_length])
+    //     //     .repeat_dim(0, batch_size);
+    //     // let embedding_positions = self.embedding_pos.forward(index_positions);
+    //     // let embedding_tokens = self.embedding_token.forward(tokens);
+    //     // let embedding = (embedding_positions + embedding_tokens) / 2;
+    //
+    //     // // Perform transformer encoding, calculate output and apply softmax for prediction
+    //     // let encoded = self
+    //     //     .transformer
+    //     //     .forward(TransformerEncoderInput::new(embedding).mask_pad(mask_pad));
+    //     // let output = self.output.forward(encoded);
+    //     // let output = output
+    //     //     .slice([0..batch_size, 0..1])
+    //     //     .reshape([batch_size, self.n_classes]);
+    //     // softmax(output, 1)
+    //
+    //     // PMB
+    //     Tensor::<2>::from([1, 1])
+    // }
+
     /// Defines forward pass for inference
     pub fn infer(&self, item: PriceGainInferenceBatch) -> Tensor<2> {
-        // Get batch and sequence length, and the device
-        // let [batch_size, seq_length] = item.tokens.dims();
+        let [batch_size, seq_length, d_model] = item.tokens.dims();
+
+        // println!("Batch size: {}, Sequence length {}, D_Model {}", batch_size, seq_length, d_model);
+
+
+        // PMB device from transformer instead of from the embedding_token layer
         // let device = &self.embedding_token.devices()[0];
+        let device = &self.transformer.devices()[0];
 
+        //
         // Move tensors to the correct device
-        // let tokens = item.tokens.to_device(device);
-        // let mask_pad = item.mask_pad.to_device(device);
-        // // Calculate token and position embeddings, and combine them
-        // let index_positions = Tensor::arange(0..seq_length as i64, device)
-        //     .reshape([1, seq_length])
-        //     .repeat_dim(0, batch_size);
-        // let embedding_positions = self.embedding_pos.forward(index_positions);
-        // let embedding_tokens = self.embedding_token.forward(tokens);
-        // let embedding = (embedding_positions + embedding_tokens) / 2;
+        let tokens = item.tokens.to_device(device);
 
-        // // Perform transformer encoding, calculate output and apply softmax for prediction
-        // let encoded = self
-        //     .transformer
-        //     .forward(TransformerEncoderInput::new(embedding).mask_pad(mask_pad));
-        // let output = self.output.forward(encoded);
-        // let output = output
-        //     .slice([0..batch_size, 0..1])
-        //     .reshape([batch_size, self.n_classes]);
-        // softmax(output, 1)
+        // Perform transformer encoding, calculate output and apply softmax for prediction
+        let encoded = self
+            .transformer
+            .forward(TransformerEncoderInput::new(tokens));
+        let output = self.output.forward(encoded);
+        let output = output
+            .slice([0..batch_size, 0..1])
+            .reshape([batch_size, self.n_classes]);
+        softmax(output, 1)
 
-        // PMB
-        Tensor::<2>::from([1, 1])
     }
+
+
 }
 
 /// Define training step

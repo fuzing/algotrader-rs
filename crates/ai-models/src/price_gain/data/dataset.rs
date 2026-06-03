@@ -26,7 +26,6 @@ pub struct PriceGainItem {
 }
 
 
-
 #[derive(Debug, Clone)]
 pub struct PriceGainDataset {
     // memory mapped file, shareable across threads
