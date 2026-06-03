@@ -151,6 +151,13 @@ async fn inference(
     snapshot_queue: &VecDeque<IntervalExtraction>
 ) -> Result<bool, Box<dyn Error>> {
 
+
+
+
+
+
+
+
     Ok(true)
 }
 
@@ -173,19 +180,32 @@ async fn decode_data(
 
     println!("Holding for {} intervals", holding_time_intervals);
 
+    let mut holding_intervals = 0;
+    let mut holding_purchase_price = 0.0;
+
     while let Some(mbo) = decoder.decode_record::<MboMsg>().await? {
         if mbo.ts_recv >= start_date_nanos && mbo.ts_recv <= end_date_nanos {
             let results = extractor.push(mbo).await?;
+
             if !results.is_empty() {
-                // all_results.append(&mut results.clone());
                 for result in results {
                     queue.push_back(result);
-                }
-                while queue.len() > spec.prediction_intervals {
-                    queue.pop_front();
+
+                    if queue.len() > spec.prediction_intervals {
+                        queue.pop_front();
+                    }
+
+                    if holding_intervals > 0 {
+                        holding_intervals -= 1;
+                        if holding_intervals == 0 {
+                            let sale_result = queue.iter().last().unwrap();
+                            let sale_price = (sale_result.bids[0].price + sale_result.asks[0].price) / 2.0;
+                            println!("Holding period over - bought for {}, sold for {}", holding_purchase_price, sale_price);
+                        }
+                    }
                 }
 
-                if queue.len() == spec.prediction_intervals {
+                if holding_intervals == 0 && queue.len() == spec.prediction_intervals {
                     let r = inference(
                         model,
                         spec,
@@ -193,7 +213,9 @@ async fn decode_data(
                     ).await?;
 
                     if r {
-                        println!("Success");
+                        let purchase_result = queue.iter().last().unwrap();
+                        holding_purchase_price = (purchase_result.bids[0].price + purchase_result.asks[0].price) / 2.0;
+                        holding_intervals = holding_time_intervals;
                     }
                 }
             }
