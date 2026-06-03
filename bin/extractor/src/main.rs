@@ -161,8 +161,6 @@ async fn convert_and_write_data(
     let d_model = patch_size * 4;
     println!("d_model: ---------------------------> {}", d_model);
 
-    let positional_max_timescale = 1_000_000;
-
     // write the spec file
     let data_spec = DataSpecBuilder::new()
         .sequence_length(predicted_patches_per_item)
@@ -180,7 +178,7 @@ async fn convert_and_write_data(
         .price_std_dev(price_std_dev)
         .volume_mean(volume_mean)
         .volume_std_dev(volume_std_dev)
-        .positional_max_timescale(positional_max_timescale)
+        .positional_max_timescale(args.positional_max_timescale)
         .build();
     data_spec.to_file(&args.output_spec)?;
 
@@ -193,7 +191,7 @@ async fn convert_and_write_data(
         .unwrap();
     let positional_encoder = PositionalEncodingConfig::new(d_model)
         .with_max_sequence_size(n_tokens)
-        .with_max_timescale(positional_max_timescale)
+        .with_max_timescale(args.positional_max_timescale)
         .init(&device);
 
 
@@ -215,7 +213,7 @@ async fn convert_and_write_data(
             let mut ask_price_patch: Vec<f64> = Vec::new();
             let mut ask_volume_patch: Vec<f64> = Vec::new();
 
-            for k in (0..patch_temporal_window_size) {
+            for k in 0..patch_temporal_window_size {
                 for l in 0..lob_levels {
                     bid_price_patch.push((data[i + j + k].bids[l].price - price_mean) / price_std_dev);
                     bid_volume_patch.push((data[i + j + k].bids[l].volume as f64 - volume_mean) / volume_std_dev);
@@ -241,7 +239,7 @@ async fn convert_and_write_data(
         let gain = data[i + prediction_temporal_window_size - 1].mid_point_gain;
         let label = if gain > args.gain_percentage {
             2.0
-        } else if (gain > -args.loss_percentage) {
+        } else if gain > -args.loss_percentage {
             1.0
         }
         else { 0.0 };
@@ -466,6 +464,9 @@ struct Args {
 
     #[arg(long)]
     loss_percentage: f64,
+
+    #[arg(long)]
+    positional_max_timescale: usize,
 
     // start/end dates to extract from/to
     #[arg(long)]

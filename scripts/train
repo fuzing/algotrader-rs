@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 cargo run --bin train -- --spec-file=KHC-spec.json \
   --dataset-file=KHC-train.csv \
-  --batch-size=64 \
-  --num-epochs=1 \
+  --batch-size=128 \
+  --num-epochs=4 \
   --shuffle-seed=42 \
   --transformer-heads=8 \
   --transformer-layers=4 \
