@@ -178,8 +178,6 @@ async fn decode_data(
                 if queue.len() == spec.prediction_intervals {
                     println!("Predict");
                 }
-
-
             }
         }
     }
