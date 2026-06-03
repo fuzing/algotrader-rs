@@ -392,6 +392,9 @@ struct Args {
     #[arg(long)]
     spec_file: PathBuf,
 
+    #[arg(long)]
+    artifacts_folder: PathBuf,    
+    
     #[arg()]
     inputs: Vec<PathBuf>,
 }
