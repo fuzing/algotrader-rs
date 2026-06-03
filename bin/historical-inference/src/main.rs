@@ -28,7 +28,7 @@ use statrs::statistics::Statistics;
 use serde::{Deserialize, Serialize};
 use anyhow::anyhow;
 
-use ai_models::price_gain::data::data_spec::{DataSpec, DataSpecBuilder};
+use ai_models::price_gain::data::data_spec::DataSpec;
 
 use clap::Parser as ClapParser;
 use std::{
@@ -162,24 +162,14 @@ async fn convert_and_write_data(
     println!("d_model: ---------------------------> {}", d_model);
 
     // write the spec file
-    let data_spec = DataSpecBuilder::new()
-        .sequence_length(predicted_patches_per_item)
-        .patch_size(patch_size)
-        .token_size(d_model)
-        .extraction_interval_nanos(args.extraction_interval_nanos)
-        .holding_time_seconds(args.holding_time_seconds)
-        .lob_levels(args.lob_levels)
-        .prediction_intervals(args.prediction_intervals)
-        .patch_intervals(args.patch_intervals)
-        .patch_stride(args.patch_stride)
-        .gain_percentage(args.gain_percentage)
-        .loss_percentage(args.loss_percentage)
-        .price_mean(price_mean)
-        .price_std_dev(price_std_dev)
-        .volume_mean(volume_mean)
-        .volume_std_dev(volume_std_dev)
-        .build();
-    data_spec.to_file(&args.output_spec)?;
+    let data_spec = DataSpec::new(
+        predicted_patches_per_item,
+        patch_size,
+        d_model,
+    );
+    let spec_file = File::create(&args.output_spec)?;
+    let spec_writer = BufWriter::new(spec_file);
+    serde_json::to_writer_pretty(spec_writer, &data_spec)?;
 
 
 

@@ -3663,6 +3663,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "historical-inference"
+version = "1.0.0"
+dependencies = [
+ "ai-models",
+ "anyhow",
+ "burn",
+ "clap",
+ "csv",
+ "databento",
+ "dotenv",
+ "extractors",
+ "serde",
+ "serde_json",
+ "statrs",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "utilities",
+]
+
+[[package]]
 name = "hkdf"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

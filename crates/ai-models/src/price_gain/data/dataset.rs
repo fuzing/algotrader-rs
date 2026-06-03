@@ -50,8 +50,7 @@ impl PriceGainDataset {
         //
         // access specs
         //
-        let spec_file_content = std::fs::read_to_string(spec_path).expect(&format!("Couldn't open spec file {spec_path:?}"));
-        let spec: DataSpec = serde_json::from_str(&spec_file_content).expect(&format!("Couldn't parse spec file {spec_path:?}"));
+        let spec = DataSpec::from_file(spec_path).expect(&format!("Couldn't open spec file {spec_path:?}"));
 
         //
         // now process data
