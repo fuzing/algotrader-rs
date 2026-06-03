@@ -169,17 +169,84 @@ fn prepare_sample(
 ) -> Result<PriceGainItem, Box<dyn Error>> {
     assert_eq!(spec.prediction_intervals, queue.len());
 
-    for data in queue.iter() {
+
+    let mut bid_price_patches: Vec<Vec<f64>> = Vec::new();
+    let mut bid_volume_patches: Vec<Vec<f64>> = Vec::new();
+    let mut ask_price_patches: Vec<Vec<f64>> = Vec::new();
+    let mut ask_volume_patches: Vec<Vec<f64>> = Vec::new();
 
 
+    for j in (0..queue.len()).step_by(spec.patch_stride) {
+        let mut bid_price_patch: Vec<f64> = Vec::new();
+        let mut bid_volume_patch: Vec<f64> = Vec::new();
+        let mut ask_price_patch: Vec<f64> = Vec::new();
+        let mut ask_volume_patch: Vec<f64> = Vec::new();
 
+        for k in (0..spec.patch_intervals) {
+            for l in 0..spec.lob_levels {
+                bid_price_patch.push((queue[j + k].bids[l].price - spec.price_mean) / spec.price_std_dev);
+                bid_volume_patch.push((queue[j + k].bids[l].volume as f64 - spec.volume_mean) / spec.volume_std_dev);
+                ask_price_patch.push((queue[j + k].asks[l].price - spec.price_mean) / spec.price_std_dev);
+                ask_volume_patch.push((queue[j + k].asks[l].volume as f64 - spec.volume_mean) / spec.volume_std_dev);
+            }
+        }
 
+        assert_eq!(bid_price_patch.len(), spec.patch_size);
+        assert_eq!(bid_volume_patch.len(), spec.patch_size);
+        assert_eq!(ask_price_patch.len(), spec.patch_size);
+        assert_eq!(ask_volume_patch.len(), spec.patch_size);
+
+        // add patches
+        bid_price_patches.push(bid_price_patch);
+        bid_volume_patches.push(bid_volume_patch);
+        ask_price_patches.push(ask_price_patch);
+        ask_volume_patches.push(ask_volume_patch);
     }
 
+    assert_eq!(bid_price_patches.len(), spec.sequence_length);
+
+    let mut tokens: Vec<Vec<f64>> = Vec::with_capacity(spec.sequence_length);
+    for i in 0..spec.sequence_length {
+        let token = [
+            bid_price_patches[i].clone(),
+            bid_volume_patches[i].clone(),
+            ask_price_patches[i].clone(),
+            ask_volume_patches[i].clone(),
+        ].concat();
+
+        // println!("token length {}", token.len());       // 160
+
+        assert_eq!(token.len(), spec.token_size);
+        tokens.push(token);
+    }
+
+    // build a tensor of [batch_size, n_tokens, d_model] with batch size 1 and then add
+    // positional encodings
+    let flat = tokens.into_iter().flatten().collect::<Vec<_>>();
+    assert_eq!(flat.len(), 1 * spec.sequence_length * spec.token_size);
+
+    let device = positional_encoder.devices()[0].clone();
+    let tensor = Tensor::<3, Float>::from_floats(
+        TensorData::new(flat, Shape::new([1, spec.sequence_length, spec.token_size])),
+        &device
+    );
+
+    // add positional encodings and divide by 2.0 to normalize
+    let tensor_with_positions = positional_encoder.forward(tensor).div_scalar(2.0);
+    let vec_with_positions = tensor_with_positions.to_data().iter::<f64>().collect::<Vec<_>>();
+    assert_eq!(vec_with_positions.len(), 1 * spec.sequence_length * spec.token_size);
+    let final_vector = vec_with_positions;
+
+    let nested_vec: Vec<Vec<f64>> = final_vector
+        .chunks(spec.token_size) // Group into chunks of size 'm'
+        .map(|chunk| chunk.to_vec())
+        .collect();
+
+    assert_eq!(nested_vec.len(), spec.sequence_length);
 
     let sample = PriceGainItem::new(
-        Vec::new(),
-        2.0
+        nested_vec,
+        0.0
     );
 
     Ok(sample)
@@ -193,15 +260,6 @@ async fn inference(
     spec: &DataSpec,
     queue: &VecDeque<IntervalExtraction>
 ) -> Result<bool, Box<dyn Error>> {
-
-
-    
-    
-    
-    
-    
-    
-    
     let device = model.devices()[0].clone();
 
     let mut samples: Vec<PriceGainItem> = Vec::new();
@@ -347,7 +405,6 @@ async fn decode_data(
 
     Ok(())
 }
-
 
 // struct PriceGainPatches {
 //     pub bid_price: Vec<Vec<f64>>,
