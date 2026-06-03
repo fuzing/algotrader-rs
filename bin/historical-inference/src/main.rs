@@ -28,7 +28,7 @@ use statrs::statistics::Statistics;
 use serde::{Deserialize, Serialize};
 use anyhow::anyhow;
 
-use ai_models::price_gain::data::data_spec::DataSpec;
+use ai_models::price_gain::data::data_spec::{DataSpec, DataSpecBuilder};
 
 use clap::Parser as ClapParser;
 use std::{
@@ -121,13 +121,6 @@ async fn decode_data(
     Ok(all_results_mapped)
 }
 
-fn format_float(val: f64) -> String {
-    format!("{:.6}", val)
-    // format!("{}", val)
-    //     // .trim_end_matches('0')
-    //     .to_string()
-    // val.to_string()
-}
 
 struct PriceGainPatches {
     pub bid_price: Vec<Vec<f64>>,
@@ -162,14 +155,24 @@ async fn convert_and_write_data(
     println!("d_model: ---------------------------> {}", d_model);
 
     // write the spec file
-    let data_spec = DataSpec::new(
-        predicted_patches_per_item,
-        patch_size,
-        d_model,
-    );
-    let spec_file = File::create(&args.output_spec)?;
-    let spec_writer = BufWriter::new(spec_file);
-    serde_json::to_writer_pretty(spec_writer, &data_spec)?;
+    let data_spec = DataSpecBuilder::new()
+        .sequence_length(predicted_patches_per_item)
+        .patch_size(patch_size)
+        .token_size(d_model)
+        .extraction_interval_nanos(args.extraction_interval_nanos)
+        .holding_time_seconds(args.holding_time_seconds)
+        .lob_levels(args.lob_levels)
+        .prediction_intervals(args.prediction_intervals)
+        .patch_intervals(args.patch_intervals)
+        .patch_stride(args.patch_stride)
+        .gain_percentage(args.gain_percentage)
+        .loss_percentage(args.loss_percentage)
+        .price_mean(price_mean)
+        .price_std_dev(price_std_dev)
+        .volume_mean(volume_mean)
+        .volume_std_dev(volume_std_dev)
+        .build();
+    data_spec.to_file(&args.output_spec)?;
 
 
 
@@ -280,44 +283,6 @@ async fn convert_and_write_data(
 
 
 
-// async fn write_data(
-//     args: &Args,
-//     stats: &DataStatistics,
-//     data: Vec<IntervalExtractionWithGain>,
-// ) -> Result<(), Box<dyn Error>> {
-//     let out_data = ExtractedDataFile {
-//         holding_time_seconds: args.holding_time_seconds,
-//         interval_nanos: args.extraction_interval_nanos,
-//
-//         price_mean: stats.price_mean,
-//         price_std_dev: stats.price_std_dev,
-//
-//         volume_mean: stats.volume_mean,
-//         volume_std_dev: stats.volume_std_dev,
-//         data,
-//     };
-//
-//     let file = File::create(&args.output_spec)?;
-//     let writer = BufWriter::new(file);
-//     if args.pretty {
-//         serde_json::to_writer_pretty(writer, &out_data)?;
-//     }
-//     else {
-//         serde_json::to_writer(writer, &out_data)?;
-//     }
-//     Ok(())
-// }
-
-
-#[derive(Debug)]
-pub struct DataStatistics {
-    price_mean: f64,
-    price_std_dev: f64,
-    volume_mean: f64,
-    volume_std_dev: f64,
-}
-
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>>
 {
@@ -417,43 +382,6 @@ async fn main() -> Result<(), Box<dyn Error>>
 
 #[derive(Debug, ClapParser)]
 struct Args {
-    // nanoseconds between intervals - to discretize the snapshots
-    #[arg(long)]
-    extraction_interval_nanos: u64,
-
-    // presumed holding time for the data - offset used to compute gain/loss
-    #[arg(long)]
-    holding_time_seconds: u16,
-
-    // levels of each side of the order book to capture (e.g. 5, 10 etc.)
-    #[arg(long)]
-    lob_levels: usize,
-
-    // number of intervals used for each prediction
-    #[arg(long)]
-    prediction_intervals: usize,
-
-    // number of intervals to include per patch
-    #[arg(long)]
-    patch_intervals: usize,
-
-    // number of intervals to include per patch
-    #[arg(long)]
-    patch_stride: usize,
-
-
-    // Governs how the prediction is classified.
-    //   If future price >= current_price + gain_percentage then "buy"
-    //   If future price is in the band gain_percentage to loss_percentage then "neutral" (i.e. don't buy)
-    //   If future price is <= loss_percentage then "sell" (i.e. don't buy)
-    //  Use values such as 0.1 (0.1%), meaning gain of 0.1% at the end of the holding_time
-    //
-    #[arg(long)]
-    gain_percentage: f64,
-
-    #[arg(long)]
-    loss_percentage: f64,
-
     // start/end dates to extract from/to
     #[arg(long)]
     start_date: String,
@@ -462,13 +390,7 @@ struct Args {
     end_date: String,
 
     #[arg(long)]
-    output_csv: PathBuf,
-
-    #[arg(long)]
-    output_spec: PathBuf,
-
-    #[arg(long)]
-    pretty: bool,
+    spec_file: PathBuf,
 
     #[arg()]
     inputs: Vec<PathBuf>,

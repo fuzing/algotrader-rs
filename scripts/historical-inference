@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-cargo run --bin historical-inference --  --prediction-intervals=64 --patch-intervals=8 --patch-stride=8 --gain-percentage=0.05 --loss-percentage=0.05 \
-  --lob-levels=15 --pretty --start-date=2024-12-03 --end-date=2024-12-03 --output-csv=/run/media/peter/genetics/algotrader/data/KHC-test.csv \
-  --output-spec=/run/media/peter/genetics/algotrader/data/KHC-test.json \
-  --extraction-interval-nanos=250000000 --holding-time-seconds=4 'KHC-XNAS.ITCH-2024-01-01 00:00:00 UTC-2024-12-31 23:59:59 UTC-mbo.dbn.zst'
+cargo run --bin historical-inference -- --start-date=2024-12-03 --end-date=2024-12-03 \
+  --spec-file=/run/media/peter/genetics/algotrader/data/KHC-spec.json \
+ 'KHC-XNAS.ITCH-2024-01-01 00:00:00 UTC-2024-12-31 23:59:59 UTC-mbo.dbn.zst'
 
