@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-cargo run --bin train -- --spec-file=KHC-train.json --dataset-file=KHC-train.csv \
+cargo run --bin train -- --spec-file=KHC-spec.json --dataset-file=KHC-train.csv \
     --artifacts-folder=/run/media/peter/genetics/algotrader/data/artifacts
 
 
