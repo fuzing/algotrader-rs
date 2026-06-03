@@ -64,6 +64,7 @@ type Elem = f32;
 async fn decode_data(
     path: &PathBuf,
     extractor: &mut impl Extractor<IntervalExtraction>,
+    spec: &DataSpec,
     holding_time_intervals: usize,
     start_date_nanos: u64,
     end_date_nanos: u64,
@@ -318,8 +319,14 @@ async fn main() -> Result<(), Box<dyn Error>>
 
     println!("inputs: {:?}", inputs);
 
+
+    // read in the spec file
+    let specs = DataSpec::from_file(&args.spec_file)?;
+
+
+
     // number of intervals that we're presuming holding for
-    let holding_time_intervals: usize = (args.holding_time_seconds as u64 * 1_000_000_000 / &args.extraction_interval_nanos) as usize;
+    let holding_time_intervals: usize = (specs.holding_time_seconds as u64 * 1_000_000_000 / &specs.extraction_interval_nanos) as usize;
 
     let start_date_nanos = str_to_offset_date_time(&format!("{} 00:00:00 UTC", &args.start_date)).expect("Invalid start date").unix_timestamp_nanos() as u64;
     let end_date_nanos = str_to_offset_date_time(&format!("{} 23:59:59 UTC", &args.end_date)).expect("Invalid end date").unix_timestamp_nanos() as u64;
@@ -328,13 +335,14 @@ async fn main() -> Result<(), Box<dyn Error>>
 
     for input in inputs {
         let mut extractor = IntervalExtractor::builder()
-            .nbr_lob_levels(&args.lob_levels)
-            .extraction_interval_nanos(&args.extraction_interval_nanos)
+            .nbr_lob_levels(&specs.lob_levels)
+            .extraction_interval_nanos(&specs.extraction_interval_nanos)
             .build();
 
         let mut data = decode_data(
             &input,
             &mut extractor,
+            &spec,
             holding_time_intervals,
             start_date_nanos,
             end_date_nanos,
@@ -343,38 +351,6 @@ async fn main() -> Result<(), Box<dyn Error>>
 
         println!("Stats: {}", extractor.stats());
     }
-
-    // calculate statistics for z-score manipulation
-    let _last_trade_price_mean = all_data.iter().map(|i| i.last_trade_price).mean();
-    let _last_trade_price_std_dev = all_data.iter().map(|i| i.last_trade_price).std_dev();
-    let mid_point_price_mean = all_data.iter().map(|i| i.mid_point_price).mean();
-    let mid_point_price_std_dev = all_data.iter().map(|i| i.mid_point_price).std_dev();
-
-    // All volumes mean and std_dev
-    let mut all_volumes: Vec::<f64> = Vec::new();
-    for d in all_data.iter() {
-        for bid in d.bids.iter() {
-            all_volumes.push(bid.volume as f64)
-        }
-        for ask in d.asks.iter() {
-            all_volumes.push(ask.volume as f64)
-        }
-    }
-    let volume_mean = all_volumes.iter().mean();
-    let volume_std_dev = all_volumes.iter().std_dev();
-
-    let stats = DataStatistics {
-        price_mean: mid_point_price_mean,
-        price_std_dev: mid_point_price_std_dev,
-        volume_mean,
-        volume_std_dev
-    };
-
-
-    convert_and_write_data(&args, &stats, all_data).await?;
-
-    // write_data(&args, &stats, all_data).await?;
-
 
     Ok(())
 }
