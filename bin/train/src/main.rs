@@ -73,16 +73,6 @@ type ElemType = burn::tensor::f16;
 type ElemType = burn::tensor::flex32;
 
 
-// // Define configuration struct for the experiment
-// #[derive(Config, Debug)]
-// pub struct ExperimentConfig {
-//     pub transformer: TransformerEncoderConfig,
-//     pub optimizer: AdamConfig,
-//     pub batch_size: usize,
-//     pub shuffle_seed: u64,
-//     pub num_epochs: usize,
-// }
-
 fn create_artifact_dir(artifact_dir: &PathBuf) {
     // Remove existing artifacts before to get an accurate learner summary
     std::fs::remove_dir_all(artifact_dir).ok();
@@ -121,42 +111,6 @@ pub fn launch_multi<B: AutodiffBackend + DistributedBackend>() {
         },
     ))
 }
-
-// pub async fn launch_single(mut device: Device) {
-//     device
-//         .configure(DeviceConfig::default().float_dtype(ElemType::dtype()))
-//         .unwrap();
-//
-//     launch(ExecutionStrategy::SingleDevice(device)).await?
-// }
-
-
-// pub async fn launch(dataset_path: &PathBuf, artifacts_path: &PathBuf, strategy: ExecutionStrategy) {
-//     let config = ExperimentConfig::new(
-//         TransformerEncoderConfig::new(256, 1024, 8, 4)
-//             .with_norm_first(true)
-//             .with_quiet_softmax(true),
-//         AdamConfig::new().with_weight_decay(Some(WeightDecayConfig::new(5e-5))),
-//     );
-//
-//     // text_classification::training::train::<AgNewsDataset>(
-//     //     strategy,
-//     //     AgNewsDataset::train(),
-//     //     AgNewsDataset::test(),
-//     //     config,
-//     //     "/tmp/text-classification-ag-news",
-//     // );
-//
-//     train(
-//         dataset_path,
-//         artifacts_path,
-//         strategy,
-//         config,
-//     );
-// }
-
-
-
 
 
 #[allow(unreachable_code)]
