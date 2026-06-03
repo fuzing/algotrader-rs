@@ -240,13 +240,12 @@ fn prepare_sample(
 
     assert_eq!(nested_vec.len(), spec.sequence_length);
 
-    println!("Nested shape [{}, {}]", nested_vec.len(), nested_vec[0].len());
+    // println!("Nested shape [{}, {}]", nested_vec.len(), nested_vec[0].len());
 
     let sample = PriceGainItem::new(
         nested_vec,
         0.0
     );
-    println!("Sample: {:?}", sample);
 
     Ok(sample)
 }
@@ -267,16 +266,11 @@ async fn inference(
         queue,
         spec
     )?);
-    println!("Samples: {:?}", samples);
 
     // Run inference on the given samples
-    println!("Running inference ...");
     let batch: PriceGainInferenceBatch = batcher.batch(samples, &device); // Batch samples using the batcher
 
-    println!("Got batch {}", batch.tokens);
-
     let predictions = model.infer(batch); // Get model predictions
-    println!("Got predictions {:?}", predictions);
 
     let prediction = predictions.clone().slice(0..1);
     // let logits = prediction.to_data();
@@ -308,8 +302,6 @@ async fn inference(
     // Ok(true)
 }
 
-
-
 async fn decode_data(
     model: &PriceGainModel,
     batcher: &Arc<PriceGainBatcher>,
@@ -323,11 +315,7 @@ async fn decode_data(
 ) -> Result<(), Box<dyn Error>> {
     let mut decoder = AsyncDbnDecoder::from_zstd_file(path).await?;
 
-    // let mut all_results: Vec<IntervalExtraction> = Vec::new();
-
     let mut queue: VecDeque<IntervalExtraction> = VecDeque::new();
-
-    println!("Holding for {} intervals", holding_time_intervals);
 
     let mut holding_intervals = 0;
     let mut holding_purchase_price = 0.0;
@@ -372,8 +360,6 @@ async fn decode_data(
             }
         }
     }
-
-
 
     Ok(())
 }

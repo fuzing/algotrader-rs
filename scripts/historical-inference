@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-cargo run --bin historical-inference -- --start-date=2024-12-03 --end-date=2024-12-03 \
+cargo run --bin historical-inference -- --start-date=2024-12-02 --end-date=2024-12-02 \
   --spec-file=/run/media/peter/genetics/algotrader/data/KHC-spec.json \
   --artifacts-folder=/run/media/peter/genetics/algotrader/data/artifacts \
  'KHC-XNAS.ITCH-2024-01-01 00:00:00 UTC-2024-12-31 23:59:59 UTC-mbo.dbn.zst'
