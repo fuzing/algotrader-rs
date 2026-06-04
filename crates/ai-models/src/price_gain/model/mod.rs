@@ -47,8 +47,6 @@ impl PriceGainModelConfig {
 
         PriceGainModel {
             transformer,
-            // embedding_token,
-            // embedding_pos,
             output,
             n_classes: self.n_classes,
         }
@@ -60,14 +58,7 @@ impl PriceGainModel {
     // Defines forward pass for training
     pub fn forward(&self, item: PriceGainTrainingBatch) -> ClassificationOutput {
         // // Get batch and sequence length, and the device
-        // let [batch_size, seq_length] = item.tokens.dims();
         let [batch_size, seq_length, d_model] = item.tokens.dims();
-
-        // println!("Batch size: {}, Sequence length {}, D_Model {}", batch_size, seq_length, d_model);
-
-
-        // PMB device from transformer instead of from the embedding_token layer
-        // let device = &self.embedding_token.devices()[0];
         let device = &self.transformer.devices()[0];
 
         //
@@ -79,7 +70,6 @@ impl PriceGainModel {
             .transformer
             .forward(TransformerEncoderInput::new(tokens));
         let output = self.output.forward(encoded);
-
 
         let output_classification = output
             .slice([0..batch_size, 0..1])
@@ -103,8 +93,6 @@ impl PriceGainModel {
     pub fn infer(&self, item: PriceGainInferenceBatch) -> Tensor<2> {
         let [batch_size, seq_length, d_model] = item.tokens.dims();
 
-        // PMB device from transformer instead of from the embedding_token layer
-        // let device = &self.embedding_token.devices()[0];
         let device = &self.transformer.devices()[0];
 
         //
