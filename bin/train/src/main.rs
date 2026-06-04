@@ -52,6 +52,8 @@ use burn::{
 use std::sync::Arc;
 use burn::data::dataloader::Dataset;
 use burn::data::dataset::transform::PartialDataset;
+use burn::nn::activation::ActivationConfig;
+use burn::nn::SwiGluConfig;
 use ai_models::price_gain::{
     data::{
         batcher::{PriceGainBatcher, PriceGainTrainingBatch},
@@ -169,14 +171,13 @@ async fn train(
     artifact_path: &PathBuf,
     args: &Args,
 ) -> Result<(), Box<dyn Error>> {
-    println!("Indexing CSV into memory-mapped structure...");
     let full_dataset = PriceGainDataset::new(spec_path, dataset_path);
-
     let config = ExperimentConfig::new(
         TransformerEncoderConfig::new(full_dataset.spec.token_size, args.feed_forward_size, args.transformer_heads, args.transformer_layers)
             .with_norm_first(true)
             .with_quiet_softmax(true)
             .with_dropout(args.dropout),
+            /*.with_activation(ActivationConfig::SwiGlu(SwiGluConfig::new()))*/
         AdamConfig::new().with_weight_decay(Some(WeightDecayConfig::new(5e-5))),
         args.batch_size,         // batch size
         args.shuffle_seed,         // shuffle seed

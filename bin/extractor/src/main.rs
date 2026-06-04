@@ -188,10 +188,9 @@ async fn convert_and_write_data(
     data_spec.to_file(&args.output_spec)?;
 
 
-
     // CPU based positional encoder
-    // let mut device = Device::flex();
-    let mut device =  Device::libtorch_cuda(burn::tensor::DeviceIndex::Default);
+    let mut device = Device::flex();
+    // let mut device =  Device::libtorch_cuda(burn::tensor::DeviceIndex::Default);
 
     device
         .configure(DeviceConfig::default().float_dtype(Elem::dtype()))
@@ -244,12 +243,12 @@ async fn convert_and_write_data(
         // our label is found in the snapshot at the end of the prediction temporal window
         // let label = data[i + prediction_temporal_window - 1].trade_gain;
         let gain = data[i + prediction_temporal_window_size - 1].mid_point_gain;
-        let label = if gain > args.gain_percentage {
-            2.0
+        let (label, repeats) = if gain > args.gain_percentage {
+            (2.0, args.gain_repeats)
         } else if gain > -args.loss_percentage {
-            1.0
+            (1.0, args.neutral_repeats)
         }
-        else { 0.0 };
+        else { (0.0, args.loss_repeats) };
 
         assert_eq!(patches.bid_price.len(), predicted_patches_per_item);
         assert_eq!(patches.bid_price.len(), n_tokens);
@@ -290,41 +289,16 @@ async fn convert_and_write_data(
 
         // format the line as a comma separated list of floats and write to the file
         let line = final_vector.into_iter().map(|v| format_float(v)).collect::<Vec<_>>();
-        writeln!(csv_filename, "{}", line.join(","))?;
+
+        for _ in 0..repeats {
+            writeln!(csv_filename, "{}", line.join(","))?;
+        }
     }
 
     Ok(())
 }
 
 
-
-// async fn write_data(
-//     args: &Args,
-//     stats: &DataStatistics,
-//     data: Vec<IntervalExtractionWithGain>,
-// ) -> Result<(), Box<dyn Error>> {
-//     let out_data = ExtractedDataFile {
-//         holding_time_seconds: args.holding_time_seconds,
-//         interval_nanos: args.extraction_interval_nanos,
-//
-//         price_mean: stats.price_mean,
-//         price_std_dev: stats.price_std_dev,
-//
-//         volume_mean: stats.volume_mean,
-//         volume_std_dev: stats.volume_std_dev,
-//         data,
-//     };
-//
-//     let file = File::create(&args.output_spec)?;
-//     let writer = BufWriter::new(file);
-//     if args.pretty {
-//         serde_json::to_writer_pretty(writer, &out_data)?;
-//     }
-//     else {
-//         serde_json::to_writer(writer, &out_data)?;
-//     }
-//     Ok(())
-// }
 
 
 #[derive(Debug)]
@@ -471,6 +445,15 @@ struct Args {
 
     #[arg(long)]
     loss_percentage: f64,
+
+    #[arg(long)]
+    neutral_repeats: usize,
+
+    #[arg(long)]
+    gain_repeats: usize,
+
+    #[arg(long)]
+    loss_repeats: usize,
 
     #[arg(long)]
     positional_max_timescale: usize,
