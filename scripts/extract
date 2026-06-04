@@ -3,7 +3,7 @@
 # note that positional-max-timescale can be the sequence length * 2 (i.e. 128/4*2) == 64
 cargo run --bin extractor --  \
   --prediction-intervals=128 \
-  --patch-intervals=8 --patch-stride=8 \
+  --patch-intervals=4 --patch-stride=4 \
   --gain-percentage=0.1 --loss-percentage=0.1 \
   --gain-repeats=25 --loss-repeats=25 --neutral-repeats=1 \
   --holding-time-seconds=10 \
