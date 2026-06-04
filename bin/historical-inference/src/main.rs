@@ -144,10 +144,8 @@ fn initialize_model(
     // Create model using loaded weights
     println!("Creating model ...");
     let model = PriceGainModelConfig::new(
-        config.transformer,
+        config.transformer.clone().with_dropout(0.0),           // override dropout for inference
         n_classes,
-        // tokenizer.vocab_size(),
-        // config.seq_length,
     )
         .init(&device)
         .load_record(record); // Initialize model with loaded weights
@@ -279,8 +277,8 @@ async fn inference(
     let prediction = predictions.clone().slice(0..1);
     // let logits = prediction.to_data();
     let class_index: i32 = prediction.argmax(1).squeeze_dim::<1>(1).into_scalar();
-    let class_name = PriceGainDataset::class_name(class_index as usize);
-    println!("Class: {}", class_name);
+    // let class_name = PriceGainDataset::class_name(class_index as usize);
+    // println!("Class: {}", class_name);
 
     if class_index == 2 {
         Ok(true)
@@ -341,7 +339,8 @@ async fn decode_data(
                         if holding_intervals == 0 {
                             let sale_result = queue.iter().last().unwrap();
                             let sale_price = (sale_result.bids[0].price + sale_result.asks[0].price) / 2.0;
-                            println!("Holding period over - bought for {}, sold for {}", holding_purchase_price, sale_price);
+                            let share_block = 100.0;
+                            println!("Holding period over - bought for {}, sold for {}, Profit ({})", holding_purchase_price, sale_price, (sale_price - holding_purchase_price) * share_block);
                         }
                     }
                 }
@@ -406,8 +405,6 @@ async fn main() -> Result<(), Box<dyn Error>>
 
     // read in the spec file
     let specs = DataSpec::from_file(&args.spec_file)?;
-
-
 
     // number of intervals that we're presuming holding for
     let holding_time_intervals: usize = (specs.holding_time_seconds as u64 * 1_000_000_000 / &specs.extraction_interval_nanos) as usize;

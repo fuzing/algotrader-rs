@@ -175,7 +175,8 @@ async fn train(
     let config = ExperimentConfig::new(
         TransformerEncoderConfig::new(full_dataset.spec.token_size, args.feed_forward_size, args.transformer_heads, args.transformer_layers)
             .with_norm_first(true)
-            .with_quiet_softmax(true),
+            .with_quiet_softmax(true)
+            .with_dropout(args.dropout),
         AdamConfig::new().with_weight_decay(Some(WeightDecayConfig::new(5e-5))),
         args.batch_size,         // batch size
         args.shuffle_seed,         // shuffle seed
@@ -308,6 +309,9 @@ struct Args {
 
     #[arg(long)]
     dataset_file: String,
+
+    #[arg(long)]
+    dropout: f64,
 
     #[arg(long)]
     batch_size: usize,

@@ -24,16 +24,12 @@ use burn::{
 pub struct PriceGainModelConfig {
     transformer: TransformerEncoderConfig,
     n_classes: usize,
-    // vocab_size: usize,
-    // seq_length: SeqLengthOption,
 }
 
 // Define the model structure
 #[derive(Module, Debug)]
 pub struct PriceGainModel {
     transformer: TransformerEncoder,
-    // embedding_token: Embedding,
-    // embedding_pos: Embedding,
     output: Linear,
     n_classes: usize,
 }
