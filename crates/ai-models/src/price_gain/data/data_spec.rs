@@ -31,6 +31,13 @@ pub struct DataSpec {
 
     pub positional_max_timescale: usize,    // parameter for positional encoder
 
+    pub gain_repeats: usize,
+    pub neutral_repeats: usize,
+    pub loss_repeats: usize,
+
+    pub n_gains: usize,
+    pub n_neutrals: usize,
+    pub n_losses: usize,
 }
 
 
@@ -54,6 +61,14 @@ impl DataSpec {
         volume_std_dev: f64,
 
         positional_max_timescale: usize,
+
+        gain_repeats: usize,
+        neutral_repeats: usize,
+        loss_repeats: usize,
+
+        n_gains: usize,
+        n_neutrals: usize,
+        n_losses: usize,
     ) -> Self {
         Self {
             sequence_length,
@@ -74,6 +89,14 @@ impl DataSpec {
             volume_std_dev,
 
             positional_max_timescale,
+
+            gain_repeats,
+            neutral_repeats,
+            loss_repeats,
+
+            n_gains,
+            n_neutrals,
+            n_losses,
         }
     }
 
@@ -114,6 +137,13 @@ pub struct DataSpecBuilder {
 
     pub positional_max_timescale: usize,    // parameter for positional encoder
 
+    pub gain_repeats: usize,
+    pub neutral_repeats: usize,
+    pub loss_repeats: usize,
+
+    pub n_gains: usize,
+    pub n_neutrals: usize,
+    pub n_losses: usize,
 }
 
 
@@ -135,8 +165,15 @@ impl DataSpecBuilder {
             price_std_dev: 0.0,
             volume_mean: 0.0,
             volume_std_dev: 0.0,
-
             positional_max_timescale: 1_000_000,
+
+            gain_repeats: 1,
+            neutral_repeats: 1,
+            loss_repeats: 1,
+
+            n_gains: 0,
+            n_neutrals: 0,
+            n_losses: 0,
         }
     }
 
@@ -221,6 +258,41 @@ impl DataSpecBuilder {
         self
     }
 
+
+    pub fn gain_repeats(mut self, gain_repeats: usize) -> Self {
+        self.gain_repeats = gain_repeats;
+        self
+    }
+
+    pub fn neutral_repeats(mut self, neutral_repeats: usize) -> Self {
+        self.neutral_repeats = neutral_repeats;
+        self
+    }
+
+    pub fn loss_repeats(mut self, loss_repeats: usize) -> Self {
+        self.loss_repeats = loss_repeats;
+        self
+    }
+
+
+    pub fn n_gains(mut self, n_gains: usize) -> Self {
+        self.n_gains = n_gains;
+        self
+    }
+
+    pub fn n_neutrals(mut self, n_neutrals: usize) -> Self {
+        self.n_neutrals = n_neutrals;
+        self
+    }
+
+    pub fn n_losses(mut self, n_losses: usize) -> Self {
+        self.n_losses = n_losses;
+        self
+    }
+
+
+
+
     pub fn build(&self) -> DataSpec {
         DataSpec::new(
             self.sequence_length,
@@ -239,6 +311,14 @@ impl DataSpecBuilder {
             self.volume_mean,
             self.volume_std_dev,
             self.positional_max_timescale,
+
+            self.gain_repeats,
+            self.neutral_repeats,
+            self.loss_repeats,
+            
+            self.n_gains,
+            self.n_neutrals,
+            self.n_losses,
         )
     }
 }

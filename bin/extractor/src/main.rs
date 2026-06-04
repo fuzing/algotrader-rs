@@ -146,7 +146,7 @@ async fn convert_and_write_data(
     stats: &DataStatistics,
     data: Vec<IntervalExtractionWithGain>,
 ) -> Result<(), Box<dyn Error>> {
-    let mut csv_filename = File::create(&args.output_csv)?;
+    let mut csv_file = File::create(&args.output_csv)?;
 
     let prediction_temporal_window_size = args.prediction_intervals;
     let patch_temporal_window_size = args.patch_intervals;
@@ -165,27 +165,6 @@ async fn convert_and_write_data(
     println!("patch_size: ----------------------> {}", patch_size);
     let d_model = patch_size * 4;
     println!("d_model: ---------------------------> {}", d_model);
-
-    // write the spec file
-    let data_spec = DataSpecBuilder::new()
-        .sequence_length(predicted_patches_per_item)
-        .patch_size(patch_size)
-        .token_size(d_model)
-        .extraction_interval_nanos(args.extraction_interval_nanos)
-        .holding_time_seconds(args.holding_time_seconds)
-        .lob_levels(args.lob_levels)
-        .prediction_intervals(args.prediction_intervals)
-        .patch_intervals(args.patch_intervals)
-        .patch_stride(args.patch_stride)
-        .gain_percentage(args.gain_percentage)
-        .loss_percentage(args.loss_percentage)
-        .price_mean(price_mean)
-        .price_std_dev(price_std_dev)
-        .volume_mean(volume_mean)
-        .volume_std_dev(volume_std_dev)
-        .positional_max_timescale(args.positional_max_timescale)
-        .build();
-    data_spec.to_file(&args.output_spec)?;
 
 
     // CPU based positional encoder
@@ -300,13 +279,41 @@ async fn convert_and_write_data(
 
         // format the line as a comma separated list of floats and write to the file
         let line = final_vector.into_iter().map(|v| format_float(v)).collect::<Vec<_>>();
-
+        let line = line.join(",");
+        // write the line to the file "repeats" times
         for _ in 0..repeats {
-            writeln!(csv_filename, "{}", line.join(","))?;
+            writeln!(csv_file, "{}", line)?;
         }
     }
 
     println!("Gains({n_gains}), Neutrals({n_neutrals}), Losses({n_losses})");
+
+    // write the spec file
+    let data_spec = DataSpecBuilder::new()
+        .sequence_length(predicted_patches_per_item)
+        .patch_size(patch_size)
+        .token_size(d_model)
+        .extraction_interval_nanos(args.extraction_interval_nanos)
+        .holding_time_seconds(args.holding_time_seconds)
+        .lob_levels(args.lob_levels)
+        .prediction_intervals(args.prediction_intervals)
+        .patch_intervals(args.patch_intervals)
+        .patch_stride(args.patch_stride)
+        .gain_percentage(args.gain_percentage)
+        .loss_percentage(args.loss_percentage)
+        .price_mean(price_mean)
+        .price_std_dev(price_std_dev)
+        .volume_mean(volume_mean)
+        .volume_std_dev(volume_std_dev)
+        .positional_max_timescale(args.positional_max_timescale)
+        .gain_repeats(args.gain_repeats)
+        .neutral_repeats(args.neutral_repeats)
+        .loss_repeats(args.loss_repeats)
+        .n_gains(n_gains)
+        .n_neutrals(n_neutrals)
+        .n_losses(n_losses)
+        .build();
+    data_spec.to_file(&args.output_spec)?;
 
     Ok(())
 }
