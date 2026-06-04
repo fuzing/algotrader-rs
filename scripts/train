@@ -2,7 +2,7 @@
 cargo run --bin train -- --spec-file=KHC-spec.json \
   --dataset-file=KHC-train.csv \
   --batch-size=128 \
-  --num-epochs=2 \
+  --num-epochs=3 \
   --shuffle-seed=42 \
   --transformer-heads=8 \
   --transformer-layers=4 \
