@@ -81,8 +81,8 @@ use utilities::date_time::{nanos_to_offset_date_time_with_tz, str_to_offset_date
 #[cfg(not(any(feature = "f16", feature = "flex32")))]
 #[allow(unused)]
 type ElemType = f32;
-#[cfg(feature = "f16")]
-type ElemType = burn::tensor::f16;
+// #[cfg(feature = "f16")]
+// type ElemType = burn::tensor::f16;
 #[cfg(feature = "flex32")]
 type ElemType = burn::tensor::flex32;
 
@@ -90,9 +90,9 @@ type ElemType = burn::tensor::flex32;
 #[allow(unreachable_code)]
 fn select_device() -> Device {
     // #[cfg(feature = "flex")]
-    return Device::flex();
+    // return Device::flex();
 
-    #[cfg(all(feature = "tch-gpu", not(target_os = "macos")))]
+    // #[cfg(all(feature = "tch-gpu", not(target_os = "macos")))]
     return Device::libtorch_cuda(burn::tensor::DeviceIndex::Default);
 
     #[cfg(all(feature = "tch-gpu", target_os = "macos"))]
