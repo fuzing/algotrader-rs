@@ -12,6 +12,6 @@ cargo run --bin extractor --  \
   --start-date=2024-12-02 --end-date=2024-12-06 \
   --output-csv=/run/media/peter/genetics/algotrader/data/KHC-train.csv \
   --output-spec=/run/media/peter/genetics/algotrader/data/KHC-spec.json \
-  --extraction-interval-nanos=200000000 \
+  --extraction-interval-nanos=100000000 \
   'KHC-XNAS.ITCH-2024-01-01 00:00:00 UTC-2024-12-31 23:59:59 UTC-mbo.dbn.zst'
 
