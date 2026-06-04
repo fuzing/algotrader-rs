@@ -35,6 +35,10 @@ use ai_models::price_gain::{
             PriceGainBatcher,
             PriceGainInferenceBatch,
         },
+        data::{
+            PriceGainPatchType,
+            PriceGainPatchSide,
+        },
         dataset::{
             PriceGainItem,
             PriceGainDataset,
@@ -74,7 +78,6 @@ use databento::{
         decode::{AsyncDbnDecoder},
     },
 };
-
 use utilities::date_time::{nanos_to_offset_date_time_with_tz, str_to_offset_date_time};
 
 
@@ -175,10 +178,11 @@ fn prepare_sample(
     let mut ask_volume_patches: Vec<Vec<f64>> = Vec::new();
 
     for j in (0..queue.len()).step_by(spec.patch_stride) {
-        let mut bid_price_patch: Vec<f64> = Vec::new();
-        let mut bid_volume_patch: Vec<f64> = Vec::new();
-        let mut ask_price_patch: Vec<f64> = Vec::new();
-        let mut ask_volume_patch: Vec<f64> = Vec::new();
+        // create each patch - starting with each patch header value pair
+        let mut bid_price_patch: Vec<f64> = vec![PriceGainPatchType::Price.value(), PriceGainPatchSide::Bid.value()];
+        let mut bid_volume_patch: Vec<f64> = vec![PriceGainPatchType::Volume.value(), PriceGainPatchSide::Bid.value()];
+        let mut ask_price_patch: Vec<f64> = vec![PriceGainPatchType::Price.value(), PriceGainPatchSide::Ask.value()];
+        let mut ask_volume_patch: Vec<f64> = vec![PriceGainPatchType::Volume.value(), PriceGainPatchSide::Ask.value()];
 
         for k in 0..spec.patch_intervals {
             for l in 0..spec.lob_levels {

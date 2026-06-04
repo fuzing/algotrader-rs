@@ -28,7 +28,12 @@ use statrs::statistics::Statistics;
 use serde::{Deserialize, Serialize};
 use anyhow::anyhow;
 
-use ai_models::price_gain::data::data_spec::{DataSpec, DataSpecBuilder};
+use ai_models::{
+    price_gain::data::{
+        data::{PriceGainPatchType, PriceGainPatchSide},
+        data_spec::{DataSpec, DataSpecBuilder}
+    }
+};
 
 use clap::Parser as ClapParser;
 use std::{
@@ -155,7 +160,7 @@ async fn convert_and_write_data(
 
     let predicted_patches_per_item = ((prediction_temporal_window_size - patch_temporal_window_size) / patch_temporal_stride) + 1;
     let n_tokens = predicted_patches_per_item;
-    let patch_size = patch_temporal_window_size * lob_levels;
+    let patch_size = 2 + patch_temporal_window_size * lob_levels;
     // the model dimension is the sum of the sizes:  ask_price_patch size + ask_volume_patch_size + bid_price_patch size + bid_volume_patch_size
     println!("patch_size: ----------------------> {}", patch_size);
     let d_model = patch_size * 4;
@@ -185,7 +190,9 @@ async fn convert_and_write_data(
 
 
     // CPU based positional encoder
-    let mut device = Device::flex();
+    // let mut device = Device::flex();
+    let mut device =  Device::libtorch_cuda(burn::tensor::DeviceIndex::Default);
+
     device
         .configure(DeviceConfig::default().float_dtype(Elem::dtype()))
         .unwrap();
@@ -193,7 +200,6 @@ async fn convert_and_write_data(
         .with_max_sequence_size(n_tokens)
         .with_max_timescale(args.positional_max_timescale)
         .init(&device);
-
 
     //
     // send it
@@ -208,10 +214,11 @@ async fn convert_and_write_data(
         };
 
         for j in (0..=(prediction_temporal_window_size - patch_temporal_window_size)).step_by(patch_temporal_stride) {
-            let mut bid_price_patch: Vec<f64> = Vec::new();
-            let mut bid_volume_patch: Vec<f64> = Vec::new();
-            let mut ask_price_patch: Vec<f64> = Vec::new();
-            let mut ask_volume_patch: Vec<f64> = Vec::new();
+            // create each patch - starting with each patch header value pair
+            let mut bid_price_patch: Vec<f64> = vec![PriceGainPatchType::Price.value(), PriceGainPatchSide::Bid.value()];
+            let mut bid_volume_patch: Vec<f64> = vec![PriceGainPatchType::Volume.value(), PriceGainPatchSide::Bid.value()];
+            let mut ask_price_patch: Vec<f64> = vec![PriceGainPatchType::Price.value(), PriceGainPatchSide::Ask.value()];
+            let mut ask_volume_patch: Vec<f64> = vec![PriceGainPatchType::Volume.value(), PriceGainPatchSide::Ask.value()];
 
             for k in 0..patch_temporal_window_size {
                 for l in 0..lob_levels {
