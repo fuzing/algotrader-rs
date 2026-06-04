@@ -200,6 +200,11 @@ async fn convert_and_write_data(
         .with_max_timescale(args.positional_max_timescale)
         .init(&device);
 
+
+    let mut n_gains: usize = 0;
+    let mut n_neutrals: usize = 0;
+    let mut n_losses: usize = 0;
+
     //
     // send it
     //
@@ -245,11 +250,16 @@ async fn convert_and_write_data(
         let gain = data[i + prediction_temporal_window_size - 1].mid_point_gain;
         let (label, repeats) =
             if gain > args.gain_percentage {
+                n_gains += args.gain_repeats;
                 (2.0, args.gain_repeats)
             } else if gain > -args.loss_percentage {
+                n_neutrals += args.neutral_repeats;
                 (1.0, args.neutral_repeats)
             }
-            else { (0.0, args.loss_repeats) };
+            else {
+                n_losses += args.loss_repeats;
+                (0.0, args.loss_repeats)
+            };
 
         assert_eq!(patches.bid_price.len(), predicted_patches_per_item);
         assert_eq!(patches.bid_price.len(), n_tokens);
@@ -295,6 +305,8 @@ async fn convert_and_write_data(
             writeln!(csv_filename, "{}", line.join(","))?;
         }
     }
+
+    println!("Gains({n_gains}), Neutrals({n_neutrals}), Losses({n_losses})");
 
     Ok(())
 }
