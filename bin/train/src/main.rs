@@ -64,11 +64,11 @@ use ai_models::price_gain::{
     training::ExperimentConfig,
 };
 
-#[cfg(not(any(feature = "f16", feature = "flex32")))]
-#[allow(unused)]
+// #[cfg(not(any(feature = "f16", feature = "flex32")))]
+// #[allow(unused)]
 type ElemType = f32;
-#[cfg(feature = "f16")]
-type ElemType = burn::tensor::f16;
+// #[cfg(feature = "f16")]
+// type ElemType = burn::tensor::f16;
 #[cfg(feature = "flex32")]
 type ElemType = burn::tensor::flex32;
 
@@ -116,9 +116,9 @@ pub fn launch_multi<B: AutodiffBackend + DistributedBackend>() {
 #[allow(unreachable_code)]
 fn select_device() -> Device {
     // #[cfg(feature = "flex")]
-    return Device::flex();
+    // return Device::flex();
 
-    #[cfg(all(feature = "tch-gpu", not(target_os = "macos")))]
+    // #[cfg(all(feature = "tch-gpu", not(target_os = "macos")))]
     return Device::libtorch_cuda(burn::tensor::DeviceIndex::Default);
 
     #[cfg(all(feature = "tch-gpu", target_os = "macos"))]
@@ -130,8 +130,10 @@ fn select_device() -> Device {
     #[cfg(any(feature = "wgpu", feature = "metal", feature = "vulkan"))]
     return Device::wgpu(burn::tensor::DeviceKind::DefaultDevice);
 
-    #[cfg(feature = "cuda")]
-    return Device::cuda(burn::tensor::DeviceIndex::Default);
+    // #[cfg(feature = "cuda")]
+    // return Device::cuda(burn::tensor::DeviceIndex::Default);
+
+    return Device::wgpu(burn::tensor::DeviceKind::DefaultDevice);
 
     #[cfg(feature = "rocm")]
     return Device::rocm(burn::tensor::DeviceIndex::Default);
@@ -185,6 +187,9 @@ async fn train(
     let mut device = select_device();
     device
         .configure(DeviceConfig::default().float_dtype(ElemType::dtype()))?;
+
+    println!("{:?}", device);
+    // return Ok(());
 
     let strategy = ExecutionStrategy::SingleDevice(device);
 
