@@ -13,15 +13,7 @@ use burn::data::dataset::{
 };
 use derive_new::new;
 
-use extractors::interval_extractor::{
-    ExtractedDataFile,
-    IntervalExtractionWithGain
-};
 use crate::price_gain::data::data_spec::DataSpec;
-
-
-
-
 
 
 #[derive(new, Clone, Debug)]
@@ -133,9 +125,8 @@ impl Dataset<PriceGainItem> for PriceGainDataset {
             return None;
         }
 
-        // Last value = label
+        // Last value from the row is the "label"
         let label = values.pop()?; // O(1)
-
 
         // now arrange into [sequence_length, d_model]
         if values.len() != self.spec.sequence_length * self.spec.token_size {
@@ -145,7 +136,6 @@ impl Dataset<PriceGainItem> for PriceGainDataset {
             .chunks(self.spec.token_size)
             .map(|slice| slice.to_vec())
             .collect();
-
 
         Some(PriceGainItem {
             features: chunks,

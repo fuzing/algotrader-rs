@@ -177,7 +177,7 @@ async fn train(
             .with_norm_first(true)
             .with_quiet_softmax(true)
             .with_dropout(args.dropout),
-            /*.with_activation(ActivationConfig::SwiGlu(SwiGluConfig::new()))*/
+            /*.with_activation(ActivationConfig::SwiGlu(SwiGluConfig::new())),*/
         AdamConfig::new().with_weight_decay(Some(WeightDecayConfig::new(5e-5))),
         args.batch_size,         // batch size
         args.shuffle_seed,         // shuffle seed
@@ -196,7 +196,7 @@ async fn train(
     let strategy = ExecutionStrategy::SingleDevice(device);
 
     let (dataset_train, dataset_test, _dataset_validation) =
-        create_splits(full_dataset.clone(), (4,1,0));
+        create_splits(full_dataset, (4,1,0));
 
 
     // ---- Build DataLoader ----
@@ -211,7 +211,7 @@ async fn train(
     let dataloader_test: Arc<dyn DataLoader<PriceGainTrainingBatch>> = DataLoaderBuilder::new(batcher)
         .batch_size(config.batch_size)
         .shuffle(config.shuffle_seed)    // Efficient even for huge datasets (shuffles indices)
-        .num_workers(8) // Parallel reading/parsing
+        .num_workers(2) // Parallel reading/parsing
         .build(dataset_test);
 
     // Initialize model
