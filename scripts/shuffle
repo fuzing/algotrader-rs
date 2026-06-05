@@ -3,7 +3,8 @@
 cargo run --bin shuffle-data-file --  \
   --seed=42 \
   --input=/run/media/peter/genetics/algotrader/data/KHC-train \
-  --output=/run/media/peter/genetics/algotrader/data/KHC-train-shuffled
+  --output=./KHC-train-shuffled
+#  --output=/run/media/peter/genetics/algotrader/data/KHC-train-shuffled
 
 
 

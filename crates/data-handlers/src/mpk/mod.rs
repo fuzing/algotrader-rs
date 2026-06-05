@@ -31,7 +31,7 @@ impl<T> MpkDataWriter<T> {
         let file = File::create(&data_name).expect(&format!("Error creating data file {}", &data_name));
 
         Self {
-            writer: BufWriter::with_capacity(64 * 1_024, file),
+            writer: BufWriter::with_capacity(1_024 * 1_024, file),
             file_base: file_base.to_string(),
             record_offsets: Vec::new(),
             offset: 0,
@@ -58,8 +58,9 @@ impl<T> Drop for MpkDataWriter<T> {
         self.writer.flush().unwrap();
         let index_name = format!("{}.idx", &self.file_base);
         let index_file = File::create(&index_name).expect(&format!("Couldn't open output file {}", &index_name));
-        let mut writer = BufWriter::with_capacity(64 * 1_024, &index_file);
+        let mut writer = BufWriter::with_capacity(1_024 * 1_024, &index_file);
         rmp_serde::encode::write(&mut writer, &self.record_offsets).expect(&format!("Error writing data to file {}", &index_name));
+        writer.flush().unwrap();
     }
 }
 
@@ -74,8 +75,15 @@ pub struct MpkDataReader<T> {
     _p: PhantomData<T>,
 }
 
+#[derive(Debug)]
+pub enum AccessType {
+    Sequential,
+    Random,
+}
+
+
 impl<T> MpkDataReader<T> {
-    pub fn new(file_base: &str) -> Self {
+    pub fn new(file_base: &str, access_type: AccessType) -> Self {
         let data_name = format!("{}.dat", file_base);
         let index_name = format!("{}.idx", file_base);
 
@@ -91,10 +99,22 @@ impl<T> MpkDataReader<T> {
 
         // memory map the file
         let file = File::open(&data_name).expect(&format!("Couldn't open data file {:?}", &data_name));
+
         let mapped_file = unsafe {
             Mmap::map(&file).expect("failed to memory map file")
         };
-        mapped_file.advise(Advice::Sequential).expect("failed to advise mmap of sequential");
+
+        match access_type {
+            AccessType::Sequential => {
+                mapped_file.advise(Advice::Sequential).expect("failed to advise mmap of sequential");
+                mapped_file.advise(Advice::HugePage).expect("failed to advise mmap of huge pages");
+            },
+            AccessType::Random => {
+                mapped_file.advise(Advice::Random).expect("failed to advise mmap of random");
+                mapped_file.advise(Advice::NoHugePage).expect("failed to advise mmap of no huge pages");
+            }
+        }
+
         Self {
             record_offsets,
             mapped_file,
@@ -107,7 +127,7 @@ impl<T> DataReader<T> for MpkDataReader<T>
 where T: DeserializeOwned
 {
     fn read(&self, index: usize) -> Result<Vec<T>, Box<dyn Error>> {
-        if index >= self.record_offsets.len() {
+        if index >= self.len() {
             return Err("Index out of bounds".into());
         }
 
@@ -116,6 +136,8 @@ where T: DeserializeOwned
 
         // Slice the mmap (looks like reading from RAM)
         let bytes = &self.mapped_file[start..end];
+
+        // unpack using message pack
         let data = rmp_serde::from_slice(bytes)?;
 
         Ok(data)

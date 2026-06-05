@@ -1,11 +1,7 @@
 #!/usr/bin/env bash
 
-#cargo run --bin csv-indexer -- \
-#  --input=/run/media/peter/genetics/algotrader/data/KHC-train.csv \
-#  --output=/run/media/peter/genetics/algotrader/data/KHC-train.idx
-#exit
-
 # note that positional-max-timescale can be the sequence length * 2 (i.e. 128/4*2) == 64
+echo "Extracting Data"
 cargo run --bin extractor --  \
   --prediction-intervals=128 \
   --patch-intervals=4 --patch-stride=4 \
@@ -20,6 +16,9 @@ cargo run --bin extractor --  \
   --extraction-interval-nanos=100000000 \
   'KHC-XNAS.ITCH-2024-01-01 00:00:00 UTC-2024-12-31 23:59:59 UTC-mbo.dbn.zst'
 
+echo "Shuffling Data"
+cargo run --bin shuffle-data-file --  \
+  --seed=42 \
+  --input=/run/media/peter/genetics/algotrader/data/KHC-train \
+  --output=/run/media/peter/genetics/algotrader/data/KHC-train-shuffled
 
-  
-  

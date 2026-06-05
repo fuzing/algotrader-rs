@@ -15,8 +15,10 @@ use tracing_subscriber::{EnvFilter, fmt};
 use tracing::{debug, info, warn, error, Instrument};
 use tokio;
 use dotenv::dotenv;
-use data_handlers::data_handler::{DataWriter, DataReader};
-use data_handlers::mpk::{MpkDataReader, MpkDataWriter};
+use data_handlers::{
+    data_handler::{DataWriter, DataReader},
+    mpk::{MpkDataReader, MpkDataWriter, AccessType}
+};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>>
@@ -46,7 +48,7 @@ async fn main() -> Result<(), Box<dyn Error>>
 
     let mut rng = StdRng::seed_from_u64(args.seed);
 
-    let reader: MpkDataReader<f64> = MpkDataReader::new(&args.input);
+    let reader: MpkDataReader<f64> = MpkDataReader::new(&args.input, AccessType::Random);
     let mut writer = MpkDataWriter::new(&args.output);
 
     let n_items = reader.len();
@@ -57,7 +59,6 @@ async fn main() -> Result<(), Box<dyn Error>>
     while remaining.len() > 0 {
         let index =remaining.pop().unwrap();
         let data = reader.read(index)?;
-        println!("Processing {:?}", data);
         writer.write(&data)?;
         if (remaining.len() % 1_000) == 0 {
             println!("Remaining Items: {}", remaining.len());
