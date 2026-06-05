@@ -1689,6 +1689,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "csv-indexer"
+version = "1.0.0"
+dependencies = [
+ "ai-models",
+ "anyhow",
+ "burn",
+ "clap",
+ "csv",
+ "databento",
+ "dotenv",
+ "extractors",
+ "rmp-serde",
+ "serde",
+ "serde_json",
+ "statrs",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "utilities",
+]
+
+[[package]]
 name = "ctutils"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"

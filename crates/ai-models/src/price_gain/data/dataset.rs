@@ -6,7 +6,10 @@ use std::{
     sync::Arc,
 };
 use std::io::BufRead;
-use memmap2::Mmap;
+use memmap2::{
+    Mmap,
+    Advice,
+};
 use burn::data::dataset::{
     Dataset,
     InMemDataset,           // PMB in memory dataset
@@ -26,7 +29,7 @@ pub struct PriceGainItem {
 #[derive(Debug, Clone)]
 pub struct PriceGainDataset {
     // memory mapped file, shareable across threads
-    mmap: Arc<Mmap>,
+    mapped_file: Arc<Mmap>,
 
     // Row index of each line
     // (start byte, byte_len)
@@ -51,18 +54,20 @@ impl PriceGainDataset {
         //
         // now process data
         //
-        let file = File::open(data_path.clone()).expect(&format!("Couldn't open data file {data_path:?}"));
-
-        let mmap = unsafe {
+        let file = File::open(&data_path).expect(&format!("Couldn't open data file {:?}", &data_path));
+        let mapped_file = unsafe {
             Mmap::map(&file).expect("failed to memory map file")
         };
+        mapped_file.advise(Advice::Sequential).expect("failed to advise mmap of sequential");
 
 
-        let reader = BufReader::new(&file);
+        // let reader = BufReader::new(&file);
+        let reader = BufReader::with_capacity(128 * 1_024, &file);
 
         let mut index = Vec::new();
         let mut cursor = 0;
 
+        println!("Dataset - mapping line starting positions");
         for (i, line_result) in reader.lines().enumerate() {
             let line = line_result.expect("Error reading csv file during indexing");
             let len = line.len();
@@ -81,7 +86,7 @@ impl PriceGainDataset {
 
         Self {
             spec,
-            mmap: Arc::new(mmap),
+            mapped_file: Arc::new(mapped_file),
             index,
         }
     }
@@ -110,7 +115,7 @@ impl Dataset<PriceGainItem> for PriceGainDataset {
         let (start, len) = *self.index.get(index)?;
 
         // Slice the mmap (looks like reading from RAM)
-        let bytes = &self.mmap[start..start + len];
+        let bytes = &self.mapped_file[start..start + len];
 
         // Convert CSV line from UTF-8 bytes
         let line_str = std::str::from_utf8(bytes).ok()?;
