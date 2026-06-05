@@ -4,7 +4,7 @@
 # Originally we started with 8 heads and 4 layers
 # export CUBECL_AUTOTUNE_LEVEL=0
 cargo run --bin train -- --spec-file=KHC-spec.json \
-  --dataset-file=KHC-train.csv \
+  --dataset-file=KHC-train \
   --batch-size=128 \
   --num-epochs=10 \
   --dropout=0.1 \

@@ -61,6 +61,11 @@ use databento::{
 
 use utilities::date_time::{nanos_to_offset_date_time_with_tz, str_to_offset_date_time};
 
+use data_handlers::{
+    mpk::MpkDataWriter,
+    data_handler::DataWriter,
+};
+
 
 type Elem = f32;
 // type Elem = burn::tensor::f16;
@@ -146,7 +151,10 @@ async fn convert_and_write_data(
     stats: &DataStatistics,
     data: Vec<IntervalExtractionWithGain>,
 ) -> Result<(), Box<dyn Error>> {
-    let mut csv_file = File::create(&args.output_csv)?;
+    // let mut csv_file = File::create(&args.output_csv)?;
+    let mut writer = MpkDataWriter::new(&args.output_data.to_string_lossy());
+
+
 
     let prediction_temporal_window_size = args.prediction_intervals;
     let patch_temporal_window_size = args.patch_intervals;
@@ -277,13 +285,20 @@ async fn convert_and_write_data(
         // add label as last position for vector
         final_vector.push(label);
 
-        // format the line as a comma separated list of floats and write to the file
-        let line = final_vector.into_iter().map(|v| format_float(v)).collect::<Vec<_>>();
-        let line = line.join(",");
-        // write the line to the file "repeats" times
+        // // format the line as a comma separated list of floats and write to the file
+        // let line = final_vector.into_iter().map(|v| format_float(v)).collect::<Vec<_>>();
+        // let line = line.join(",");
+        // // write the line to the file "repeats" times
+        // for _ in 0..repeats {
+        //     writeln!(csv_file, "{}", line)?;
+        // }
         for _ in 0..repeats {
-            writeln!(csv_file, "{}", line)?;
+            writer.write(&final_vector)?;
         }
+
+        // write to the data file
+
+
     }
 
     println!("Gains({n_gains}), Neutrals({n_neutrals}), Losses({n_losses})");
@@ -486,7 +501,7 @@ struct Args {
     end_date: String,
 
     #[arg(long)]
-    output_csv: PathBuf,
+    output_data: PathBuf,
 
     #[arg(long)]
     output_spec: PathBuf,

@@ -23,6 +23,7 @@ burn = { workspace = true, features = [
     "std",
 ]
 }
+data-handlers.workspace = true
 derive-new.workspace = true
 extractors.workspace = true
 memmap2.workspace = true

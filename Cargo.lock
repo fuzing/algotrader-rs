@@ -57,6 +57,7 @@ version = "1.0.0"
 dependencies = [
  "anyhow",
  "burn",
+ "data-handlers",
  "derive-new",
  "extractors",
  "memmap2",
@@ -2904,6 +2905,7 @@ dependencies = [
  "burn",
  "clap",
  "csv",
+ "data-handlers",
  "databento",
  "dotenv",
  "extractors",

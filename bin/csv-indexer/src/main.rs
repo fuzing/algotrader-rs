@@ -30,17 +30,22 @@ use data_handlers::mpk::{MpkDataReader, MpkDataWriter};
 async fn main() -> Result<(), Box<dyn Error>>
 {
     {
-        // let w: dyn DataWriter<f64> = MpkDataWriter::new("./shit");
         let mut w = MpkDataWriter::new("./shit");
-        w.write(&vec![1.0, 2.0, 3.0])?;
-        w.write(&vec![4.0, 5.0, 6.0])?;
-        w.write(&vec![7.0, 8.0, 9.0])?;
+        for _ in 0..100_000 {
+            w.write(&vec![1.1, 2.0, 3.0])?;
+            w.write(&vec![4.0, 5.0, 6.0])?;
+            w.write(&vec![7.23987, 8.0, 9.0])?;
+        }
     }
 
     {
         let x  = MpkDataReader::new("./shit");
-        let y: Vec<f64> = x.read(0)?;
-        println!("{:?}", y);
+
+        for i in 0..x.len() {
+            let y: Vec<f64> = x.read(i)?;
+            println!("{:?}", y);
+        }
+
     }
 
     return Ok(());
