@@ -217,6 +217,7 @@ console_error_panic_hook = "0.1.7"
 criterion = "0.8.2"
 csv = { version = "1.4.0" }
 dotenv = "0.15.0"
+data-handlers = { path = "crates/data-handlers" }
 databento = { version = "0.52.0", features = ["historical", "live"], default-features = true }
 derive-new = { version = "0.7.0" }
 extractors = { path = "crates/extractors" }

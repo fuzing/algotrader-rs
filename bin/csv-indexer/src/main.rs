@@ -23,11 +23,24 @@ use tracing_subscriber::{EnvFilter, fmt};
 use tracing::{debug, info, warn, error, Instrument};
 use tokio;
 use dotenv::dotenv;
-
+use data_handlers::data_handler::DataWriter;
+use data_handlers::mpk::MpkDataWriter;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>>
 {
+    {
+        // let w: dyn DataWriter<f64> = MpkDataWriter::new("./shit");
+        let mut w = MpkDataWriter::new("./shit");
+        w.write(&vec![1.0, 2.0, 3.0])?;
+        w.write(&vec![4.0, 5.0, 6.0])?;
+        w.write(&vec![7.0, 8.0, 9.0])?;
+    }
+
+    return Ok(());
+
+
+
     // get .env variables into environment
     dotenv().ok();
     let root_folder = env::var("ROOT_FOLDER").expect("no ROOT_FOLDER found in environment");

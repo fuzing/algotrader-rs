@@ -52,7 +52,7 @@ impl Batcher<PriceGainItem, PriceGainTrainingBatch> for PriceGainBatcher
             .flatten()
             .collect();
 
-        let flattened_labels: Vec<i64> = items.iter().map(|item| item.label as i64).collect();
+        let flattened_labels: Vec<i64> = items.iter().map(|item| item.label.round() as i64).collect();
 
         // Construct tensors
         let inputs = Tensor::from_floats(

@@ -1697,6 +1697,7 @@ dependencies = [
  "burn",
  "clap",
  "csv",
+ "data-handlers",
  "databento",
  "dotenv",
  "extractors",
@@ -2346,6 +2347,28 @@ name = "data-encoding"
 version = "2.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4ae5f15dda3c708c0ade84bfee31ccab44a3da4f88015ed22f63732abe300c8"
+
+[[package]]
+name = "data-handlers"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "chrono-tz",
+ "databento",
+ "dotenv",
+ "memmap2",
+ "order-book",
+ "rmp-serde",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "time",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "utilities",
+]
 
 [[package]]
 name = "databento"
