@@ -4,6 +4,14 @@
 
 NAME=KHC
 
+
+echo "Shuffling Data"
+cargo run --bin shuffle-data-file --  \
+  --seed=42 \
+  --input=/run/media/peter/genetics/algotrader/data/${NAME}-train \
+  --output=/run/media/peter/genetics/algotrader/data/${NAME}-train-shuffled
+exit
+
 echo "Extracting Data"
 cargo run --bin extractor --  \
   --prediction-intervals=128 \
