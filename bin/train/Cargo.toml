@@ -10,7 +10,8 @@ exclude.workspace = true
 
 [dependencies]
 ai-models = { workspace = true }
-burn = { workspace = true, features = ["default", "train", "flex", "std", "wgpu", "cuda", "tch"] }
+#burn = { workspace = true, features = ["default", "train", "flex", "std", "wgpu", "cuda", "tch"] }
+burn = { workspace = true, features = ["default", "train", "flex", "std", "tch"] }
 
 clap.workspace = true
 dotenv.workspace = true

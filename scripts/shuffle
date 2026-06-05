@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-cargo run --bin shuffle-data-file --  \
+cargo run --release --bin shuffle-data-file --  \
   --seed=42 \
   --input=/run/media/peter/genetics/algotrader/data/KHC-train \
   --output=./KHC-train-shuffled

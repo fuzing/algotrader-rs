@@ -211,7 +211,7 @@ async fn train(
     let dataloader_test: Arc<dyn DataLoader<PriceGainTrainingBatch>> = DataLoaderBuilder::new(batcher)
         .batch_size(config.batch_size)
         // .shuffle(config.shuffle_seed)    // Efficient even for huge datasets (shuffles indices)
-        .num_workers(2) // Parallel reading/parsing
+        .num_workers(4) // Parallel reading/parsing
         .build(dataset_test);
 
     // Initialize model
