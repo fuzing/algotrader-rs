@@ -1690,29 +1690,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "csv-indexer"
-version = "1.0.0"
-dependencies = [
- "ai-models",
- "anyhow",
- "burn",
- "clap",
- "csv",
- "data-handlers",
- "databento",
- "dotenv",
- "extractors",
- "rmp-serde",
- "serde",
- "serde_json",
- "statrs",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "utilities",
-]
-
-[[package]]
 name = "ctutils"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6610,6 +6587,19 @@ name = "shlex"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
+
+[[package]]
+name = "shuffle-data-file"
+version = "1.0.0"
+dependencies = [
+ "clap",
+ "data-handlers",
+ "dotenv",
+ "rand 0.10.1",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
 
 [[package]]
 name = "signal-hook"

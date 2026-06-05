@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+cargo run --bin shuffle-data-file --  \
+  --input=/run/media/peter/genetics/algotrader/data/KHC-train \
+  --output=/run/media/peter/genetics/algotrader/data/KHC-train-shuffled \
+  --seed=42
+
+
+  
+  

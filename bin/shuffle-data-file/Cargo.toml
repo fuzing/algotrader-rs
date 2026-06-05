@@ -1,0 +1,25 @@
+[package]
+name = "shuffle-data-file"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+exclude.workspace = true
+
+[dependencies]
+
+clap.workspace = true
+data-handlers.workspace = true
+dotenv.workspace = true
+rand.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+
+[lints]
+workspace = true
+
+
