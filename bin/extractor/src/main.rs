@@ -154,8 +154,6 @@ async fn convert_and_write_data(
     // let mut csv_file = File::create(&args.output_csv)?;
     let mut writer = MpkDataWriter::new(&args.output_data.to_string_lossy());
 
-
-
     let prediction_temporal_window_size = args.prediction_intervals;
     let patch_temporal_window_size = args.patch_intervals;
     let patch_temporal_stride = args.patch_stride;
