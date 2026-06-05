@@ -44,7 +44,7 @@ async fn main() -> Result<(), Box<dyn Error>>
     // Parse the command line arguments
     let args = Args::parse();
 
-    println!("Generating index for {}", args.input);
+    println!("Shuffling {}", args.input);
 
     let mut rng = StdRng::seed_from_u64(args.seed);
 
@@ -54,14 +54,19 @@ async fn main() -> Result<(), Box<dyn Error>>
     let n_items = reader.len();
     println!("Shuffling {} items", n_items);
 
+    // vector of indices (initially in order)
     let mut remaining: Vec<usize> = (0..n_items).collect();
+
+    // shuffle the indices
     remaining.shuffle(&mut rng);
+
+    // read randomly and write to the new index file
     while remaining.len() > 0 {
         let index =remaining.pop().unwrap();
         let data = reader.read(index)?;
         writer.write(&data)?;
         if (remaining.len() % 1_000) == 0 {
-            println!("Remaining Items: {}", remaining.len());
+            println!("Shuffle remaining Items: {}", remaining.len());
         }
     }
 

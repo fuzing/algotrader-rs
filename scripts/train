@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 
+NAME=KHC
+
 #
 # Originally we started with 8 heads and 4 layers
 # export CUBECL_AUTOTUNE_LEVEL=0
-cargo run --bin train -- --spec-file=KHC-spec.json \
-  --dataset-file=KHC-train \
+cargo run --bin train -- \
+  --spec-file=${NAME}-spec.json \
+  --dataset-file=${NAME}-train-shuffled \
   --batch-size=128 \
   --num-epochs=10 \
   --dropout=0.1 \
@@ -12,6 +15,6 @@ cargo run --bin train -- --spec-file=KHC-spec.json \
   --transformer-heads=8 \
   --transformer-layers=8 \
   --feed-forward-size=1024 \
-  --artifacts-folder=/run/media/peter/genetics/algotrader/data/KHC-artifacts
+  --artifacts-folder=/run/media/peter/genetics/algotrader/data/${NAME}-artifacts
 
 

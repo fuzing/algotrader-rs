@@ -2,7 +2,7 @@
 
 # note that positional-max-timescale can be the sequence length * 2 (i.e. 128/4*2) == 64
 
-OUTPUT_NAME=KHC
+NAME=KHC
 
 echo "Extracting Data"
 cargo run --bin extractor --  \
@@ -13,15 +13,15 @@ cargo run --bin extractor --  \
   --holding-time-seconds=5 \
   --positional-max-timescale=5000 \
   --lob-levels=15 --pretty \
-  --start-date=2024-12-02 --end-date=2024-12-06 \
-  --output-data=/run/media/peter/genetics/algotrader/data/${OUPUT_NAME}-train \
-  --output-spec=/run/media/peter/genetics/algotrader/data/${OUPUT_NAME}-spec.json \
+  --start-date=2024-11-01 --end-date=2024-11-14 \
+  --output-data=/run/media/peter/genetics/algotrader/data/${NAME}-train \
+  --output-spec=/run/media/peter/genetics/algotrader/data/${NAME}-spec.json \
   --extraction-interval-nanos=100000000 \
   'KHC-XNAS.ITCH-2024-01-01 00:00:00 UTC-2024-12-31 23:59:59 UTC-mbo.dbn.zst'
 
 echo "Shuffling Data"
 cargo run --bin shuffle-data-file --  \
   --seed=42 \
-  --input=/run/media/peter/genetics/algotrader/data/${OUTPUT_NAME}-train \
-  --output=/run/media/peter/genetics/algotrader/data/${OUTPUT_NAME}-train-shuffled
+  --input=/run/media/peter/genetics/algotrader/data/${NAME}-train \
+  --output=/run/media/peter/genetics/algotrader/data/${NAME}-train-shuffled
 
