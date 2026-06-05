@@ -23,8 +23,8 @@ use tracing_subscriber::{EnvFilter, fmt};
 use tracing::{debug, info, warn, error, Instrument};
 use tokio;
 use dotenv::dotenv;
-use data_handlers::data_handler::DataWriter;
-use data_handlers::mpk::MpkDataWriter;
+use data_handlers::data_handler::{DataWriter, DataReader};
+use data_handlers::mpk::{MpkDataReader, MpkDataWriter};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>>
@@ -35,6 +35,12 @@ async fn main() -> Result<(), Box<dyn Error>>
         w.write(&vec![1.0, 2.0, 3.0])?;
         w.write(&vec![4.0, 5.0, 6.0])?;
         w.write(&vec![7.0, 8.0, 9.0])?;
+    }
+
+    {
+        let x  = MpkDataReader::new("./shit");
+        let y: Vec<f64> = x.read(0)?;
+        println!("{:?}", y);
     }
 
     return Ok(());
