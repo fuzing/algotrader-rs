@@ -13,6 +13,8 @@ pub trait DataWriter<T> {
 
 pub trait DataReader<T> {
     fn read(&self, index: usize) -> Result<Vec<T>, Box<dyn Error>> { Ok(vec![]) }
+
+    fn len(&self) -> usize { 0 }
 }
 
 

@@ -82,7 +82,12 @@ impl MpkDataReader {
         // read in the record offsets
         let file = File::open(&index_name).expect(&format!("Couldn't open data file {:?}", &index_name));
         let reader = BufReader::with_capacity(1_024 * 1_024, &file);
-        let record_offsets: Vec<usize> = rmp_serde::decode::from_read(reader).expect(&format!("Error reading data from file {:?}", &index_name));
+        let mut record_offsets: Vec<usize> = rmp_serde::decode::from_read(reader).expect(&format!("Error reading data from file {:?}", &index_name));
+
+        // add additional offset, being the end of the file
+        let metadata = std::fs::metadata(&index_name).expect(&format!("Couldn't get metadata from file {:?}", &index_name));
+        record_offsets.push(metadata.len() as usize);
+
 
         let file = File::open(&data_name).expect(&format!("Couldn't open data file {:?}", &data_name));
         let mapped_file = unsafe {
@@ -100,25 +105,28 @@ impl MpkDataReader {
 impl<T> DataReader<T> for MpkDataReader
 where T: DeserializeOwned
 {
-    fn write(&mut self, data: &Vec<T>) -> Result<(), Box<dyn Error>> {
-        self.record_offsets.push(self.offset);
-        let data = rmp_serde::to_vec(&data)?;
-        self.writer.write_all(&data)?;
-        self.offset += data.len();
-        Ok(())
+    fn read(&self, index: usize) -> Result<Vec<T>, Box<dyn Error>> {
+        if index >= self.record_offsets.len() {
+            return Err("Index out of bounds".into());
+        }
+
+        let start = self.record_offsets[index];
+        let end = self.record_offsets[index + 1];
+
+        // Slice the mmap (looks like reading from RAM)
+        let bytes = &self.mapped_file[start..end];
+        let data: Vec<T> = rmp_serde::from_slice(bytes)?;
+
+        Ok(data)
+    }
+
+    fn len(&self) -> usize {
+        self.record_offsets.len() - 1
     }
 }
 
-impl Drop for MpkDataReader {
-    // on drop we will write the index file
-    fn drop(&mut self) {
-        self.writer.flush().unwrap();
-        let index_name = format!("{}-index.mpk", &self.file_base);
-        let index_file = File::create(&index_name).expect(&format!("Couldn't open output file {}", &index_name));
-        let mut writer = BufWriter::with_capacity(64 * 1_024, &index_file);
-        rmp_serde::encode::write(&mut writer, &self.record_offsets).expect(&format!("Error writing data to file {}", &index_name));
-    }
-}
+
+
 
 
 
