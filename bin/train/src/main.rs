@@ -68,9 +68,9 @@ use ai_models::price_gain::{
 
 // #[cfg(not(any(feature = "f16", feature = "flex32")))]
 // #[allow(unused)]
-// type ElemType = f32;
+type ElemType = f32;
 // #[cfg(feature = "f16")]
-type ElemType = burn::tensor::f16;
+// type ElemType = burn::tensor::f16;
 #[cfg(feature = "flex32")]
 type ElemType = burn::tensor::flex32;
 
