@@ -269,16 +269,22 @@ async fn convert_and_write_data(
         let flat = tokens.into_iter().flatten().collect::<Vec<_>>();
         assert_eq!(flat.len(), 1 * n_tokens * d_model);
 
-        let tensor = Tensor::<3, Float>::from_floats(
-            TensorData::new(flat,Shape::new([1, n_tokens, d_model])),
-            &device
-        );
 
-        // add positional encodings and divide by 2.0 to normalize
-        let tensor_with_positions = positional_encoder.forward(tensor).div_scalar(2.0);
-        let vec_with_positions = tensor_with_positions.to_data().iter::<f64>().collect::<Vec<_>>();
-        assert_eq!(vec_with_positions.len(), 1 * n_tokens * d_model);
-        let mut final_vector = vec_with_positions;
+        let mut final_vector = if args.with_positional_encodings {
+            // add positional encodings and divide by 2.0 to normalize
+            let tensor = Tensor::<3, Float>::from_floats(
+                TensorData::new(flat,Shape::new([1, n_tokens, d_model])),
+                &device
+            );
+
+            let tensor_with_positions = positional_encoder.forward(tensor).div_scalar(2.0);
+            let vec_with_positions = tensor_with_positions.to_data().iter::<f64>().collect::<Vec<_>>();
+            assert_eq!(vec_with_positions.len(), 1 * n_tokens * d_model);
+            vec_with_positions
+        }
+        else {
+            flat
+        };
 
         // add label as last position for vector
         final_vector.push(label);
@@ -487,6 +493,9 @@ struct Args {
 
     #[arg(long)]
     loss_repeats: usize,
+
+    #[arg(long)]
+    with_positional_encodings: bool,
 
     #[arg(long)]
     positional_max_timescale: usize,
