@@ -11,7 +11,6 @@ use burn::{
     nn::{
         Embedding, EmbeddingConfig, Linear, LinearConfig,
         attention::SeqLengthOption,
-        PositionalEncoding, PositionalEncodingConfig
         loss::CrossEntropyLossConfig,
         transformer::{TransformerEncoder, TransformerEncoderConfig, TransformerEncoderInput},
     },
@@ -23,8 +22,6 @@ use burn::{
 // Define the model configuration
 #[derive(Config, Debug)]
 pub struct PriceGainModelConfig {
-    positional_encoder: PositionalEncodingConfig,
-
     transformer: TransformerEncoderConfig,
     n_classes: usize,
 }
@@ -32,8 +29,6 @@ pub struct PriceGainModelConfig {
 // Define the model structure
 #[derive(Module, Debug)]
 pub struct PriceGainModel {
-    positional_encoder: PositionalEncoding,
-
     transformer: TransformerEncoder,
     output: Linear,
     n_classes: usize,
