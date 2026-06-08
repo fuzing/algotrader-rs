@@ -5,6 +5,8 @@ NAME=KHC
 #
 # Originally we started with 8 heads and 4 layers
 # export CUBECL_AUTOTUNE_LEVEL=0
+# output-feed-forward-size should be 4x token size
+#
 cargo run --bin train -- \
   --spec-file=${NAME}-spec.json \
   --dataset-file=${NAME}-train-shuffled \
@@ -14,7 +16,7 @@ cargo run --bin train -- \
   --shuffle-seed=42 \
   --transformer-heads=8 \
   --transformer-layers=8 \
-  --output-feed-forward-size=992 \
+  --output-feed-forward-size=1952 \
   --artifacts-folder=/run/media/peter/genetics/algotrader/data/${NAME}-artifacts
 
 
