@@ -9,7 +9,7 @@ use burn::data::dataset::{
 };
 use derive_new::new;
 
-use crate::price_gain::data::data_spec::DataSpec;
+use crate::price_gain::data::data_spec::PriceGainDataSpec;
 
 use data_handlers::{
     mpk::{
@@ -21,26 +21,26 @@ use data_handlers::{
 
 
 #[derive(new, Clone, Debug)]
-pub struct PriceGainItem {
+pub struct LobTransItem {
     pub features: Vec<Vec<f64>>,        // [sequence_length, token_size]
     pub label: f64,
 }
 
 
 #[derive(Debug, Clone)]
-pub struct PriceGainDataset {
+pub struct LobTransDataset {
     file: Arc<MpkDataReader<f64>>,
-    pub spec: DataSpec,
+    pub spec: PriceGainDataSpec,
 }
 
 
 
-impl PriceGainDataset {
+impl LobTransDataset {
     pub fn new(
         spec_path: &PathBuf,
         data_path: &PathBuf,
-    ) -> PriceGainDataset {
-        let spec = DataSpec::from_file(spec_path).expect(&format!("Couldn't open spec file {spec_path:?}"));
+    ) -> LobTransDataset {
+        let spec = PriceGainDataSpec::from_file(spec_path).expect(&format!("Couldn't open spec file {spec_path:?}"));
         let file = MpkDataReader::new(data_path.to_str().unwrap(), AccessType::Sequential);
 
         Self {
@@ -50,7 +50,7 @@ impl PriceGainDataset {
     }
 
 
-    pub fn specs(&self) -> DataSpec {
+    pub fn specs(&self) -> PriceGainDataSpec {
         self.spec.clone()
     }
 
@@ -67,8 +67,8 @@ impl PriceGainDataset {
     }
 }
 
-impl Dataset<PriceGainItem> for PriceGainDataset {
-    fn get(&self, index: usize) -> Option<PriceGainItem> {
+impl Dataset<LobTransItem> for LobTransDataset {
+    fn get(&self, index: usize) -> Option<LobTransItem> {
         let mut values = self.file.read(index).unwrap();
         if values.is_empty() {
             return None;
@@ -86,7 +86,7 @@ impl Dataset<PriceGainItem> for PriceGainDataset {
             .map(|slice| slice.to_vec())
             .collect();
 
-        Some(PriceGainItem {
+        Some(LobTransItem {
             features: chunks,
             label,
         })

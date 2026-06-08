@@ -10,7 +10,8 @@ use std::{
 use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct DataSpec {
+pub struct PriceGainDataSpec {
+    pub type_: String,
     pub sequence_length: usize,         // number of items in temporal sequence
     pub patch_size: usize,              // number of values in a patch (lob_depth * patch_temporal_window)
     pub token_size: usize,              // in our use case it's 4 * patch_size (bid_price, bid_volume, ask_price, ask_volume)
@@ -41,7 +42,7 @@ pub struct DataSpec {
 }
 
 
-impl DataSpec {
+impl PriceGainDataSpec {
     pub fn new(
         sequence_length: usize,
         patch_size: usize,
@@ -71,6 +72,7 @@ impl DataSpec {
         n_losses: usize,
     ) -> Self {
         Self {
+            type_: "PriceGain".to_string(),
             sequence_length,
             patch_size,
             token_size,
@@ -116,7 +118,7 @@ impl DataSpec {
 
 
 #[derive(Debug)]
-pub struct DataSpecBuilder {
+pub struct PriceGainDataSpecBuilder {
     pub sequence_length: usize,         // number of items in temporal sequence
     pub patch_size: usize,              // number of values in a patch (lob_depth * patch_temporal_window)
     pub token_size: usize,              // in our use case it's 4 * patch_size (bid_price, bid_volume, ask_price, ask_volume)
@@ -147,7 +149,7 @@ pub struct DataSpecBuilder {
 }
 
 
-impl DataSpecBuilder {
+impl PriceGainDataSpecBuilder {
     pub fn new() -> Self {
         Self {
             sequence_length: 128,
@@ -293,8 +295,8 @@ impl DataSpecBuilder {
 
 
 
-    pub fn build(&self) -> DataSpec {
-        DataSpec::new(
+    pub fn build(&self) -> PriceGainDataSpec {
+        PriceGainDataSpec::new(
             self.sequence_length,
             self.patch_size,
             self.token_size,

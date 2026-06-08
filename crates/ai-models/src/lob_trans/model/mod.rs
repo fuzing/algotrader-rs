@@ -4,44 +4,81 @@
 // (both with and without pre-trained weights), forward pass, inference, training, and validation.
 
 use super::data::batcher::{
-    PriceGainInferenceBatch,
-    PriceGainTrainingBatch
+    LobTransInferenceBatch,
+    LobTransTrainingBatch,
 };
 use burn::{
+    module::Param,
     nn::{
         Embedding, EmbeddingConfig, Linear, LinearConfig,
         attention::SeqLengthOption,
+        PositionalEncoding, PositionalEncodingConfig,
         loss::CrossEntropyLossConfig,
         transformer::{TransformerEncoder, TransformerEncoderConfig, TransformerEncoderInput},
     },
     prelude::*,
-    tensor::activation::softmax,
+    tensor::{
+        Distribution,
+        activation::softmax
+    },
     train::{RegressionOutput, ClassificationOutput, InferenceStep, TrainOutput, TrainStep},
 };
 
 // Define the model configuration
 #[derive(Config, Debug)]
-pub struct PriceGainModelConfig {
+pub struct LobTransConfig {
+    seq_length: usize,          // same as number of patches
+    d_model: usize,             // model embedding size
+
+    positional_encoder: PositionalEncodingConfig,
     transformer: TransformerEncoderConfig,
     n_classes: usize,
 }
 
 // Define the model structure
 #[derive(Module, Debug)]
-pub struct PriceGainModel {
+pub struct LobTransModel {
+    seq_length: usize,
+    d_model: usize,
+
+    // if we're using fixed weight sin/cos positional encodings
+    // positional_encoder: PositionalEncoding,
+
+    // [batch_size, class_token]
+    class_tokens: Param<Tensor<3>>,
+
+    // [batch_size, seq_length, d_model]
+    positional_embeddings: Param<Tensor<3>>,
+
     transformer: TransformerEncoder,
     output: Linear,
     n_classes: usize,
 }
 
 // Define functions for model initialization
-impl PriceGainModelConfig {
+impl LobTransConfig {
     /// Initializes a model with default weights
-    pub fn init(&self, device: &Device) -> PriceGainModel {
+    pub fn init(&self, device: &Device) -> LobTransModel {
+
+
+        let class_tokens = Param::from_tensor(
+            Tensor::random([1, 1, 1], Distribution::default(), device)
+        );
+        let positional_embeddings = Param::from_tensor(
+            Tensor::random([1, self.seq_length + 1, self.d_model], Distribution::default(), device)
+        );
+
+        // let positional_encoder = self.positional_encoder.init(device);
         let output = LinearConfig::new(self.transformer.d_model, self.n_classes).init(device);
         let transformer = self.transformer.init(device);
 
-        PriceGainModel {
+        LobTransModel {
+            seq_length: self.seq_length,
+            d_model: self.d_model,
+
+            class_tokens,
+            positional_embeddings,
+            // positional_encoder,
             transformer,
             output,
             n_classes: self.n_classes,
@@ -50,9 +87,9 @@ impl PriceGainModelConfig {
 }
 
 /// Define model behavior
-impl PriceGainModel {
+impl LobTransModel {
     // Defines forward pass for training
-    pub fn forward(&self, item: PriceGainTrainingBatch) -> ClassificationOutput {
+    pub fn forward(&self, item: LobTransTrainingBatch) -> ClassificationOutput {
         // // Get batch and sequence length, and the device
         let [batch_size, seq_length, d_model] = item.tokens.dims();
         let device = &self.transformer.devices()[0];
@@ -86,7 +123,7 @@ impl PriceGainModel {
 
 
     /// Defines forward pass for inference
-    pub fn infer(&self, item: PriceGainInferenceBatch) -> Tensor<2> {
+    pub fn infer(&self, item: LobTransInferenceBatch) -> Tensor<2> {
         let [batch_size, seq_length, d_model] = item.tokens.dims();
 
         let device = &self.transformer.devices()[0];
@@ -111,11 +148,11 @@ impl PriceGainModel {
 }
 
 /// Define training step
-impl TrainStep for PriceGainModel {
-    type Input = PriceGainTrainingBatch;
+impl TrainStep for LobTransModel {
+    type Input = LobTransTrainingBatch;
     type Output = ClassificationOutput;
 
-    fn step(&self, item: PriceGainTrainingBatch) -> TrainOutput<ClassificationOutput> {
+    fn step(&self, item: LobTransTrainingBatch) -> TrainOutput<ClassificationOutput> {
         // Run forward pass, calculate gradients and return them along with the output
         let item = self.forward(item);
         let grads = item.loss.backward();
@@ -125,11 +162,11 @@ impl TrainStep for PriceGainModel {
 }
 
 /// Define validation step
-impl InferenceStep for PriceGainModel {
-    type Input = PriceGainTrainingBatch;
+impl InferenceStep for LobTransModel {
+    type Input = LobTransTrainingBatch;
     type Output = ClassificationOutput;
 
-    fn step(&self, item: PriceGainTrainingBatch) -> ClassificationOutput {
+    fn step(&self, item: LobTransTrainingBatch) -> ClassificationOutput {
         // Run forward pass and return the output
         self.forward(item)
     }

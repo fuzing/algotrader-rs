@@ -1,6 +1,6 @@
 
 
-use super::{dataset::PriceGainItem, /*tokenizer::Tokenizer*/};
+use super::{dataset::LobTransItem, /*tokenizer::Tokenizer*/};
 use burn::{
     data::dataloader::batcher::Batcher,
     nn::attention::{SeqLengthOption, generate_padding_mask},
@@ -10,9 +10,9 @@ use std::sync::Arc;
 use derive_new::new;
 
 #[derive(Clone, Debug)]
-pub struct PriceGainBatcher {}
+pub struct LobTransBatcher {}
 
-impl PriceGainBatcher {
+impl LobTransBatcher {
     pub fn new() -> Self {
         Self {}
     }
@@ -20,7 +20,7 @@ impl PriceGainBatcher {
 
 
 #[derive(Debug, Clone, new)]
-pub struct PriceGainTrainingBatch {
+pub struct LobTransTrainingBatch {
     pub tokens: Tensor<3, Float>,           // [batch_size, sequence_length, token_size]
     pub labels: Tensor<1, Int>,             // [batch_size]
 
@@ -28,19 +28,19 @@ pub struct PriceGainTrainingBatch {
 }
 
 #[derive (Debug, Clone, new)]
-pub struct PriceGainInferenceBatch {
+pub struct LobTransInferenceBatch {
     pub tokens: Tensor<3, Float>,           // [batch_size, sequence_length, token_size]
 }
 
 
-impl Batcher<PriceGainItem, PriceGainTrainingBatch> for PriceGainBatcher
+impl Batcher<LobTransItem, LobTransTrainingBatch> for LobTransBatcher
 {
     /// Batches a vector of price regression items into a training batch
     fn batch(
         &self,
-        items: Vec<PriceGainItem>,
+        items: Vec<LobTransItem>,
         device: &Device,
-    ) -> PriceGainTrainingBatch {
+    ) -> LobTransTrainingBatch {
         let batch_size = items.len();
         let sequence_length = items.first().map(|i| i.features.len()).unwrap_or(0);
         let token_length = items.first().map(|i| i.features.first().unwrap().len()).unwrap_or(0);
@@ -65,7 +65,7 @@ impl Batcher<PriceGainItem, PriceGainTrainingBatch> for PriceGainBatcher
             device,
         );
 
-        PriceGainTrainingBatch {
+        LobTransTrainingBatch {
             tokens: inputs,
             labels: targets,
         }
@@ -73,14 +73,14 @@ impl Batcher<PriceGainItem, PriceGainTrainingBatch> for PriceGainBatcher
 }
 
 
-impl Batcher<PriceGainItem, PriceGainInferenceBatch> for PriceGainBatcher
+impl Batcher<LobTransItem, LobTransInferenceBatch> for LobTransBatcher
 {
     /// Batches a vector of price regression items into a training batch
     fn batch(
         &self,
-        items: Vec<PriceGainItem>,
+        items: Vec<LobTransItem>,
         device: &Device,
-    ) -> PriceGainInferenceBatch {
+    ) -> LobTransInferenceBatch {
         let batch_size = items.len();
         let sequence_length = items.first().map(|i| i.features.len()).unwrap_or(0);
         let token_length = items.first().map(|i| i.features.first().unwrap().len()).unwrap_or(0);
@@ -99,7 +99,7 @@ impl Batcher<PriceGainItem, PriceGainInferenceBatch> for PriceGainBatcher
             device,
         );
 
-        PriceGainInferenceBatch {
+        LobTransInferenceBatch {
             tokens: inputs,
         }
     }

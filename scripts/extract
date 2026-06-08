@@ -6,7 +6,6 @@ NAME=KHC
 
 echo "Extracting Data"
 cargo run --bin extractor --  \
-  --with-positional-encodings \
   --prediction-intervals=128 \
   --patch-intervals=4 --patch-stride=4 \
   --gain-percentage=0.08 --loss-percentage=0.08 \
@@ -14,11 +13,14 @@ cargo run --bin extractor --  \
   --holding-time-seconds=5 \
   --positional-max-timescale=5000 \
   --lob-levels=15 --pretty \
-  --start-date=2024-11-01 --end-date=2024-11-14 \
+  --start-date=2024-11-04 --end-date=2024-11-04 \
   --output-data=/run/media/peter/genetics/algotrader/data/${NAME}-train \
   --output-spec=/run/media/peter/genetics/algotrader/data/${NAME}-spec.json \
-  --extraction-interval-nanos=100000000 \
+  --extraction-interval-nanos=250000000 \
   'KHC-XNAS.ITCH-2024-01-01 00:00:00 UTC-2024-12-31 23:59:59 UTC-mbo.dbn.zst'
+
+#  --with-positional-encodings \
+
 
 echo "Shuffling Data"
 cargo run --bin shuffle-data-file --  \

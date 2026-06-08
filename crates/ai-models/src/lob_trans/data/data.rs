@@ -2,11 +2,11 @@
 
 
 #[derive(Debug)]
-pub enum PriceGainPatchType {
+pub enum LobTransPatchType {
     Price,
     Volume,
 }
-impl PriceGainPatchType {
+impl LobTransPatchType {
     pub fn value(&self) -> f64 {
         match self {
             Self::Price => -1.0,
@@ -17,11 +17,11 @@ impl PriceGainPatchType {
 
 
 #[derive(Debug)]
-pub enum PriceGainPatchSide {
+pub enum LobTransPatchSide {
     Bid,
     Ask,
 }
-impl PriceGainPatchSide {
+impl LobTransPatchSide {
     pub fn value(&self) -> f64 {
         match self {
             Self::Bid => -1.0,

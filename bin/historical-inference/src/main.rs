@@ -43,7 +43,7 @@ use ai_models::price_gain::{
             PriceGainItem,
             PriceGainDataset,
         },
-        data_spec::{DataSpec, DataSpecBuilder}
+        data_spec::{PriceGainDataSpec, PriceGainDataSpecBuilder}
     },
     model::{
         PriceGainModel,
@@ -118,7 +118,7 @@ fn select_device() -> Device {
 
 fn initialize_model(
     args: &Args,
-    spec: &DataSpec,
+    spec: &PriceGainDataSpec,
 ) -> Result<(PriceGainModel, Arc<PriceGainBatcher>, PositionalEncoding), Box<dyn Error>> {
     // Load experiment configuration
     let config = ExperimentConfig::load(format!("{}/config.json", args.artifacts_folder.to_string_lossy()).as_str())
@@ -165,7 +165,7 @@ fn initialize_model(
 fn prepare_sample(
     positional_encoder: &PositionalEncoding,
     queue: &VecDeque<IntervalExtraction>,
-    spec: &DataSpec,
+    spec: &PriceGainDataSpec,
 
 ) -> Result<PriceGainItem, Box<dyn Error>> {
     assert_eq!(spec.prediction_intervals, queue.len());
@@ -257,7 +257,7 @@ async fn inference(
     model: &PriceGainModel,
     batcher: &Arc<PriceGainBatcher>,
     positional_encoder: &PositionalEncoding,
-    spec: &DataSpec,
+    spec: &PriceGainDataSpec,
     queue: &VecDeque<IntervalExtraction>
 ) -> Result<bool, Box<dyn Error>> {
     let device = model.devices()[0].clone();
@@ -310,7 +310,7 @@ async fn decode_data(
     positional_encoder: &PositionalEncoding,
     path: &PathBuf,
     extractor: &mut impl Extractor<IntervalExtraction>,
-    spec: &DataSpec,
+    spec: &PriceGainDataSpec,
     holding_time_intervals: usize,
     start_date_nanos: u64,
     end_date_nanos: u64,
@@ -404,7 +404,7 @@ async fn main() -> Result<(), Box<dyn Error>>
 
 
     // read in the spec file
-    let specs = DataSpec::from_file(&args.spec_file)?;
+    let specs = PriceGainDataSpec::from_file(&args.spec_file)?;
 
     // number of intervals that we're presuming holding for
     let holding_time_intervals: usize = (specs.holding_time_seconds as u64 * 1_000_000_000 / &specs.extraction_interval_nanos) as usize;

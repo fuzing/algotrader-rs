@@ -9,7 +9,7 @@ use burn::data::dataset::{
 };
 use derive_new::new;
 
-use crate::price_gain::data::data_spec::DataSpec;
+use crate::price_gain::data::data_spec::PriceGainDataSpec;
 
 use data_handlers::{
     mpk::{
@@ -30,7 +30,7 @@ pub struct PriceGainItem {
 #[derive(Debug, Clone)]
 pub struct PriceGainDataset {
     file: Arc<MpkDataReader<f64>>,
-    pub spec: DataSpec,
+    pub spec: PriceGainDataSpec,
 }
 
 
@@ -40,7 +40,7 @@ impl PriceGainDataset {
         spec_path: &PathBuf,
         data_path: &PathBuf,
     ) -> PriceGainDataset {
-        let spec = DataSpec::from_file(spec_path).expect(&format!("Couldn't open spec file {spec_path:?}"));
+        let spec = PriceGainDataSpec::from_file(spec_path).expect(&format!("Couldn't open spec file {spec_path:?}"));
         let file = MpkDataReader::new(data_path.to_str().unwrap(), AccessType::Sequential);
 
         Self {
@@ -50,7 +50,7 @@ impl PriceGainDataset {
     }
 
 
-    pub fn specs(&self) -> DataSpec {
+    pub fn specs(&self) -> PriceGainDataSpec {
         self.spec.clone()
     }
 

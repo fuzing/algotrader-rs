@@ -31,7 +31,7 @@ use anyhow::anyhow;
 use ai_models::{
     price_gain::data::{
         data::{PriceGainPatchType, PriceGainPatchSide},
-        data_spec::{DataSpec, DataSpecBuilder}
+        data_spec::{PriceGainDataSpec, PriceGainDataSpecBuilder}
     }
 };
 
@@ -308,7 +308,7 @@ async fn convert_and_write_data(
     println!("Gains({n_gains}), Neutrals({n_neutrals}), Losses({n_losses})");
 
     // write the spec file
-    let data_spec = DataSpecBuilder::new()
+    let data_spec = PriceGainDataSpecBuilder::new()
         .sequence_length(predicted_patches_per_item)
         .patch_size(patch_size)
         .token_size(d_model)
