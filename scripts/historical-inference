@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 cargo run --bin historical-inference -- \
+  --with-positional-encoding \
   --start-date=2024-11-04 --end-date=2024-11-04 \
   --spec-file=/run/media/peter/genetics/algotrader/data/KHC-spec.json \
   --artifacts-folder=/run/media/peter/genetics/algotrader/data/KHC-artifacts \

@@ -165,10 +165,9 @@ fn initialize_model(
 
 
 fn prepare_sample(
-    positional_encoder: &PositionalEncoding,
+    positional_encoder: Option<&PositionalEncoding>,
     queue: &VecDeque<IntervalExtraction>,
     spec: &PriceGainDataSpec,
-
 ) -> Result<PriceGainItem, Box<dyn Error>> {
     assert_eq!(spec.prediction_intervals, queue.len());
 
@@ -220,34 +219,47 @@ fn prepare_sample(
         tokens.push(token);
     }
 
-    // build a tensor of [batch_size, n_tokens, d_model] with batch size 1 and then add
-    // positional encodings
-    let flat = tokens.into_iter().flatten().collect::<Vec<_>>();
-    assert_eq!(flat.len(), 1 * spec.sequence_length * spec.token_size);
+    let final_tokens = if let Some(positional_encoder) = positional_encoder {
+        // build a tensor of [batch_size, n_tokens, d_model] with batch size 1 and then add
+        // positional encodings
+        let flat = tokens.into_iter().flatten().collect::<Vec<_>>();
+        assert_eq!(flat.len(), 1 * spec.sequence_length * spec.token_size);
 
-    let device = positional_encoder.devices()[0].clone();
-    let tensor = Tensor::<3, Float>::from_floats(
-        TensorData::new(flat, Shape::new([1, spec.sequence_length, spec.token_size])),
-        &device
-    );
+        let device = positional_encoder.devices()[0].clone();
+        let tensor = Tensor::<3, Float>::from_floats(
+            TensorData::new(flat, Shape::new([1, spec.sequence_length, spec.token_size])),
+            &device
+        );
 
-    // add positional encodings and divide by 2.0 to normalize
-    let tensor_with_positions = positional_encoder.forward(tensor).div_scalar(2.0);
-    let vec_with_positions = tensor_with_positions.to_data().iter::<f64>().collect::<Vec<_>>();
-    assert_eq!(vec_with_positions.len(), 1 * spec.sequence_length * spec.token_size);
-    let final_vector = vec_with_positions;
+        // add positional encodings and divide by 2.0 to normalize
+        let tensor_with_positions = positional_encoder.forward(tensor).div_scalar(2.0);
+        let vec_with_positions = tensor_with_positions.to_data().iter::<f64>().collect::<Vec<_>>();
+        assert_eq!(vec_with_positions.len(), 1 * spec.sequence_length * spec.token_size);
+        let final_vector = vec_with_positions;
 
-    let nested_vec: Vec<Vec<f64>> = final_vector
-        .chunks(spec.token_size) // Group into chunks of size 'm'
-        .map(|chunk| chunk.to_vec())
-        .collect();
+        let nested_vec: Vec<Vec<f64>> = final_vector
+            .chunks(spec.token_size) // Group into chunks of size 'm'
+            .map(|chunk| chunk.to_vec())
+            .collect();
 
-    assert_eq!(nested_vec.len(), spec.sequence_length);
+        assert_eq!(nested_vec.len(), spec.sequence_length);
+        nested_vec
+    }
+    else {
+        tokens
+    };
 
-    // println!("Nested shape [{}, {}]", nested_vec.len(), nested_vec[0].len());
+
+    //
+    // // println!("Nested shape [{}, {}]", nested_vec.len(), nested_vec[0].len());
+    //
+    // let sample = PriceGainItem::new(
+    //     nested_vec,
+    //     0.0
+    // );
 
     let sample = PriceGainItem::new(
-        nested_vec,
+        final_tokens,
         0.0
     );
 
@@ -258,7 +270,7 @@ fn prepare_sample(
 async fn inference(
     model: &PriceGainModel,
     batcher: &Arc<PriceGainBatcher>,
-    positional_encoder: &PositionalEncoding,
+    positional_encoder: Option<&PositionalEncoding>,
     spec: &PriceGainDataSpec,
     queue: &VecDeque<IntervalExtraction>
 ) -> Result<bool, Box<dyn Error>> {
@@ -309,7 +321,7 @@ async fn inference(
 async fn decode_data(
     model: &PriceGainModel,
     batcher: &Arc<PriceGainBatcher>,
-    positional_encoder: &PositionalEncoding,
+    positional_encoder: Option<&PositionalEncoding>,
     path: &PathBuf,
     extractor: &mut impl Extractor<IntervalExtraction>,
     spec: &PriceGainDataSpec,
@@ -417,6 +429,12 @@ async fn main() -> Result<(), Box<dyn Error>>
     // let mut all_data: Vec<IntervalExtractionWithGain> = Vec::new();
     
     let (model, batcher, positional_encoder) = initialize_model(&args, &spec)?;
+    let positional_encoder = if args.with_positional_encoding {
+        Some(&positional_encoder)
+    }
+    else {
+        None
+    };
 
     for input in inputs {
         let mut extractor = IntervalExtractor::builder()
@@ -427,7 +445,7 @@ async fn main() -> Result<(), Box<dyn Error>>
         decode_data(
             &model,
             &batcher,
-            &positional_encoder,
+            positional_encoder,
             &input,
             &mut extractor,
             &spec,
@@ -457,8 +475,12 @@ struct Args {
     spec_file: PathBuf,
 
     #[arg(long)]
-    artifacts_folder: PathBuf,    
-    
+    artifacts_folder: PathBuf,
+
+    #[arg(long)]
+    with_positional_encoding: bool,
+
+
     #[arg()]
     inputs: Vec<PathBuf>,
 }
