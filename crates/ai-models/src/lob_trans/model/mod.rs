@@ -3,6 +3,8 @@
 // The model is then trained using Cross-Entropy loss. It contains methods for model initialization
 // (both with and without pre-trained weights), forward pass, inference, training, and validation.
 
+use std::io::Write;
+use std::time::Duration;
 use super::data::batcher::{
     LobTransInferenceBatch,
     LobTransTrainingBatch,
@@ -69,6 +71,9 @@ impl LobTransModelConfig {
         let output = LinearConfig::new(self.transformer.d_model, self.n_classes).init(device);
         let transformer = self.transformer.init(device);
 
+
+        println!("LobTrans init completed");
+
         LobTransModel {
             sequence_length: self.sequence_length,
             token_size: self.token_size,
@@ -94,31 +99,53 @@ impl LobTransModel {
         //
         // Move tensors to the correct device
         let tokens = item.tokens.to_device(device);
+        eprintln!("Tokens shape: {:?}", tokens.shape());
         let labels = item.labels.to_device(device);
+        eprintln!("Labels shape: {:?}", labels.shape());
 
         // insert class tokens
-        let class_tokens = self.class_tokens.val(); //.expand(batch_size); //.expand([batch_size]);
+        let class_tokens = self.class_tokens.val().expand([batch_size as i32,-1,-1]); //.expand(batch_size); //.expand([batch_size]);
+        eprintln!("Class-tokens shape: {:?}", class_tokens.shape());
+
         let tokens_with_class = Tensor::cat(vec![class_tokens, tokens], 1);
+        eprintln!("Tokens_with_class shape: {:?}", tokens_with_class.shape());
 
         // positional encoding
+        eprintln!("positional embeddings shape: {:?}", self.positional_embeddings.val().shape());
+
         let tokens_with_class_and_pe = tokens_with_class.add(self.positional_embeddings.val());
+        // TODO - PMB - should we divide by 2 or not?
+        eprintln!("Tokens_with_class_and_pe shape: {:?}", tokens_with_class_and_pe.shape());
 
         // through the transformer
         let encoded = self
             .transformer
             .forward(TransformerEncoderInput::new(tokens_with_class_and_pe));
+        eprintln!("encoded shape: {:?}", encoded.shape());
+
 
         // through the output linear layer
         let output = self.output.forward(encoded);
+        eprintln!("output shape: {:?}", output.shape());
 
-        // classify, using only the
+
+        // classify, using only the class token
         let output_classification = output
-            .slice([0..batch_size, 0..1])
-            .reshape([batch_size, self.n_classes]);
+            .slice([0..batch_size, 0..seq_length, 0..1])
+            .reshape([batch_size, self.n_classes])
+            ;
+        eprintln!("output_classification shape: {:?}", output_classification.shape());
+
+
+        let _ = std::io::stderr().flush();
+        panic!("help");
+
 
         let loss = CrossEntropyLossConfig::new()
             .init(&output_classification.device())
             .forward(output_classification.clone(), labels.clone());
+
+
         // Return the output and loss
         ClassificationOutput {
             loss,
