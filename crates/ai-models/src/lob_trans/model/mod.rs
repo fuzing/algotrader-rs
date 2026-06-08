@@ -96,54 +96,38 @@ impl LobTransModelConfig {
 impl LobTransModel {
     // Defines forward pass for training
     pub fn forward(&self, item: LobTransTrainingBatch) -> ClassificationOutput {
-        // // Get batch and sequence length, and the device
+        // Get batch and sequence length, and the device
         let [batch_size, seq_length, d_model] = item.tokens.dims();
         let device = &self.transformer.devices()[0];
 
         //
         // Move tensors to the correct device
         let tokens = item.tokens.to_device(device);
-        // eprintln!("Tokens shape: {:?}", tokens.shape());
         let labels = item.labels.to_device(device);
-        // eprintln!("Labels shape: {:?}", labels.shape());
 
         // insert class tokens
         let class_tokens = self.class_tokens.val().expand([batch_size as i32,-1,-1]);
-        // eprintln!("Class-tokens shape: {:?}", class_tokens.shape());
-
         let tokens_with_class = Tensor::cat(vec![class_tokens, tokens], 1);
-        // eprintln!("Tokens_with_class shape: {:?}", tokens_with_class.shape());
 
         // positional encoding
-        // eprintln!("positional embeddings shape: {:?}", self.positional_embeddings.val().shape());
         let tokens_with_class_and_pe = tokens_with_class.add(self.positional_embeddings.val());
         // TODO - PMB - should we divide by 2 or not?
-        // eprintln!("Tokens_with_class_and_pe shape: {:?}", tokens_with_class_and_pe.shape());
 
         // through the transformer
         let encoded = self
             .transformer
             .forward(TransformerEncoderInput::new(tokens_with_class_and_pe));
-        // eprintln!("encoded shape: {:?}", encoded.shape());
 
         // we are only interested in the class token from the transformer output
         let encoded_class = encoded.slice([0..batch_size,0..1,0..d_model]);
-        // eprintln!("encoded class shape: {:?}", encoded_class.shape());
 
         // through the output linear layer
         let output = self.output.forward(encoded_class);
-        // eprintln!("output shape: {:?}", output.shape());
 
         // classify, using only the class token
         let output_classification = output
             // .slice([0..batch_size, 0..1, 0..d_model])
             .reshape([batch_size, self.n_classes]);
-        // eprintln!("output_classification shape: {:?}", output_classification.shape());
-
-
-        // let _ = std::io::stderr().flush();
-        // panic!("help");
-
 
         let loss = CrossEntropyLossConfig::new()
             .init(&output_classification.device())
@@ -193,30 +177,23 @@ impl LobTransModel {
 
         // insert class tokens
         let class_tokens = self.class_tokens.val().expand([batch_size as i32,-1,-1]);
-        // eprintln!("Class-tokens shape: {:?}", class_tokens.shape());
 
         let tokens_with_class = Tensor::cat(vec![class_tokens, tokens], 1);
-        // eprintln!("Tokens_with_class shape: {:?}", tokens_with_class.shape());
 
         // positional encoding
-        // eprintln!("positional embeddings shape: {:?}", self.positional_embeddings.val().shape());
         let tokens_with_class_and_pe = tokens_with_class.add(self.positional_embeddings.val());
         // TODO - PMB - should we divide by 2 or not?
-        // eprintln!("Tokens_with_class_and_pe shape: {:?}", tokens_with_class_and_pe.shape());
 
         // through the transformer
         let encoded = self
             .transformer
             .forward(TransformerEncoderInput::new(tokens_with_class_and_pe));
-        // eprintln!("encoded shape: {:?}", encoded.shape());
 
         // we are only interested in the class token from the transformer output
         let encoded_class = encoded.slice([0..batch_size,0..1,0..d_model]);
-        // eprintln!("encoded class shape: {:?}", encoded_class.shape());
 
         // through the output linear layer
         let output = self.output.forward(encoded_class);
-        // eprintln!("output shape: {:?}", output.shape());
 
         // classify, using only the class token
         let output_classification = output

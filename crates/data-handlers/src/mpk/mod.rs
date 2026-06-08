@@ -5,7 +5,7 @@ use std::{
 };
 use std::io::{BufReader, BufWriter, Write};
 use std::marker::PhantomData;
-use memmap2::{Advice, Mmap};
+use memmap2::{Advice, Mmap, MmapOptions};
 use serde::{
     Serialize,
     de::DeserializeOwned
@@ -95,13 +95,21 @@ impl<T> MpkDataReader<T> {
         // add additional offset, being the end of the file
         let metadata = std::fs::metadata(&data_name).expect(&format!("Couldn't get metadata from file {:?}", &data_name));
         record_offsets.push(metadata.len() as usize);
-
-
+        
         // memory map the file
         let file = File::open(&data_name).expect(&format!("Couldn't open data file {:?}", &data_name));
-
+        
+        let options = match access_type {
+            AccessType::Sequential => MmapOptions::new()
+                .huge(None)
+                .no_reserve_swap().clone(),
+            AccessType::Random => MmapOptions::new()
+                .no_reserve_swap().clone(),
+        };
+        
         let mapped_file = unsafe {
-            Mmap::map(&file).expect("failed to memory map file")
+            // Mmap::map(&file).expect("failed to memory map file")
+            options.map(&file).expect("failed mapping file")
         };
 
         match access_type {

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 cargo run --bin historical-inference -- \
-  --with-positional-encoding \
   --start-date=2024-11-04 --end-date=2024-11-04 \
   --spec-file=/run/media/peter/genetics/algotrader/data/KHC-spec.json \
   --artifacts-folder=/run/media/peter/genetics/algotrader/data/KHC-artifacts \
  'KHC-XNAS.ITCH-2024-01-01 00:00:00 UTC-2024-12-31 23:59:59 UTC-mbo.dbn.zst'
 
+#  --with-positional-encoding \

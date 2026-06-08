@@ -29,28 +29,29 @@ use statrs::statistics::Statistics;
 use serde::{Deserialize, Serialize};
 use anyhow::anyhow;
 
-use ai_models::price_gain::{
+use ai_models::lob_trans::{
     data::{
         batcher::{
-            PriceGainBatcher,
-            PriceGainInferenceBatch,
+            LobTransBatcher,
+            LobTransInferenceBatch,
         },
         data::{
-            PriceGainPatchType,
-            PriceGainPatchSide,
+            LobTransPatchType,
+            LobTransPatchSide,
         },
         dataset::{
-            PriceGainItem,
-            PriceGainDataset,
+            LobTransItem,
+            LobTransDataset,
         },
-        data_spec::{PriceGainDataSpec, PriceGainDataSpecBuilder}
+        data_spec::{LobTransDataSpec, LobTransDataSpecBuilder}
     },
     model::{
-        PriceGainModel,
-        PriceGainModelConfig,
+        LobTransModel,
+        LobTransModelConfig,
     },
     training::ExperimentConfig,
 };
+
 
 use clap::Parser as ClapParser;
 use std::{
@@ -118,17 +119,17 @@ fn select_device() -> Device {
 
 fn initialize_model(
     args: &Args,
-    spec: &PriceGainDataSpec,
-) -> Result<(PriceGainModel, Arc<PriceGainBatcher>, PositionalEncoding), Box<dyn Error>> {
+    spec: &LobTransDataSpec,
+) -> Result<(LobTransModel, Arc<LobTransBatcher>, PositionalEncoding), Box<dyn Error>> {
     // Load experiment configuration
     let config = ExperimentConfig::load(format!("{}/config.json", args.artifacts_folder.to_string_lossy()).as_str())
         .expect("Config file present");
 
     // Get number of classes from dataset
-    let n_classes = PriceGainDataset::num_classes();
+    let n_classes = LobTransDataset::num_classes();
 
     // Initialize batcher for batching samples
-    let batcher = Arc::new(PriceGainBatcher::new());
+    let batcher = Arc::new(LobTransBatcher::new());
 
     let mut device = select_device();
     device
@@ -143,7 +144,7 @@ fn initialize_model(
 
     // Create model using loaded weights
     println!("Creating model ...");
-    let model = PriceGainModelConfig::new(
+    let model = LobTransModelConfig::new(
         spec.sequence_length,
         spec.token_size,
         config.transformer.clone().with_dropout(0.0),           // override dropout for inference
@@ -167,8 +168,8 @@ fn initialize_model(
 fn prepare_sample(
     positional_encoder: Option<&PositionalEncoding>,
     queue: &VecDeque<IntervalExtraction>,
-    spec: &PriceGainDataSpec,
-) -> Result<PriceGainItem, Box<dyn Error>> {
+    spec: &LobTransDataSpec,
+) -> Result<LobTransItem, Box<dyn Error>> {
     assert_eq!(spec.prediction_intervals, queue.len());
 
     let mut bid_price_patches: Vec<Vec<f64>> = Vec::new();
@@ -178,10 +179,10 @@ fn prepare_sample(
 
     for j in (0..queue.len()).step_by(spec.patch_stride) {
         // create each patch - starting with each patch header value pair
-        let mut bid_price_patch: Vec<f64> = vec![PriceGainPatchType::Price.value(), PriceGainPatchSide::Bid.value()];
-        let mut bid_volume_patch: Vec<f64> = vec![PriceGainPatchType::Volume.value(), PriceGainPatchSide::Bid.value()];
-        let mut ask_price_patch: Vec<f64> = vec![PriceGainPatchType::Price.value(), PriceGainPatchSide::Ask.value()];
-        let mut ask_volume_patch: Vec<f64> = vec![PriceGainPatchType::Volume.value(), PriceGainPatchSide::Ask.value()];
+        let mut bid_price_patch: Vec<f64> = vec![LobTransPatchType::Price.value(), LobTransPatchSide::Bid.value()];
+        let mut bid_volume_patch: Vec<f64> = vec![LobTransPatchType::Volume.value(), LobTransPatchSide::Bid.value()];
+        let mut ask_price_patch: Vec<f64> = vec![LobTransPatchType::Price.value(), LobTransPatchSide::Ask.value()];
+        let mut ask_volume_patch: Vec<f64> = vec![LobTransPatchType::Volume.value(), LobTransPatchSide::Ask.value()];
 
         for k in 0..spec.patch_intervals {
             for l in 0..spec.lob_levels {
@@ -253,12 +254,12 @@ fn prepare_sample(
     //
     // // println!("Nested shape [{}, {}]", nested_vec.len(), nested_vec[0].len());
     //
-    // let sample = PriceGainItem::new(
+    // let sample = LobTransItem::new(
     //     nested_vec,
     //     0.0
     // );
 
-    let sample = PriceGainItem::new(
+    let sample = LobTransItem::new(
         final_tokens,
         0.0
     );
@@ -268,15 +269,15 @@ fn prepare_sample(
 
 
 async fn inference(
-    model: &PriceGainModel,
-    batcher: &Arc<PriceGainBatcher>,
+    model: &LobTransModel,
+    batcher: &Arc<LobTransBatcher>,
     positional_encoder: Option<&PositionalEncoding>,
-    spec: &PriceGainDataSpec,
+    spec: &LobTransDataSpec,
     queue: &VecDeque<IntervalExtraction>
 ) -> Result<bool, Box<dyn Error>> {
     let device = model.devices()[0].clone();
 
-    let mut samples: Vec<PriceGainItem> = Vec::new();
+    let mut samples: Vec<LobTransItem> = Vec::new();
     samples.push(prepare_sample(
         positional_encoder,
         queue,
@@ -284,14 +285,14 @@ async fn inference(
     )?);
 
     // Run inference on the given samples
-    let batch: PriceGainInferenceBatch = batcher.batch(samples, &device); // Batch samples using the batcher
+    let batch: LobTransInferenceBatch = batcher.batch(samples, &device); // Batch samples using the batcher
 
     let predictions = model.infer(batch); // Get model predictions
 
     let prediction = predictions.clone().slice(0..1);
     // let logits = prediction.to_data();
     let class_index: i32 = prediction.argmax(1).squeeze_dim::<1>(1).into_scalar();
-    // let class_name = PriceGainDataset::class_name(class_index as usize);
+    // let class_name = LobTransDataset::class_name(class_index as usize);
     // println!("Class: {}", class_name);
 
     if class_index == 2 {
@@ -307,7 +308,7 @@ async fn inference(
     //     let prediction = predictions.clone().slice([i..i + 1]); // Get prediction for current sample
     //     let logits = prediction.to_data(); // Convert prediction tensor to data
     //     let class_index: i32 = prediction.argmax(1).squeeze_dim::<1>(1).into_scalar(); // Get class index with the highest value
-    //     let class = PriceGainDataset::class_name(class_index as usize); // Get class name
+    //     let class = LobTransDataset::class_name(class_index as usize); // Get class name
     //
     //     // Print sample text, predicted logits and predicted class
     //     println!(
@@ -319,12 +320,12 @@ async fn inference(
 }
 
 async fn decode_data(
-    model: &PriceGainModel,
-    batcher: &Arc<PriceGainBatcher>,
+    model: &LobTransModel,
+    batcher: &Arc<LobTransBatcher>,
     positional_encoder: Option<&PositionalEncoding>,
     path: &PathBuf,
     extractor: &mut impl Extractor<IntervalExtraction>,
-    spec: &PriceGainDataSpec,
+    spec: &LobTransDataSpec,
     holding_time_intervals: usize,
     start_date_nanos: u64,
     end_date_nanos: u64,
@@ -424,7 +425,7 @@ async fn main() -> Result<(), Box<dyn Error>>
 
 
     // read in the spec file
-    let spec = PriceGainDataSpec::from_file(&args.spec_file)?;
+    let spec = LobTransDataSpec::from_file(&args.spec_file)?;
 
     // number of intervals that we're presuming holding for
     let holding_time_intervals: usize = (spec.holding_time_seconds as u64 * 1_000_000_000 / &spec.extraction_interval_nanos) as usize;
