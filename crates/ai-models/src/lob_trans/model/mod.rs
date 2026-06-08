@@ -60,9 +60,13 @@ pub struct LobTransModel {
 impl LobTransModelConfig {
     /// Initializes a model with default weights
     pub fn init(&self, device: &Device) -> LobTransModel {
+
+        // only 1 class token (will be expanded/duplicated in model)
         let class_tokens = Param::from_tensor(
             Tensor::random([1, 1, self.token_size], Distribution::default(), device)
         );
+
+        // learnable position encodings
         let positional_embeddings = Param::from_tensor(
             Tensor::random([1, self.sequence_length + 1, self.token_size], Distribution::default(), device)
         );
@@ -123,16 +127,21 @@ impl LobTransModel {
             .forward(TransformerEncoderInput::new(tokens_with_class_and_pe));
         eprintln!("encoded shape: {:?}", encoded.shape());
 
+        // we are only interested in the class token
+        let encoded_class = encoded.slice([0..batch_size,0..1,0..d_model]);
+        eprintln!("encoded class shape: {:?}", encoded_class.shape());
+
+
 
         // through the output linear layer
-        let output = self.output.forward(encoded);
+        let output = self.output.forward(encoded_class);
         eprintln!("output shape: {:?}", output.shape());
 
 
         // classify, using only the class token
         let output_classification = output
-            .slice([0..batch_size, 0..seq_length, 0..1])
-            .reshape([batch_size, self.n_classes])
+            .slice([0..batch_size, 0..1, 0..d_model])
+            .reshape([batch_size, 1]) //.reshape([batch_size, self.n_classes])
             ;
         eprintln!("output_classification shape: {:?}", output_classification.shape());
 
