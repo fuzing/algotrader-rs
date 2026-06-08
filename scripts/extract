@@ -10,7 +10,7 @@ cargo run --bin extractor --  \
   --patch-intervals=8 --patch-stride=8 \
   --gain-percentage=0.1 --loss-percentage=0.1 \
   --gain-repeats=100 --loss-repeats=100 --neutral-repeats=1 \
-  --holding-time-seconds=5 \
+  --holding-time-seconds=8 \
   --positional-max-timescale=5000 \
   --lob-levels=15 --pretty \
   --start-date=2024-11-04 --end-date=2024-11-08 \
