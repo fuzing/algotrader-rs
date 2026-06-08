@@ -341,7 +341,5 @@ struct Args {
     #[arg(long)]
     artifacts_folder: String,
 
-
-
 }
 
