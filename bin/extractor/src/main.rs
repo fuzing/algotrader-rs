@@ -324,6 +324,8 @@ async fn convert_and_write_data(
         .n_gains(n_gains)
         .n_neutrals(n_neutrals)
         .n_losses(n_losses)
+        .start_date(&args.start_date)
+        .end_date(&args.end_date)
         .build();
     data_spec.to_file(&args.output_spec)?;
 
