@@ -144,6 +144,8 @@ fn initialize_model(
     // Create model using loaded weights
     println!("Creating model ...");
     let model = PriceGainModelConfig::new(
+        spec.sequence_length,
+        spec.token_size,
         config.transformer.clone().with_dropout(0.0),           // override dropout for inference
         n_classes,
     )
@@ -404,22 +406,22 @@ async fn main() -> Result<(), Box<dyn Error>>
 
 
     // read in the spec file
-    let specs = PriceGainDataSpec::from_file(&args.spec_file)?;
+    let spec = PriceGainDataSpec::from_file(&args.spec_file)?;
 
     // number of intervals that we're presuming holding for
-    let holding_time_intervals: usize = (specs.holding_time_seconds as u64 * 1_000_000_000 / &specs.extraction_interval_nanos) as usize;
+    let holding_time_intervals: usize = (spec.holding_time_seconds as u64 * 1_000_000_000 / &spec.extraction_interval_nanos) as usize;
 
     let start_date_nanos = str_to_offset_date_time(&format!("{} 00:00:00 UTC", &args.start_date)).expect("Invalid start date").unix_timestamp_nanos() as u64;
     let end_date_nanos = str_to_offset_date_time(&format!("{} 23:59:59 UTC", &args.end_date)).expect("Invalid end date").unix_timestamp_nanos() as u64;
 
     // let mut all_data: Vec<IntervalExtractionWithGain> = Vec::new();
     
-    let (model, batcher, positional_encoder) = initialize_model(&args, &specs)?;
+    let (model, batcher, positional_encoder) = initialize_model(&args, &spec)?;
 
     for input in inputs {
         let mut extractor = IntervalExtractor::builder()
-            .nbr_lob_levels(&specs.lob_levels)
-            .extraction_interval_nanos(&specs.extraction_interval_nanos)
+            .nbr_lob_levels(&spec.lob_levels)
+            .extraction_interval_nanos(&spec.extraction_interval_nanos)
             .build();
 
         decode_data(
@@ -428,7 +430,7 @@ async fn main() -> Result<(), Box<dyn Error>>
             &positional_encoder,
             &input,
             &mut extractor,
-            &specs,
+            &spec,
             holding_time_intervals,
             start_date_nanos,
             end_date_nanos,

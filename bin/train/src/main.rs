@@ -58,6 +58,7 @@ use ai_models::price_gain::{
     data::{
         batcher::{PriceGainBatcher, PriceGainTrainingBatch},
         dataset::{PriceGainDataset, PriceGainItem},
+        data_spec::PriceGainDataSpec,
     },
     model::{
         PriceGainModelConfig,
@@ -171,9 +172,12 @@ async fn train(
     artifact_path: &PathBuf,
     args: &Args,
 ) -> Result<(), Box<dyn Error>> {
-    let full_dataset = PriceGainDataset::new(spec_path, dataset_path);
+
+    let spec = PriceGainDataSpec::from_file(&spec_path).expect(&format!("Failed to load spec {}", &spec_path.to_str().unwrap()));
+
+    let full_dataset = PriceGainDataset::new(dataset_path, spec.sequence_length, spec.token_size);
     let config = ExperimentConfig::new(
-        TransformerEncoderConfig::new(full_dataset.spec.token_size, args.feed_forward_size, args.transformer_heads, args.transformer_layers)
+        TransformerEncoderConfig::new(spec.token_size, args.output_feed_forward_size, args.transformer_heads, args.transformer_layers)
             .with_norm_first(true)
             .with_quiet_softmax(true)
             .with_dropout(args.dropout),
@@ -216,6 +220,8 @@ async fn train(
 
     // Initialize model
     let model = PriceGainModelConfig::new(
+        spec.sequence_length,
+        spec.token_size,
         config.transformer.clone(),
         PriceGainDataset::num_classes(),
     )
@@ -330,7 +336,7 @@ struct Args {
     transformer_layers: usize,
 
     #[arg(long)]
-    feed_forward_size: usize,
+    output_feed_forward_size: usize,
 
     #[arg(long)]
     artifacts_folder: String,

@@ -9,12 +9,12 @@ cargo run --bin train -- \
   --spec-file=${NAME}-spec.json \
   --dataset-file=${NAME}-train-shuffled \
   --batch-size=128 \
-  --num-epochs=12 \
+  --num-epochs=1 \
   --dropout=0.1 \
   --shuffle-seed=42 \
   --transformer-heads=8 \
   --transformer-layers=8 \
-  --feed-forward-size=1024 \
+  --output-feed-forward-size=1024 \
   --artifacts-folder=/run/media/peter/genetics/algotrader/data/${NAME}-artifacts
 
 

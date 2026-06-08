@@ -28,6 +28,7 @@ use std::{
 use ai_models::price_gain::data::{
     batcher::{PriceGainBatcher, PriceGainTrainingBatch},
     dataset::{PriceGainDataset, PriceGainItem},
+    data_spec::PriceGainDataSpec,
 };
 
 
@@ -159,10 +160,11 @@ fn stream_data() {
 
     let spec_filename = PathBuf::from("/run/media/peter/genetics/algotrader/data/KHC-2024.json");
     let dataset_filename = PathBuf::from("/run/media/peter/genetics/algotrader/data/KHC-2024.csv");
+    let spec = PriceGainDataSpec::from_file(&spec_filename).expect(&format!("Failed to load spec {}", &spec_filename.to_str().unwrap()));
 
     // ---- Create dataset (streaming, no loading) ----
     println!("Indexing CSV into memory-mapped structure...");
-    let full_dataset = PriceGainDataset::new(&spec_filename, &dataset_filename);
+    let full_dataset = PriceGainDataset::new(&dataset_filename, spec.sequence_length, spec.token_size);
     let (train_dataset, test_dataset, validation_dataset) =
         create_splits(full_dataset.clone(), (4,1,0));
 

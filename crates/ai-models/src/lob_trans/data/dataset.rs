@@ -30,28 +30,24 @@ pub struct LobTransItem {
 #[derive(Debug, Clone)]
 pub struct LobTransDataset {
     file: Arc<MpkDataReader<f64>>,
-    pub spec: PriceGainDataSpec,
+    sequence_length: usize,
+    token_size: usize,
 }
-
 
 
 impl LobTransDataset {
     pub fn new(
-        spec_path: &PathBuf,
         data_path: &PathBuf,
+        sequence_length: usize,
+        token_size: usize,
     ) -> LobTransDataset {
-        let spec = PriceGainDataSpec::from_file(spec_path).expect(&format!("Couldn't open spec file {spec_path:?}"));
         let file = MpkDataReader::new(data_path.to_str().unwrap(), AccessType::Sequential);
 
         Self {
-            spec,
             file: Arc::new(file),
+            sequence_length,
+            token_size,
         }
-    }
-
-
-    pub fn specs(&self) -> PriceGainDataSpec {
-        self.spec.clone()
     }
 
 
@@ -78,11 +74,11 @@ impl Dataset<LobTransItem> for LobTransDataset {
         let label = values.pop()?; // O(1)
 
         // now arrange into [sequence_length, d_model]
-        if values.len() != self.spec.sequence_length * self.spec.token_size {
-            panic!("values is the wrong length: ({}) vs expect size of ({})", values.len(), self.spec.sequence_length * self.spec.token_size);
+        if values.len() != self.sequence_length * self.token_size {
+            panic!("values is the wrong length: ({}) vs expect size of ({})", values.len(), self.sequence_length * self.token_size);
         }
         let chunks = values
-            .chunks(self.spec.token_size)
+            .chunks(self.token_size)
             .map(|slice| slice.to_vec())
             .collect();
 

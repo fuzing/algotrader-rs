@@ -22,6 +22,9 @@ use burn::{
 // Define the model configuration
 #[derive(Config, Debug)]
 pub struct PriceGainModelConfig {
+    sequence_length: usize,
+    token_size: usize,
+    
     transformer: TransformerEncoderConfig,
     n_classes: usize,
 }
@@ -29,6 +32,9 @@ pub struct PriceGainModelConfig {
 // Define the model structure
 #[derive(Module, Debug)]
 pub struct PriceGainModel {
+    sequence_length: usize,
+    token_size: usize,
+    
     transformer: TransformerEncoder,
     output: Linear,
     n_classes: usize,
@@ -42,6 +48,8 @@ impl PriceGainModelConfig {
         let transformer = self.transformer.init(device);
 
         PriceGainModel {
+            sequence_length: self.sequence_length,
+            token_size: self.token_size,
             transformer,
             output,
             n_classes: self.n_classes,

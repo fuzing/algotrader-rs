@@ -27,8 +27,8 @@ use burn::{
 // Define the model configuration
 #[derive(Config, Debug)]
 pub struct LobTransConfig {
-    seq_length: usize,          // same as number of patches
-    d_model: usize,             // model embedding size
+    sequence_length: usize,          // same as number of patches
+    token_size: usize,             // model embedding size
 
     positional_encoder: PositionalEncodingConfig,
     transformer: TransformerEncoderConfig,
@@ -38,8 +38,8 @@ pub struct LobTransConfig {
 // Define the model structure
 #[derive(Module, Debug)]
 pub struct LobTransModel {
-    seq_length: usize,
-    d_model: usize,
+    sequence_length: usize,
+    token_size: usize,
 
     // if we're using fixed weight sin/cos positional encodings
     // positional_encoder: PositionalEncoding,
@@ -59,13 +59,11 @@ pub struct LobTransModel {
 impl LobTransConfig {
     /// Initializes a model with default weights
     pub fn init(&self, device: &Device) -> LobTransModel {
-
-
         let class_tokens = Param::from_tensor(
-            Tensor::random([1, 1, 1], Distribution::default(), device)
+            Tensor::random([1, 1, self.token_size], Distribution::default(), device)
         );
         let positional_embeddings = Param::from_tensor(
-            Tensor::random([1, self.seq_length + 1, self.d_model], Distribution::default(), device)
+            Tensor::random([1, self.sequence_length + 1, self.token_size], Distribution::default(), device)
         );
 
         // let positional_encoder = self.positional_encoder.init(device);
@@ -73,8 +71,8 @@ impl LobTransConfig {
         let transformer = self.transformer.init(device);
 
         LobTransModel {
-            seq_length: self.seq_length,
-            d_model: self.d_model,
+            sequence_length: self.sequence_length,
+            token_size: self.token_size,
 
             class_tokens,
             positional_embeddings,
