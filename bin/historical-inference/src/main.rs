@@ -333,6 +333,8 @@ async fn decode_data(
 
     let mut queue: VecDeque<IntervalExtraction> = VecDeque::new();
 
+    let mut total_profit = 0.0;
+
     let mut holding_intervals = 0;
     let mut holding_purchase_price = 0.0;
 
@@ -354,7 +356,9 @@ async fn decode_data(
                             let sale_result = queue.iter().last().unwrap();
                             let sale_price = (sale_result.bids[0].price + sale_result.asks[0].price) / 2.0;
                             let share_block = 100.0;
-                            println!("Holding period over - bought for {}, sold for {}, Profit ({})", holding_purchase_price, sale_price, (sale_price - holding_purchase_price) * share_block);
+                            let profit = (sale_price - holding_purchase_price) * share_block;
+                            println!("Holding period over - bought for {}, sold for {}, Profit ({})", holding_purchase_price, sale_price, profit);
+                            total_profit += profit;
                         }
                     }
                 }
@@ -377,6 +381,8 @@ async fn decode_data(
             }
         }
     }
+
+    println!("Total Profit was {}", total_profit);
 
     Ok(())
 }
