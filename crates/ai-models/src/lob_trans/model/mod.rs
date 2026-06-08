@@ -97,11 +97,22 @@ impl LobTransModel {
         let tokens = item.tokens.to_device(device);
         let labels = item.labels.to_device(device);
 
+        // insert class tokens
+        let class_tokens = self.class_tokens.val(); //.expand(batch_size); //.expand([batch_size]);
+        let tokens_with_class = Tensor::cat(vec![class_tokens, tokens], 1);
+
+        // positional encoding
+        let tokens_with_class_and_pe = tokens_with_class.add(self.positional_embeddings.val());
+
+        // through the transformer
         let encoded = self
             .transformer
-            .forward(TransformerEncoderInput::new(tokens));
+            .forward(TransformerEncoderInput::new(tokens_with_class_and_pe));
+
+        // through the output linear layer
         let output = self.output.forward(encoded);
 
+        // classify, using only the
         let output_classification = output
             .slice([0..batch_size, 0..1])
             .reshape([batch_size, self.n_classes]);
