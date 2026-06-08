@@ -26,11 +26,10 @@ use burn::{
 
 // Define the model configuration
 #[derive(Config, Debug)]
-pub struct LobTransConfig {
+pub struct LobTransModelConfig {
     sequence_length: usize,          // same as number of patches
     token_size: usize,             // model embedding size
 
-    positional_encoder: PositionalEncodingConfig,
     transformer: TransformerEncoderConfig,
     n_classes: usize,
 }
@@ -56,7 +55,7 @@ pub struct LobTransModel {
 }
 
 // Define functions for model initialization
-impl LobTransConfig {
+impl LobTransModelConfig {
     /// Initializes a model with default weights
     pub fn init(&self, device: &Device) -> LobTransModel {
         let class_tokens = Param::from_tensor(
@@ -133,6 +132,7 @@ impl LobTransModel {
 
     /// Defines forward pass for inference
     pub fn infer(&self, item: LobTransInferenceBatch) -> Tensor<2> {
+        todo!("TODO - LobTrans inference");
         let [batch_size, seq_length, d_model] = item.tokens.dims();
 
         let device = &self.transformer.devices()[0];
@@ -150,9 +150,7 @@ impl LobTransModel {
             .slice([0..batch_size, 0..1])
             .reshape([batch_size, self.n_classes]);
         softmax(output, 1)
-
     }
-
 
 }
 

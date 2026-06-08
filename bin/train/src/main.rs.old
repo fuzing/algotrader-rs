@@ -54,15 +54,15 @@ use burn::data::dataloader::Dataset;
 use burn::data::dataset::transform::PartialDataset;
 use burn::nn::activation::ActivationConfig;
 use burn::nn::SwiGluConfig;
-use ai_models::lob_trans::{
+use ai_models::price_gain::{
     data::{
-        batcher::{LobTransBatcher, LobTransTrainingBatch},
-        dataset::{LobTransDataset, LobTransItem},
-        data_spec::LobTransDataSpec,
+        batcher::{PriceGainBatcher, PriceGainTrainingBatch},
+        dataset::{PriceGainDataset, PriceGainItem},
+        data_spec::PriceGainDataSpec,
     },
     model::{
-        LobTransModelConfig,
-        LobTransModel,
+        PriceGainModelConfig,
+        PriceGainModel,
     },
     training::ExperimentConfig,
 };
@@ -173,9 +173,9 @@ async fn train(
     args: &Args,
 ) -> Result<(), Box<dyn Error>> {
 
-    let spec = LobTransDataSpec::from_file(&spec_path).expect(&format!("Failed to load spec {}", &spec_path.to_str().unwrap()));
+    let spec = PriceGainDataSpec::from_file(&spec_path).expect(&format!("Failed to load spec {}", &spec_path.to_str().unwrap()));
 
-    let full_dataset = LobTransDataset::new(dataset_path, spec.sequence_length, spec.token_size);
+    let full_dataset = PriceGainDataset::new(dataset_path, spec.sequence_length, spec.token_size);
     let config = ExperimentConfig::new(
         TransformerEncoderConfig::new(spec.token_size, args.output_feed_forward_size, args.transformer_heads, args.transformer_layers)
             .with_norm_first(true)
@@ -204,26 +204,26 @@ async fn train(
 
 
     // ---- Build DataLoader ----
-    let batcher = LobTransBatcher::new();
+    let batcher = PriceGainBatcher::new();
 
-    let dataloader_train: Arc<dyn DataLoader<LobTransTrainingBatch>> = DataLoaderBuilder::new(batcher.clone())
+    let dataloader_train: Arc<dyn DataLoader<PriceGainTrainingBatch>> = DataLoaderBuilder::new(batcher.clone())
         .batch_size(config.batch_size)
         // .shuffle(config.shuffle_seed)    // Efficient even for huge datasets (shuffles indices)
         .num_workers(8) // Parallel reading/parsing
         .build(dataset_train);
 
-    let dataloader_test: Arc<dyn DataLoader<LobTransTrainingBatch>> = DataLoaderBuilder::new(batcher)
+    let dataloader_test: Arc<dyn DataLoader<PriceGainTrainingBatch>> = DataLoaderBuilder::new(batcher)
         .batch_size(config.batch_size)
         // .shuffle(config.shuffle_seed)    // Efficient even for huge datasets (shuffles indices)
         .num_workers(4) // Parallel reading/parsing
         .build(dataset_test);
 
     // Initialize model
-    let model = LobTransModelConfig::new(
+    let model = PriceGainModelConfig::new(
         spec.sequence_length,
         spec.token_size,
         config.transformer.clone(),
-        LobTransDataset::num_classes(),
+        PriceGainDataset::num_classes(),
     )
         .init(&strategy.main_device().clone().autodiff());
 

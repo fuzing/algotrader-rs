@@ -9,8 +9,6 @@ use burn::data::dataset::{
 };
 use derive_new::new;
 
-use crate::price_gain::data::data_spec::PriceGainDataSpec;
-
 use data_handlers::{
     mpk::{
         MpkDataReader,

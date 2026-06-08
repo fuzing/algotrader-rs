@@ -72,7 +72,7 @@ impl LobTransDataSpec {
         n_losses: usize,
     ) -> Self {
         Self {
-            type_: "TransLOB".to_string(),
+            type_: "LobTrans".to_string(),
             sequence_length,
             patch_size,
             token_size,

@@ -139,12 +139,6 @@ fn format_float(val: f64) -> String {
     // val.to_string()
 }
 
-// struct PriceGainPatches {
-//     pub bid_price_patches: Vec<Vec<f64>>,
-//     pub bid_volume_patches: Vec<Vec<f64>>,
-//     pub ask_price_patches: Vec<Vec<f64>>,
-//     pub ask_volume_patches: Vec<Vec<f64>>,
-// }
 
 async fn convert_and_write_data(
     args: &Args,
@@ -194,13 +188,6 @@ async fn convert_and_write_data(
     // send it
     //
     for i in 0..=(data.len() - prediction_temporal_window_size) {
-        // new embeddable
-        // let mut patches = PriceGainPatches {
-        //     bid_price_patches: Vec::new(),
-        //     bid_volume_patches: Vec::new(),
-        //     ask_price_patches: Vec::new(),
-        //     ask_volume_patches: Vec::new(),
-        // };
 
         let mut bid_price_patches: Vec<Vec<f64>> = Vec::new();
         let mut bid_volume_patches: Vec<Vec<f64>> = Vec::new();

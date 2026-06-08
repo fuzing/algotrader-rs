@@ -72,7 +72,7 @@ impl<T> Drop for MpkDataWriter<T> {
 pub struct MpkDataReader<T> {
     mapped_file: Mmap,
     record_offsets: Vec<usize>,
-    _p: PhantomData<T>,
+    _marker: PhantomData<T>,
 }
 
 #[derive(Debug)]
@@ -118,7 +118,7 @@ impl<T> MpkDataReader<T> {
         Self {
             record_offsets,
             mapped_file,
-            _p: PhantomData,
+            _marker: PhantomData,
         }
     }
 }
