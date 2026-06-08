@@ -14,7 +14,7 @@ cargo run --bin train -- \
   --shuffle-seed=42 \
   --transformer-heads=8 \
   --transformer-layers=8 \
-  --output-feed-forward-size=1024 \
+  --output-feed-forward-size=992 \
   --artifacts-folder=/run/media/peter/genetics/algotrader/data/${NAME}-artifacts
 
 
