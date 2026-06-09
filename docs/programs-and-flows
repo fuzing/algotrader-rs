@@ -7,6 +7,10 @@ used to download historical data for training and backtesting
 extractor
 extracts and formats data for local training and testing
 
+shuffler
+shuffles the extracted file into a new file
+[for ingestion in a sequential manner into training - NOTE data across epochs will be the same!]
+
 train
 trains a model
 
