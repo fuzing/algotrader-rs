@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 NAME=KHC
+
+echo "Shuffling Data"
 cargo run --bin shuffle-data-file --  \
   --seed=42 \
   --input=/run/media/peter/genetics/algotrader/data/${NAME}-train \
