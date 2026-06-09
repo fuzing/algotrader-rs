@@ -3,6 +3,8 @@
 // The model is then trained using Cross-Entropy loss. It contains methods for model initialization
 // (both with and without pre-trained weights), forward pass, inference, training, and validation.
 
+mod mlp;
+
 use std::io::Write;
 use super::data::batcher::{
     LobTransInferenceBatch,

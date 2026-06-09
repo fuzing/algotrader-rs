@@ -13,9 +13,8 @@
 #cargo run --bin downloader -- --dataset=XNAS.ITCH --symbols=GAP --start-time="2025-01-01 00:00:00 UTC" --end-time="2025-12-31 23:59:59 UTC"
 #cargo run --bin downloader -- --dataset=XNAS.ITCH --symbols=KMX --start-time="2025-01-01 00:00:00 UTC" --end-time="2025-12-31 23:59:59 UTC"
 #cargo run --bin downloader -- --dataset=XNAS.ITCH --symbols=DLB --start-time="2025-01-01 00:00:00 UTC" --end-time="2025-12-31 23:59:59 UTC"
-
-cargo run --bin downloader -- --dataset=XNAS.ITCH --symbols=AKAM --start-time="2025-01-01 00:00:00 UTC" --end-time="2025-12-31 23:59:59 UTC"
-cargo run --bin downloader -- --dataset=XNAS.ITCH --symbols=ROKU --start-time="2025-01-01 00:00:00 UTC" --end-time="2025-12-31 23:59:59 UTC"
-cargo run --bin downloader -- --dataset=XNAS.ITCH --symbols=HAS --start-time="2025-01-01 00:00:00 UTC" --end-time="2025-12-31 23:59:59 UTC"
+#cargo run --bin downloader -- --dataset=XNAS.ITCH --symbols=AKAM --start-time="2025-01-01 00:00:00 UTC" --end-time="2025-12-31 23:59:59 UTC"
+#cargo run --bin downloader -- --dataset=XNAS.ITCH --symbols=ROKU --start-time="2025-01-01 00:00:00 UTC" --end-time="2025-12-31 23:59:59 UTC"
+#cargo run --bin downloader -- --dataset=XNAS.ITCH --symbols=HAS --start-time="2025-01-01 00:00:00 UTC" --end-time="2025-12-31 23:59:59 UTC"
 
 
