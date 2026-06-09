@@ -91,6 +91,9 @@ type ElemType = f32;
 type ElemType = burn::tensor::flex32;
 
 
+type StorageElem = f32;
+
+
 #[allow(unreachable_code)]
 fn select_device() -> Device {
     // #[cfg(feature = "flex")]
@@ -172,24 +175,24 @@ fn prepare_sample(
 ) -> Result<LobTransItem, Box<dyn Error>> {
     assert_eq!(spec.prediction_intervals, queue.len());
 
-    let mut bid_price_patches: Vec<Vec<f64>> = Vec::new();
-    let mut bid_volume_patches: Vec<Vec<f64>> = Vec::new();
-    let mut ask_price_patches: Vec<Vec<f64>> = Vec::new();
-    let mut ask_volume_patches: Vec<Vec<f64>> = Vec::new();
+    let mut bid_price_patches: Vec<Vec<StorageElem>> = Vec::new();
+    let mut bid_volume_patches: Vec<Vec<StorageElem>> = Vec::new();
+    let mut ask_price_patches: Vec<Vec<StorageElem>> = Vec::new();
+    let mut ask_volume_patches: Vec<Vec<StorageElem>> = Vec::new();
 
     for j in (0..queue.len()).step_by(spec.patch_stride) {
         // create each patch - starting with each patch header value pair
-        let mut bid_price_patch: Vec<f64> = vec![LobTransPatchType::Price.value(), LobTransPatchSide::Bid.value()];
-        let mut bid_volume_patch: Vec<f64> = vec![LobTransPatchType::Volume.value(), LobTransPatchSide::Bid.value()];
-        let mut ask_price_patch: Vec<f64> = vec![LobTransPatchType::Price.value(), LobTransPatchSide::Ask.value()];
-        let mut ask_volume_patch: Vec<f64> = vec![LobTransPatchType::Volume.value(), LobTransPatchSide::Ask.value()];
+        let mut bid_price_patch: Vec<StorageElem> = vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Bid.value() as StorageElem];
+        let mut bid_volume_patch: Vec<StorageElem> = vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Bid.value() as StorageElem];
+        let mut ask_price_patch: Vec<StorageElem> = vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem];
+        let mut ask_volume_patch: Vec<StorageElem> = vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem];
 
         for k in 0..spec.patch_intervals {
             for l in 0..spec.lob_levels {
-                bid_price_patch.push((queue[j + k].bids[l].price - spec.price_mean) / spec.price_std_dev);
-                bid_volume_patch.push((queue[j + k].bids[l].volume as f64 - spec.volume_mean) / spec.volume_std_dev);
-                ask_price_patch.push((queue[j + k].asks[l].price - spec.price_mean) / spec.price_std_dev);
-                ask_volume_patch.push((queue[j + k].asks[l].volume as f64 - spec.volume_mean) / spec.volume_std_dev);
+                bid_price_patch.push(((queue[j + k].bids[l].price - spec.price_mean) / spec.price_std_dev) as StorageElem);
+                bid_volume_patch.push(((queue[j + k].bids[l].volume as f64 - spec.volume_mean) / spec.volume_std_dev) as StorageElem);
+                ask_price_patch.push(((queue[j + k].asks[l].price - spec.price_mean) / spec.price_std_dev) as StorageElem);
+                ask_volume_patch.push(((queue[j + k].asks[l].volume as f64 - spec.volume_mean) / spec.volume_std_dev) as StorageElem);
             }
         }
 
@@ -207,7 +210,7 @@ fn prepare_sample(
 
     assert_eq!(bid_price_patches.len(), spec.sequence_length);
 
-    let mut tokens: Vec<Vec<f64>> = Vec::with_capacity(spec.sequence_length);
+    let mut tokens = Vec::with_capacity(spec.sequence_length);
     for i in 0..spec.sequence_length {
         let token = [
             bid_price_patches[i].clone(),
@@ -234,11 +237,11 @@ fn prepare_sample(
 
         // add positional encodings and divide by 2.0 to normalize
         let tensor_with_positions = positional_encoder.forward(tensor).div_scalar(2.0);
-        let vec_with_positions = tensor_with_positions.to_data().iter::<f64>().collect::<Vec<_>>();
+        let vec_with_positions = tensor_with_positions.to_data().iter::<f32>().collect::<Vec<_>>();
         assert_eq!(vec_with_positions.len(), 1 * spec.sequence_length * spec.token_size);
         let final_vector = vec_with_positions;
 
-        let nested_vec: Vec<Vec<f64>> = final_vector
+        let nested_vec: Vec<Vec<f32>> = final_vector
             .chunks(spec.token_size) // Group into chunks of size 'm'
             .map(|chunk| chunk.to_vec())
             .collect();
