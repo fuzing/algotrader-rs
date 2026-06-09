@@ -3,7 +3,7 @@
 // The model is then trained using Cross-Entropy loss. It contains methods for model initialization
 // (both with and without pre-trained weights), forward pass, inference, training, and validation.
 
-mod mlp;
+mod lob_trans_mlp;
 
 use std::io::Write;
 use super::data::batcher::{
@@ -28,6 +28,7 @@ use burn::{
     train::{RegressionOutput, ClassificationOutput, InferenceStep, TrainOutput, TrainStep},
 };
 use burn::module::Initializer;
+use crate::lob_trans::model::lob_trans_mlp::{LobTransMLP, LobTransMLPConfig};
 
 // Define the model configuration
 #[derive(Config, Debug)]
@@ -36,6 +37,7 @@ pub struct LobTransModelConfig {
     token_size: usize,             // model embedding size
 
     transformer: TransformerEncoderConfig,
+    output_hidden_size: usize,
     n_classes: usize,
 }
 
@@ -52,7 +54,8 @@ pub struct LobTransModel {
     positional_embeddings: Param<Tensor<3>>,
 
     transformer: TransformerEncoder,
-    output: Linear,
+    // output: Linear,
+    output: LobTransMLP,
     n_classes: usize,
 }
 
@@ -86,10 +89,16 @@ impl LobTransModelConfig {
         let positional_embeddings = Param::from_tensor(
             Tensor::random([1, self.sequence_length + 1, self.token_size], Distribution::default(), device)
         );
-
-        // let positional_encoder = self.positional_encoder.init(device);
-        let output = LinearConfig::new(self.transformer.d_model, self.n_classes).init(device);
+        
         let transformer = self.transformer.init(device);
+        
+        // let output = LinearConfig::new(self.transformer.d_model, self.n_classes).init(device);
+        let output = LobTransMLPConfig::new(
+            self.transformer.d_model,
+            self.output_hidden_size,
+            self.n_classes,
+        ).init(device);
+
 
         LobTransModel {
             sequence_length: self.sequence_length,

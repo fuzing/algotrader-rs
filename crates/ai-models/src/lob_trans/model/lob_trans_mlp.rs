@@ -20,7 +20,7 @@ use burn::{
 };
 
 #[derive(Config, Debug)]
-pub struct MLPConfig {
+pub struct LobTransMLPConfig {
     pub input_dim: usize,
     pub hidden_dim: usize,
     pub output_dim: usize,
@@ -29,7 +29,7 @@ pub struct MLPConfig {
 
 #[derive(Module, Debug)]
 #[module(custom_display)]
-pub struct MLP {
+pub struct LobTransMLP {
     pub input_dim: usize,
     pub hidden_dim: usize,
     pub output_dim: usize,
@@ -40,9 +40,9 @@ pub struct MLP {
 }
 
 
-impl MLPConfig {
-    pub fn init(&self, device: &Device) -> MLP {
-        MLP::new(
+impl LobTransMLPConfig {
+    pub fn init(&self, device: &Device) -> LobTransMLP {
+        LobTransMLP::new(
             device,
             self.input_dim,
             self.hidden_dim,
@@ -52,7 +52,7 @@ impl MLPConfig {
 }
 
 
-impl MLP {
+impl LobTransMLP {
     pub fn new(
         device: &Device,
         input_dim: usize,
@@ -83,7 +83,7 @@ impl MLP {
 }
 
 
-impl ModuleDisplay for MLP {
+impl ModuleDisplay for LobTransMLP {
     fn custom_settings(&self) -> Option<DisplaySettings> {
         DisplaySettings::new()
             .with_new_line_after_attribute(false)
