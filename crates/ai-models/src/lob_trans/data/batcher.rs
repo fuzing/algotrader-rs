@@ -34,6 +34,7 @@ pub struct LobTransInferenceBatch {
 
 
 impl Batcher<LobTransItem, LobTransTrainingBatch> for LobTransBatcher
+
 {
     /// Batches a vector of price regression items into a training batch
     fn batch(
@@ -45,7 +46,7 @@ impl Batcher<LobTransItem, LobTransTrainingBatch> for LobTransBatcher
         let sequence_length = items.first().map(|i| i.features.len()).unwrap_or(0);
         let token_length = items.first().map(|i| i.features.first().unwrap().len()).unwrap_or(0);
 
-        let flattened_features: Vec<f64> = items
+        let flattened_features = items
             .iter()
             .map(|item| item.features.clone())
             .flatten()
@@ -85,7 +86,7 @@ impl Batcher<LobTransItem, LobTransInferenceBatch> for LobTransBatcher
         let sequence_length = items.first().map(|i| i.features.len()).unwrap_or(0);
         let token_length = items.first().map(|i| i.features.first().unwrap().len()).unwrap_or(0);
 
-        let flattened_features: Vec<f64> = items
+        let flattened_features = items
             .iter()
             .map(|item| item.features.clone())
             .flatten()

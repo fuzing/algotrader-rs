@@ -103,8 +103,8 @@ async fn decode_data(
             //
             // Make sure that future data point is from same day
             //
-            let sample_day = nanos_to_offset_date_time_with_tz(result.date_time_nanos as i128, "ET").unwrap().weekday();
-            let future_day = nanos_to_offset_date_time_with_tz(future_result.date_time_nanos as i128, "ET").unwrap().weekday();
+            let sample_day = nanos_to_offset_date_time_with_tz(result.date_time_nanos as i128, "ET")?.weekday();
+            let future_day = nanos_to_offset_date_time_with_tz(future_result.date_time_nanos as i128, "ET")?.weekday();
 
             if sample_day == future_day {
                 // let mid_point_price = (result.bids.get(0).unwrap().price + result.asks.get(0).unwrap().price) / 2.0;

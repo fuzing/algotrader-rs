@@ -8,7 +8,7 @@ use burn::data::dataset::{
     Dataset,
 };
 use derive_new::new;
-
+use serde::de::DeserializeOwned;
 use data_handlers::{
     mpk::{
         MpkDataReader,
@@ -20,14 +20,14 @@ use data_handlers::{
 
 #[derive(new, Clone, Debug)]
 pub struct LobTransItem {
-    pub features: Vec<Vec<f64>>,        // [sequence_length, token_size]
-    pub label: f64,
+    pub features: Vec<Vec<f32>>,        // [sequence_length, token_size]
+    pub label: f32,
 }
 
 
 #[derive(Debug, Clone)]
 pub struct LobTransDataset {
-    file: Arc<MpkDataReader<f64>>,
+    file: Arc<MpkDataReader<f32>>,
     sequence_length: usize,
     token_size: usize,
 }
@@ -39,7 +39,7 @@ impl LobTransDataset {
         sequence_length: usize,
         token_size: usize,
     ) -> LobTransDataset {
-        let file = MpkDataReader::new(data_path.to_str().unwrap(), AccessType::Sequential);
+        let file = MpkDataReader::<f32>::new(data_path.to_str().unwrap(), AccessType::Sequential);
 
         Self {
             file: Arc::new(file),
@@ -61,7 +61,8 @@ impl LobTransDataset {
     }
 }
 
-impl Dataset<LobTransItem> for LobTransDataset {
+impl Dataset<LobTransItem> for LobTransDataset
+{
     fn get(&self, index: usize) -> Option<LobTransItem> {
         let mut values = self.file.read(index).unwrap();
         if values.is_empty() {
