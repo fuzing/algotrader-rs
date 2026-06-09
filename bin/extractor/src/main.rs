@@ -262,7 +262,6 @@ async fn convert_and_write_data(
         let flat = tokens.into_iter().flatten().collect::<Vec<_>>();
         assert_eq!(flat.len(), 1 * n_tokens * d_model);
 
-
         let mut final_vector = if args.with_positional_encodings {
             // add positional encodings and divide by 2.0 to normalize
             let tensor = Tensor::<3, Float>::from_floats(

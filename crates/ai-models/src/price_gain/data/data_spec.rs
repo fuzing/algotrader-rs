@@ -39,6 +39,9 @@ pub struct PriceGainDataSpec {
     pub n_gains: usize,
     pub n_neutrals: usize,
     pub n_losses: usize,
+
+    pub start_date: String,
+    pub end_date: String,
 }
 
 
@@ -70,6 +73,9 @@ impl PriceGainDataSpec {
         n_gains: usize,
         n_neutrals: usize,
         n_losses: usize,
+
+        start_date: String,
+        end_date: String,
     ) -> Self {
         Self {
             type_: "PriceGain".to_string(),
@@ -99,6 +105,9 @@ impl PriceGainDataSpec {
             n_gains,
             n_neutrals,
             n_losses,
+
+            start_date,
+            end_date,
         }
     }
 
@@ -146,6 +155,9 @@ pub struct PriceGainDataSpecBuilder {
     pub n_gains: usize,
     pub n_neutrals: usize,
     pub n_losses: usize,
+
+    pub start_date: String,
+    pub end_date: String,
 }
 
 
@@ -176,6 +188,9 @@ impl PriceGainDataSpecBuilder {
             n_gains: 0,
             n_neutrals: 0,
             n_losses: 0,
+
+            start_date: "".to_string(),
+            end_date: "".to_string(),
         }
     }
 
@@ -292,7 +307,15 @@ impl PriceGainDataSpecBuilder {
         self
     }
 
+    pub fn start_date(mut self, start_date: &str) -> Self {
+        self.start_date = start_date.to_string();
+        self
+    }
 
+    pub fn end_date(mut self, end_date: &str) -> Self {
+        self.end_date = end_date.to_string();
+        self
+    }
 
 
     pub fn build(&self) -> PriceGainDataSpec {
@@ -321,6 +344,9 @@ impl PriceGainDataSpecBuilder {
             self.n_gains,
             self.n_neutrals,
             self.n_losses,
+
+            self.start_date.clone(),
+            self.end_date.clone(),
         )
     }
 }

@@ -146,26 +146,6 @@ impl LobTransModel {
 
 
     /// Defines forward pass for inference
-    // pub fn infer(&self, item: LobTransInferenceBatch) -> Tensor<2> {
-    //     let [batch_size, seq_length, d_model] = item.tokens.dims();
-    //
-    //     let device = &self.transformer.devices()[0];
-    //
-    //     //
-    //     // Move tensors to the correct device
-    //     let tokens = item.tokens.to_device(device);
-    //
-    //     // Perform transformer encoding, calculate output and apply softmax for prediction
-    //     let encoded = self
-    //         .transformer
-    //         .forward(TransformerEncoderInput::new(tokens));
-    //     let output = self.output.forward(encoded);
-    //     let output = output
-    //         .slice([0..batch_size, 0..1])
-    //         .reshape([batch_size, self.n_classes]);
-    //
-    //     softmax(output, 1)
-    // }
     pub fn infer(&self, item: LobTransInferenceBatch) -> Tensor<2> {
         let [batch_size, seq_length, d_model] = item.tokens.dims();
 
@@ -182,7 +162,7 @@ impl LobTransModel {
 
         // positional encoding
         let tokens_with_class_and_pe = tokens_with_class.add(self.positional_embeddings.val());
-        // TODO - PMB - should we divide by 2 or not?
+        // TODO - PMB - should we divide by 2 or not? Probably not given that these are learnable
 
         // through the transformer
         let encoded = self
