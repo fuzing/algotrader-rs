@@ -175,11 +175,17 @@ async fn train(
 
     let spec = LobTransDataSpec::from_file(&spec_path).expect(&format!("Failed to load spec {}", &spec_path.to_str().unwrap()));
 
+
+    // a reasonable heuristic for feedforward size is 4 x token_size
+    let output_feed_forward_size = spec.token_size * 4;
+
     let full_dataset = LobTransDataset::new(dataset_path, spec.sequence_length, spec.token_size);
     let config = ExperimentConfig::new(
-        TransformerEncoderConfig::new(spec.token_size, args.output_feed_forward_size, args.transformer_heads, args.transformer_layers)
+        // don't use the args passed to the program, use the 4x version from above
+        // TransformerEncoderConfig::new(spec.token_size, args.output_feed_forward_size, args.transformer_heads, args.transformer_layers)
+        TransformerEncoderConfig::new(spec.token_size, output_feed_forward_size, args.transformer_heads, args.transformer_layers)
             .with_norm_first(true)
-            .with_quiet_softmax(true)
+            // .with_quiet_softmax(true)
             .with_dropout(args.dropout),
             /*.with_activation(ActivationConfig::SwiGlu(SwiGluConfig::new())),*/
         AdamConfig::new().with_weight_decay(Some(WeightDecayConfig::new(5e-5))),

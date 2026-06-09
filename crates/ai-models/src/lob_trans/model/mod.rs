@@ -4,7 +4,6 @@
 // (both with and without pre-trained weights), forward pass, inference, training, and validation.
 
 use std::io::Write;
-use std::time::Duration;
 use super::data::batcher::{
     LobTransInferenceBatch,
     LobTransTrainingBatch,
@@ -17,6 +16,7 @@ use burn::{
         PositionalEncoding, PositionalEncodingConfig,
         loss::CrossEntropyLossConfig,
         transformer::{TransformerEncoder, TransformerEncoderConfig, TransformerEncoderInput},
+        conv::{Conv2dConfig, Conv2d},
     },
     prelude::*,
     tensor::{
@@ -25,6 +25,7 @@ use burn::{
     },
     train::{RegressionOutput, ClassificationOutput, InferenceStep, TrainOutput, TrainStep},
 };
+use burn::module::Initializer;
 
 // Define the model configuration
 #[derive(Config, Debug)]
@@ -61,6 +62,22 @@ impl LobTransModelConfig {
     /// Initializes a model with default weights
     pub fn init(&self, device: &Device) -> LobTransModel {
 
+        // in pytorch
+        // patch_embed = nn.Conv2d(num_channels, embed_dim, kernel_size= patch_size, stride= patch_size);
+        // embed = patch_embed.flatten(2).transpose(1,2);
+        //
+        // in rust????? (not done below)
+        // let patch_size = 24;
+        // let init = Initializer::KaimingUniform {
+        //     gain: 1.0 / 3.0f64.sqrt(),
+        //     fan_out_only: true, // test that fan_out is passed to `init_with()`
+        // };
+        //
+        // let config = Conv2dConfig::new([num_channels, 1], [patch_size, patch_size]).with_initializer(init.clone());
+        // let c = config.init(&device);
+        // let _ = c.weight.val(); // initializes param
+
+
         // only 1 class token (will be expanded/duplicated in model)
         let class_tokens = Param::from_tensor(
             Tensor::random([1, 1, self.token_size], Distribution::default(), device)
@@ -74,9 +91,6 @@ impl LobTransModelConfig {
         // let positional_encoder = self.positional_encoder.init(device);
         let output = LinearConfig::new(self.transformer.d_model, self.n_classes).init(device);
         let transformer = self.transformer.init(device);
-
-
-        println!("LobTrans init completed");
 
         LobTransModel {
             sequence_length: self.sequence_length,
@@ -97,7 +111,7 @@ impl LobTransModel {
     // Defines forward pass for training
     pub fn forward(&self, item: LobTransTrainingBatch) -> ClassificationOutput {
         // Get batch and sequence length, and the device
-        let [batch_size, seq_length, d_model] = item.tokens.dims();
+        let [batch_size, sequence_length, token_size] = item.tokens.dims();
         let device = &self.transformer.devices()[0];
 
         //
@@ -106,20 +120,21 @@ impl LobTransModel {
         let labels = item.labels.to_device(device);
 
         // insert class tokens
-        let class_tokens = self.class_tokens.val().expand([batch_size as i32,-1,-1]);
+        let class_tokens = self.class_tokens.val().expand([batch_size as i32, -1, -1]);
         let tokens_with_class = Tensor::cat(vec![class_tokens, tokens], 1);
 
         // positional encoding
-        let tokens_with_class_and_pe = tokens_with_class.add(self.positional_embeddings.val());
+        let tokens_with_class_and_positional_encoding = tokens_with_class.add(self.positional_embeddings.val());
         // TODO - PMB - should we divide by 2 or not?
 
         // through the transformer
         let encoded = self
             .transformer
-            .forward(TransformerEncoderInput::new(tokens_with_class_and_pe));
+            .forward(TransformerEncoderInput::new(tokens_with_class_and_positional_encoding));
 
         // we are only interested in the class token from the transformer output
-        let encoded_class = encoded.slice([0..batch_size,0..1,0..d_model]);
+        // let encoded_class = encoded.slice([0..batch_size, 0..1, 0..token_size]);
+        let encoded_class = encoded.slice([0..batch_size, 0..1]);
 
         // through the output linear layer
         let output = self.output.forward(encoded_class);
@@ -147,7 +162,7 @@ impl LobTransModel {
 
     /// Defines forward pass for inference
     pub fn infer(&self, item: LobTransInferenceBatch) -> Tensor<2> {
-        let [batch_size, seq_length, d_model] = item.tokens.dims();
+        let [batch_size, sequence_length, token_size] = item.tokens.dims();
 
         let device = &self.transformer.devices()[0];
 
@@ -156,21 +171,22 @@ impl LobTransModel {
         let tokens = item.tokens.to_device(device);
 
         // insert class tokens
-        let class_tokens = self.class_tokens.val().expand([batch_size as i32,-1,-1]);
+        let class_tokens = self.class_tokens.val().expand([batch_size as i32, -1, -1]);
 
         let tokens_with_class = Tensor::cat(vec![class_tokens, tokens], 1);
 
         // positional encoding
-        let tokens_with_class_and_pe = tokens_with_class.add(self.positional_embeddings.val());
+        let tokens_with_class_and_positional_encoding = tokens_with_class.add(self.positional_embeddings.val());
         // TODO - PMB - should we divide by 2 or not? Probably not given that these are learnable
 
         // through the transformer
         let encoded = self
             .transformer
-            .forward(TransformerEncoderInput::new(tokens_with_class_and_pe));
+            .forward(TransformerEncoderInput::new(tokens_with_class_and_positional_encoding));
 
         // we are only interested in the class token from the transformer output
-        let encoded_class = encoded.slice([0..batch_size,0..1,0..d_model]);
+        // let encoded_class = encoded.slice([0..batch_size, 0..1, 0..token_size]);
+        let encoded_class = encoded.slice([0..batch_size, 0..1]);
 
         // through the output linear layer
         let output = self.output.forward(encoded_class);

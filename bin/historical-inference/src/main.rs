@@ -437,14 +437,8 @@ async fn main() -> Result<(), Box<dyn Error>>
     
     let (model, batcher, positional_encoder) = initialize_model(&args, &spec)?;
 
-    // // count model parameters
-    // let mut param_count = 0;
-    // model.visit(|tensor| {
-    //     param_count += tensor.shape().num_elements();
-    // });
-    // println!("Model has {} parameters", param_count);
-
-
+    // count model parameters
+    println!("Model has {} parameters", model.num_params());
 
     let positional_encoder = if args.with_positional_encoding {
         Some(&positional_encoder)
