@@ -20,6 +20,9 @@ use data_handlers::{
     mpk::{MpkDataReader, MpkDataWriter, AccessType}
 };
 
+
+type StorageElem = f32;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>>
 {
@@ -48,8 +51,8 @@ async fn main() -> Result<(), Box<dyn Error>>
 
     let mut rng = StdRng::seed_from_u64(args.seed);
 
-    let reader: MpkDataReader<f64> = MpkDataReader::new(&args.input, AccessType::Random);
-    let mut writer = MpkDataWriter::new(&args.output);
+    let reader: MpkDataReader<StorageElem> = MpkDataReader::new(&args.input, AccessType::Random);
+    let mut writer = MpkDataWriter::<StorageElem>::new(&args.output);
 
     let n_items = reader.len();
     println!("Shuffling {} items", n_items);

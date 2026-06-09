@@ -71,6 +71,10 @@ type Elem = f32;
 // type Elem = burn::tensor::f16;
 
 
+// how elements are to be stored when extracted
+type StorageElem = f32;
+
+
 async fn decode_data(
     path: &PathBuf,
     extractor: &mut impl Extractor<IntervalExtraction>,
@@ -146,7 +150,7 @@ async fn convert_and_write_data(
     data: Vec<IntervalExtractionWithGain>,
 ) -> Result<(), Box<dyn Error>> {
     // let mut csv_file = File::create(&args.output_csv)?;
-    let mut writer = MpkDataWriter::new(&args.output_data.to_string_lossy());
+    let mut writer = MpkDataWriter::<StorageElem>::new(&args.output_data.to_string_lossy());
 
     let prediction_temporal_window_size = args.prediction_intervals;
     let patch_temporal_window_size = args.patch_intervals;
@@ -189,18 +193,18 @@ async fn convert_and_write_data(
     //
     for i in 0..=(data.len() - prediction_temporal_window_size) {
 
-        let mut bid_price_patches: Vec<Vec<f64>> = Vec::new();
-        let mut bid_volume_patches: Vec<Vec<f64>> = Vec::new();
-        let mut ask_price_patches: Vec<Vec<f64>> = Vec::new();
-        let mut ask_volume_patches: Vec<Vec<f64>> = Vec::new();
+        let mut bid_price_patches: Vec<Vec<StorageElem>> = Vec::new();
+        let mut bid_volume_patches: Vec<Vec<StorageElem>> = Vec::new();
+        let mut ask_price_patches: Vec<Vec<StorageElem>> = Vec::new();
+        let mut ask_volume_patches: Vec<Vec<StorageElem>> = Vec::new();
 
 
         for j in (0..=(prediction_temporal_window_size - patch_temporal_window_size)).step_by(patch_temporal_stride) {
             // create each patch - starting with each patch header value pair
-            let mut bid_price_patch: Vec<f64> = vec![LobTransPatchType::Price.value(), LobTransPatchSide::Bid.value()];
-            let mut bid_volume_patch: Vec<f64> = vec![LobTransPatchType::Volume.value(), LobTransPatchSide::Bid.value()];
-            let mut ask_price_patch: Vec<f64> = vec![LobTransPatchType::Price.value(), LobTransPatchSide::Ask.value()];
-            let mut ask_volume_patch: Vec<f64> = vec![LobTransPatchType::Volume.value(), LobTransPatchSide::Ask.value()];
+            let mut bid_price_patch: Vec<StorageElem> = vec![LobTransPatchType::Price.value(), LobTransPatchSide::Bid.value()];
+            let mut bid_volume_patch: Vec<StorageElem> = vec![LobTransPatchType::Volume.value(), LobTransPatchSide::Bid.value()];
+            let mut ask_price_patch: Vec<StorageElem> = vec![LobTransPatchType::Price.value(), LobTransPatchSide::Ask.value()];
+            let mut ask_volume_patch: Vec<StorageElem> = vec![LobTransPatchType::Volume.value(), LobTransPatchSide::Ask.value()];
 
             for k in 0..patch_temporal_window_size {
                 for l in 0..lob_levels {
@@ -242,7 +246,7 @@ async fn convert_and_write_data(
         assert_eq!(bid_price_patches.len(), predicted_patches_per_item);
         assert_eq!(bid_price_patches.len(), n_tokens);
 
-        let mut tokens: Vec<Vec<f64>> = Vec::with_capacity(n_tokens);
+        let mut tokens: Vec<Vec<StorageElem>> = Vec::with_capacity(n_tokens);
         for i in 0..n_tokens {
             let token = [
                 bid_price_patches[i].clone(),
@@ -270,7 +274,7 @@ async fn convert_and_write_data(
             );
 
             let tensor_with_positions = positional_encoder.forward(tensor).div_scalar(2.0);
-            let vec_with_positions = tensor_with_positions.to_data().iter::<f64>().collect::<Vec<_>>();
+            let vec_with_positions = tensor_with_positions.to_data().iter::<StorageElem>().collect::<Vec<_>>();
             assert_eq!(vec_with_positions.len(), 1 * n_tokens * d_model);
             vec_with_positions
         }
