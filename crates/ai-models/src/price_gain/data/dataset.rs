@@ -22,14 +22,14 @@ use data_handlers::{
 
 #[derive(new, Clone, Debug)]
 pub struct PriceGainItem {
-    pub features: Vec<Vec<f64>>,        // [sequence_length, token_size]
-    pub label: f64,
+    pub features: Vec<Vec<f32>>,        // [sequence_length, token_size]
+    pub label: f32,
 }
 
 
 #[derive(Debug, Clone)]
 pub struct PriceGainDataset {
-    file: Arc<MpkDataReader<f64>>,
+    file: Arc<MpkDataReader<f32>>,
     // pub spec: PriceGainDataSpec,
     sequence_length: usize,
     token_size: usize,
@@ -45,7 +45,7 @@ impl PriceGainDataset {
         token_size: usize,
     ) -> PriceGainDataset {
         // let spec = PriceGainDataSpec::from_file(spec_path).expect(&format!("Couldn't open spec file {spec_path:?}"));
-        let file = MpkDataReader::new(data_path.to_str().unwrap(), AccessType::Sequential);
+        let file = MpkDataReader::<f32>::new(data_path.to_str().unwrap(), AccessType::Sequential);
 
         Self {
             // spec,

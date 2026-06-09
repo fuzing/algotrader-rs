@@ -45,7 +45,7 @@ impl Batcher<PriceGainItem, PriceGainTrainingBatch> for PriceGainBatcher
         let sequence_length = items.first().map(|i| i.features.len()).unwrap_or(0);
         let token_length = items.first().map(|i| i.features.first().unwrap().len()).unwrap_or(0);
 
-        let flattened_features: Vec<f64> = items
+        let flattened_features = items
             .iter()
             .map(|item| item.features.clone())
             .flatten()
@@ -85,14 +85,13 @@ impl Batcher<PriceGainItem, PriceGainInferenceBatch> for PriceGainBatcher
         let sequence_length = items.first().map(|i| i.features.len()).unwrap_or(0);
         let token_length = items.first().map(|i| i.features.first().unwrap().len()).unwrap_or(0);
 
-        let flattened_features: Vec<f64> = items
+        let flattened_features = items
             .iter()
             .map(|item| item.features.clone())
             .flatten()
             .flatten()
             .collect();
-
-
+        
         // Construct tensors
         let inputs = Tensor::from_floats(
             TensorData::new(flattened_features, vec![batch_size, sequence_length, token_length]),
