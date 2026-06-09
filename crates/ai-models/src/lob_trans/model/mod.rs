@@ -43,9 +43,6 @@ pub struct LobTransModel {
     sequence_length: usize,
     token_size: usize,
 
-    // if we're using fixed weight sin/cos positional encodings
-    // positional_encoder: PositionalEncoding,
-
     // [batch_size, class_token]
     class_tokens: Param<Tensor<3>>,
 
