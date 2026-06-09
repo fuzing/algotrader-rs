@@ -201,17 +201,17 @@ async fn convert_and_write_data(
 
         for j in (0..=(prediction_temporal_window_size - patch_temporal_window_size)).step_by(patch_temporal_stride) {
             // create each patch - starting with each patch header value pair
-            let mut bid_price_patch: Vec<StorageElem> = vec![LobTransPatchType::Price.value(), LobTransPatchSide::Bid.value()];
-            let mut bid_volume_patch: Vec<StorageElem> = vec![LobTransPatchType::Volume.value(), LobTransPatchSide::Bid.value()];
-            let mut ask_price_patch: Vec<StorageElem> = vec![LobTransPatchType::Price.value(), LobTransPatchSide::Ask.value()];
-            let mut ask_volume_patch: Vec<StorageElem> = vec![LobTransPatchType::Volume.value(), LobTransPatchSide::Ask.value()];
+            let mut bid_price_patch: Vec<StorageElem> = vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Bid.value() as StorageElem];
+            let mut bid_volume_patch: Vec<StorageElem> = vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Bid.value() as StorageElem];
+            let mut ask_price_patch: Vec<StorageElem> = vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem];
+            let mut ask_volume_patch: Vec<StorageElem> = vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem];
 
             for k in 0..patch_temporal_window_size {
                 for l in 0..lob_levels {
-                    bid_price_patch.push((data[i + j + k].bids[l].price - price_mean) / price_std_dev);
-                    bid_volume_patch.push((data[i + j + k].bids[l].volume as f64 - volume_mean) / volume_std_dev);
-                    ask_price_patch.push((data[i + j + k].asks[l].price - price_mean) / price_std_dev);
-                    ask_volume_patch.push((data[i + j + k].asks[l].volume as f64 - volume_mean) / volume_std_dev);
+                    bid_price_patch.push(((data[i + j + k].bids[l].price - price_mean) / price_std_dev) as StorageElem);
+                    bid_volume_patch.push(((data[i + j + k].bids[l].volume as f64 - volume_mean) / volume_std_dev) as StorageElem);
+                    ask_price_patch.push(((data[i + j + k].asks[l].price - price_mean) / price_std_dev) as StorageElem);
+                    ask_volume_patch.push(((data[i + j + k].asks[l].volume as f64 - volume_mean) / volume_std_dev) as StorageElem);
                 }
             }
 
