@@ -16,7 +16,6 @@ use burn::{
             Gelu,
         }
     }
-
 };
 
 #[derive(Config, Debug)]

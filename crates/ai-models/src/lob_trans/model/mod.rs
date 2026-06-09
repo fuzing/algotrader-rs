@@ -3,7 +3,7 @@
 // The model is then trained using Cross-Entropy loss. It contains methods for model initialization
 // (both with and without pre-trained weights), forward pass, inference, training, and validation.
 
-mod lob_trans_mlp;
+// mod lob_trans_mlp;
 
 use std::io::Write;
 use super::data::batcher::{
@@ -27,8 +27,7 @@ use burn::{
     },
     train::{RegressionOutput, ClassificationOutput, InferenceStep, TrainOutput, TrainStep},
 };
-use burn::module::Initializer;
-use crate::lob_trans::model::lob_trans_mlp::{LobTransMLP, LobTransMLPConfig};
+// use crate::lob_trans::model::lob_trans_mlp::{LobTransMLP, LobTransMLPConfig};
 
 // Define the model configuration
 #[derive(Config, Debug)]
@@ -54,8 +53,8 @@ pub struct LobTransModel {
     positional_embeddings: Param<Tensor<3>>,
 
     transformer: TransformerEncoder,
-    // output: Linear,
-    output: LobTransMLP,
+    output: Linear,
+    // output: LobTransMLP,
     n_classes: usize,
 }
 
@@ -92,12 +91,12 @@ impl LobTransModelConfig {
         
         let transformer = self.transformer.init(device);
         
-        // let output = LinearConfig::new(self.transformer.d_model, self.n_classes).init(device);
-        let output = LobTransMLPConfig::new(
-            self.transformer.d_model,
-            self.output_hidden_size,
-            self.n_classes,
-        ).init(device);
+        let output = LinearConfig::new(self.transformer.d_model, self.n_classes).init(device);
+        // let output = LobTransMLPConfig::new(
+        //     self.transformer.d_model,
+        //     self.output_hidden_size,
+        //     self.n_classes,
+        // ).init(device);
 
 
         LobTransModel {
