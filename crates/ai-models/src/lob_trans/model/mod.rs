@@ -36,7 +36,7 @@ pub struct LobTransModelConfig {
     token_size: usize,             // model embedding size
 
     transformer: TransformerEncoderConfig,
-    output_hidden_size: usize,
+    // output_hidden_size: usize,
     n_classes: usize,
 }
 
