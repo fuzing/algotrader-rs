@@ -11,7 +11,7 @@ cargo run --bin extractor --  \
   --holding-time-seconds=5 \
   --positional-max-timescale=5000 \
   --lob-levels=20 --pretty \
-  --start-date=2024-08-01 --end-date=2024-10-31 \
+  --start-date=2024-07-01 --end-date=2024-09-30 \
   --output-data=/run/media/peter/genetics/algotrader/data/${NAME}-train \
   --output-spec=/run/media/peter/genetics/algotrader/data/${NAME}-spec.json \
   --extraction-interval-nanos=100000000 \
