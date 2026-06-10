@@ -237,7 +237,7 @@ async fn convert_and_write_data(
         // write to the data file
         writer.write(&final_vector)?;
 
-        if (i % 1_000) == 0 {
+        if (i % 10_000) == 0 {
             println!("Written {} of {} samples", i, data.len());
         }
     }
