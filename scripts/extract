@@ -44,16 +44,16 @@ NAME=COLM
 #  --extraction-interval-nanos=100000000 \
 #  'COLM-XNAS.ITCH-2025-01-01 00:00:00 UTC-2025-12-31 23:59:59 UTC-mbo.dbn.zst'
 
-echo "data file stats"
-cargo run --bin data-file-stats --  \
-  --gain-threshold=0.08 \
-  --loss-threshold=0.08 \
-  --input=/run/media/peter/genetics/algotrader/data/${NAME}-train
+#echo "data file stats"
+#cargo run --bin data-file-stats --  \
+#  --gain-threshold=0.08 \
+#  --loss-threshold=0.08 \
+#  --input=/run/media/peter/genetics/algotrader/data/${NAME}-train
 
 
-#echo "Shuffling Data"
-#cargo run --bin shuffle-data-file --  \
-#  --seed=42 \
-#  --input=/run/media/peter/genetics/algotrader/data/${NAME}-train \
-#  --output=/run/media/peter/genetics/algotrader/data/${NAME}-train-shuffled
-#
+echo "Shuffling Data"
+cargo run --bin shuffle-data-file --  \
+  --seed=42 \
+  --input=/run/media/peter/genetics/algotrader/data/${NAME}-train \
+  --output=/run/media/peter/genetics/algotrader/data/${NAME}-train-shuffled
+

@@ -31,7 +31,7 @@ impl<T> MpkDataWriter<T> {
         let file = File::create(&data_name).expect(&format!("Error creating data file {}", &data_name));
 
         Self {
-            writer: BufWriter::with_capacity(10 * 1_024 * 1_024, file),
+            writer: BufWriter::with_capacity(25 * 1_024 * 1_024, file),
             file_base: file_base.to_string(),
             record_offsets: Vec::new(),
             offset: 0,
