@@ -31,7 +31,7 @@ impl<T> MpkDataWriter<T> {
         let file = File::create(&data_name).expect(&format!("Error creating data file {}", &data_name));
 
         Self {
-            writer: BufWriter::with_capacity(1_024 * 1_024, file),
+            writer: BufWriter::with_capacity(10 * 1_024 * 1_024, file),
             file_base: file_base.to_string(),
             record_offsets: Vec::new(),
             offset: 0,
@@ -58,7 +58,7 @@ impl<T> Drop for MpkDataWriter<T> {
         self.writer.flush().unwrap();
         let index_name = format!("{}.idx", &self.file_base);
         let index_file = File::create(&index_name).expect(&format!("Couldn't open output file {}", &index_name));
-        let mut writer = BufWriter::with_capacity(1_024 * 1_024, &index_file);
+        let mut writer = BufWriter::with_capacity(10 * 1_024 * 1_024, &index_file);
         rmp_serde::encode::write(&mut writer, &self.record_offsets).expect(&format!("Error writing data to file {}", &index_name));
         writer.flush().unwrap();
     }
@@ -89,13 +89,13 @@ impl<T> MpkDataReader<T> {
 
         // read in the record offsets
         let file = File::open(&index_name).expect(&format!("Couldn't open data file {:?}", &index_name));
-        let reader = BufReader::with_capacity(1_024 * 1_024, &file);
+        let reader = BufReader::with_capacity(10 * 1_024 * 1_024, &file);
         let mut record_offsets: Vec<usize> = rmp_serde::decode::from_read(reader).expect(&format!("Error reading data from file {:?}", &index_name));
 
         // add additional offset, being the end of the file
         let metadata = std::fs::metadata(&data_name).expect(&format!("Couldn't get metadata from file {:?}", &data_name));
         record_offsets.push(metadata.len() as usize);
-        
+
         // memory map the file
         let file = File::open(&data_name).expect(&format!("Couldn't open data file {:?}", &data_name));
         
@@ -106,7 +106,7 @@ impl<T> MpkDataReader<T> {
             AccessType::Random => MmapOptions::new()
                 .no_reserve_swap().clone(),
         };
-        
+
         let mapped_file = unsafe {
             // Mmap::map(&file).expect("failed to memory map file")
             options.map(&file).expect("failed mapping file")
