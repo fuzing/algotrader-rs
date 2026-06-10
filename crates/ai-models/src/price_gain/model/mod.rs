@@ -24,9 +24,11 @@ use burn::{
 pub struct PriceGainModelConfig {
     sequence_length: usize,
     token_size: usize,
-    
+
     transformer: TransformerEncoderConfig,
     n_classes: usize,
+    loss_weights: Option<Vec<f32>>,
+
 }
 
 // Define the model structure
@@ -38,6 +40,8 @@ pub struct PriceGainModel {
     transformer: TransformerEncoder,
     output: Linear,
     n_classes: usize,
+    loss_weights: Option<Vec<f32>>,
+
 }
 
 // Define functions for model initialization
@@ -53,6 +57,7 @@ impl PriceGainModelConfig {
             transformer,
             output,
             n_classes: self.n_classes,
+            loss_weights: self.loss_weights.clone(),
         }
     }
 }
@@ -80,6 +85,7 @@ impl PriceGainModel {
             .reshape([batch_size, self.n_classes]);
 
         let loss = CrossEntropyLossConfig::new()
+            .with_weights(self.loss_weights.clone())
             .init(&output_classification.device())
             .forward(output_classification.clone(), labels.clone());
         // Return the output and loss

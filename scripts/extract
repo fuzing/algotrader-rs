@@ -1,6 +1,33 @@
 #!/usr/bin/env bash
 
-NAME=KHC
+#NAME=KHC
+#
+#echo "Extracting Data"
+#cargo run --bin extractor --  \
+#  --prediction-intervals=128 \
+#  --patch-intervals=4 --patch-stride=4 \
+#  --gain-percentage=0.05 --loss-percentage=0.05 \
+#  --gain-repeats=1 --loss-repeats=1 --neutral-repeats=1 \
+#  --holding-time-seconds=5 \
+#  --positional-max-timescale=5000 \
+#  --lob-levels=20 --pretty \
+#  --start-date=2024-07-01 --end-date=2024-09-30 \
+#  --output-data=/run/media/peter/genetics/algotrader/data/${NAME}-train \
+#  --output-spec=/run/media/peter/genetics/algotrader/data/${NAME}-spec.json \
+#  --extraction-interval-nanos=100000000 \
+#  'KHC-XNAS.ITCH-2024-01-01 00:00:00 UTC-2024-12-31 23:59:59 UTC-mbo.dbn.zst'
+#
+##  --with-positional-encodings \
+#
+#
+#echo "Shuffling Data"
+#cargo run --bin shuffle-data-file --  \
+#  --seed=42 \
+#  --input=/run/media/peter/genetics/algotrader/data/${NAME}-train \
+#  --output=/run/media/peter/genetics/algotrader/data/${NAME}-train-shuffled
+#
+
+NAME=COLM
 
 echo "Extracting Data"
 cargo run --bin extractor --  \
@@ -11,11 +38,11 @@ cargo run --bin extractor --  \
   --holding-time-seconds=5 \
   --positional-max-timescale=5000 \
   --lob-levels=20 --pretty \
-  --start-date=2024-07-01 --end-date=2024-09-30 \
+  --start-date=2025-08-04 --end-date=2025-08-08 \
   --output-data=/run/media/peter/genetics/algotrader/data/${NAME}-train \
   --output-spec=/run/media/peter/genetics/algotrader/data/${NAME}-spec.json \
   --extraction-interval-nanos=100000000 \
-  'KHC-XNAS.ITCH-2024-01-01 00:00:00 UTC-2024-12-31 23:59:59 UTC-mbo.dbn.zst'
+  'COLM-XNAS.ITCH-2025-01-01 00:00:00 UTC-2025-12-31 23:59:59 UTC-mbo.dbn.zst'
 
 #  --with-positional-encodings \
 
@@ -25,6 +52,5 @@ cargo run --bin shuffle-data-file --  \
   --seed=42 \
   --input=/run/media/peter/genetics/algotrader/data/${NAME}-train \
   --output=/run/media/peter/genetics/algotrader/data/${NAME}-train-shuffled
-
 
 

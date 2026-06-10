@@ -230,7 +230,7 @@ async fn train(
         spec.token_size,
         config.transformer.clone(),
         LobTransDataset::num_classes(),
-    )
+    ).with_loss_weights(Some(vec![1.0, 1.0, 1.0]),)
         .init(&strategy.main_device().clone().autodiff());
 
     // Initialize optimizer

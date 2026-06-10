@@ -38,6 +38,7 @@ pub struct LobTransModelConfig {
     transformer: TransformerEncoderConfig,
     // output_hidden_size: usize,
     n_classes: usize,
+    loss_weights: Option<Vec<f32>>,
 }
 
 // Define the model structure
@@ -56,6 +57,8 @@ pub struct LobTransModel {
     output: Linear,
     // output: LobTransMLP,
     n_classes: usize,
+    loss_weights: Option<Vec<f32>>,
+
 }
 
 // Define functions for model initialization
@@ -109,6 +112,7 @@ impl LobTransModelConfig {
             transformer,
             output,
             n_classes: self.n_classes,
+            loss_weights: self.loss_weights.clone(),
         }
     }
 }
@@ -152,6 +156,7 @@ impl LobTransModel {
             .reshape([batch_size, self.n_classes]);
 
         let loss = CrossEntropyLossConfig::new()
+            .with_weights(self.loss_weights.clone())
             .init(&output_classification.device())
             .forward(output_classification.clone(), labels.clone());
 

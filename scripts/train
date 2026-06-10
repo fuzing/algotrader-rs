@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-NAME=KHC
+#NAME=KHC
+NAME=COLM
 
 #
 # Originally we started with 8 heads and 4 layers
