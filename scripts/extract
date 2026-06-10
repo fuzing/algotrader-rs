@@ -7,7 +7,7 @@ cargo run --bin extractor --  \
   --prediction-intervals=128 \
   --patch-intervals=4 --patch-stride=4 \
   --gain-percentage=0.05 --loss-percentage=0.05 \
-  --gain-repeats=5 --loss-repeats=5 --neutral-repeats=1 \
+  --gain-repeats=1 --loss-repeats=1 --neutral-repeats=1 \
   --holding-time-seconds=5 \
   --positional-max-timescale=5000 \
   --lob-levels=20 --pretty \

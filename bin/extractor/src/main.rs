@@ -230,18 +230,18 @@ async fn convert_and_write_data(
         // our label is found in the snapshot at the end of the prediction temporal window
         // let label = data[i + prediction_temporal_window - 1].trade_gain;
         let gain = data[i + prediction_temporal_window_size - 1].mid_point_gain;
-        let (label, repeats) =
-            if gain > args.gain_percentage {
-                n_gains += args.gain_repeats;
-                (2.0, args.gain_repeats)
-            } else if gain > -args.loss_percentage {
-                n_neutrals += args.neutral_repeats;
-                (1.0, args.neutral_repeats)
-            }
-            else {
-                n_losses += args.loss_repeats;
-                (0.0, args.loss_repeats)
-            };
+        let (label, repeats) = (gain as StorageElem, 1);
+            // if gain > args.gain_percentage {
+            //     n_gains += args.gain_repeats;
+            //     (2.0, args.gain_repeats)
+            // } else if gain > -args.loss_percentage {
+            //     n_neutrals += args.neutral_repeats;
+            //     (1.0, args.neutral_repeats)
+            // }
+            // else {
+            //     n_losses += args.loss_repeats;
+            //     (0.0, args.loss_repeats)
+            // };
 
         assert_eq!(bid_price_patches.len(), predicted_patches_per_item);
         assert_eq!(bid_price_patches.len(), n_tokens);
