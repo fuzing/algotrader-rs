@@ -139,7 +139,8 @@ async fn convert_and_write_data(
     stats: &DataStatistics,
     data: Vec<IntervalExtractionWithGain>,
 ) -> Result<(), Box<dyn Error>> {
-    // let mut csv_file = File::create(&args.output_csv)?;
+    println!("Convert and write data");
+
     let mut writer = MpkDataWriter::<StorageElem>::new(&args.output_data.to_string_lossy());
 
     let prediction_temporal_window_size = args.prediction_intervals;
@@ -233,6 +234,10 @@ async fn convert_and_write_data(
 
         // write to the data file
         writer.write(&final_vector)?;
+
+        if (i % 1_000) == 0 {
+            println!("Written {} of {} samples", i, data.len());
+        }
     }
 
     println!("Gains({n_gains}), Neutrals({n_neutrals}), Losses({n_losses})");
