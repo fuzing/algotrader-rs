@@ -33,6 +33,8 @@ pub struct PriceGainDataset {
     // pub spec: PriceGainDataSpec,
     sequence_length: usize,
     token_size: usize,
+    gain_threshold: f32,
+    loss_threshold: f32,
 }
 
 
@@ -43,6 +45,8 @@ impl PriceGainDataset {
         data_path: &PathBuf,
         sequence_length: usize,
         token_size: usize,
+        gain_threshold: f32,
+        loss_threshold: f32,
     ) -> PriceGainDataset {
         // let spec = PriceGainDataSpec::from_file(spec_path).expect(&format!("Couldn't open spec file {spec_path:?}"));
         let file = MpkDataReader::<f32>::new(data_path.to_str().unwrap(), AccessType::Sequential);
@@ -52,6 +56,8 @@ impl PriceGainDataset {
             file: Arc::new(file),
             sequence_length,
             token_size,
+            gain_threshold,
+            loss_threshold,
         }
     }
 
@@ -76,7 +82,16 @@ impl Dataset<PriceGainItem> for PriceGainDataset {
         }
 
         // Last value from the row is the "label"
-        let label = values.pop()?; // O(1)
+        let outcome = values.pop()?; // O(1)
+        let label = if outcome >= self.gain_threshold {
+            2.0
+        }
+        else if outcome > self.loss_threshold {
+            1.0
+        }
+        else {
+            0.0
+        };
 
         // now arrange into [sequence_length, d_model]
         if values.len() != self.sequence_length * self.token_size {

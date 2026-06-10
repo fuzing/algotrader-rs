@@ -179,7 +179,7 @@ async fn train(
     // a reasonable heuristic for feedforward size is 4 x token_size
     let output_feed_forward_size = spec.token_size * 4;
 
-    let full_dataset = LobTransDataset::new(dataset_path, spec.sequence_length, spec.token_size);
+    let full_dataset = LobTransDataset::new(dataset_path, spec.sequence_length, spec.token_size, 0.08, 0.08);
     let config = ExperimentConfig::new(
         // don't use the args passed to the program, use the 4x version from above
         // TransformerEncoderConfig::new(spec.token_size, args.output_feed_forward_size, args.transformer_heads, args.transformer_layers)
