@@ -101,7 +101,7 @@ impl<T> MpkDataReader<T> {
         
         let options = match access_type {
             AccessType::Sequential => MmapOptions::new()
-                .huge(None)
+                .huge(Some(22))                 // 2^21 == 4MB pages
                 .no_reserve_swap().clone(),
             AccessType::Random => MmapOptions::new()
                 .no_reserve_swap().clone(),

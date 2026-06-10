@@ -18,7 +18,7 @@ cargo run --bin train -- \
   --transformer-heads=8 \
   --transformer-layers=4 \
   --output-feed-forward-size=1312 \
-  --loss-weights=1.0,1.0,10.0 \
+  --loss-weights=51.976,0.338,52.173 \
   --gain-threshold=0.08 \
   --loss-threshold=0.08 \
   --artifacts-folder=/run/media/peter/genetics/algotrader/data/${NAME}-artifacts
