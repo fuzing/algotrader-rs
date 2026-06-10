@@ -166,6 +166,8 @@ fn prepare_sample(
 ) -> Result<LobTransItem, Box<dyn Error>> {
     assert_eq!(spec.prediction_intervals, queue.len());
 
+    let patch_size = spec.patch_size;
+
     let mut bid_price_patches: Vec<Vec<StorageElem>> = Vec::new();
     let mut bid_volume_patches: Vec<Vec<StorageElem>> = Vec::new();
     let mut ask_price_patches: Vec<Vec<StorageElem>> = Vec::new();
@@ -173,10 +175,10 @@ fn prepare_sample(
 
     for j in (0..queue.len()).step_by(spec.patch_stride) {
         // create each patch - starting with each patch header value pair
-        let mut bid_price_patch: Vec<StorageElem> = Vec::new(); // vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Bid.value() as StorageElem];
-        let mut bid_volume_patch: Vec<StorageElem> = Vec::new(); // vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Bid.value() as StorageElem];
-        let mut ask_price_patch: Vec<StorageElem> = Vec::new(); // vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem];
-        let mut ask_volume_patch: Vec<StorageElem> = Vec::new(); // vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem];
+        let mut bid_price_patch: Vec<StorageElem> = Vec::with_capacity(patch_size); // vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Bid.value() as StorageElem];
+        let mut bid_volume_patch: Vec<StorageElem> = Vec::with_capacity(patch_size); // vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Bid.value() as StorageElem];
+        let mut ask_price_patch: Vec<StorageElem> = Vec::with_capacity(patch_size); // vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem];
+        let mut ask_volume_patch: Vec<StorageElem> = Vec::with_capacity(patch_size); // vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem];
 
         for k in 0..spec.patch_intervals {
             for l in 0..spec.lob_levels {
@@ -187,10 +189,10 @@ fn prepare_sample(
             }
         }
 
-        assert_eq!(bid_price_patch.len(), spec.patch_size);
-        assert_eq!(bid_volume_patch.len(), spec.patch_size);
-        assert_eq!(ask_price_patch.len(), spec.patch_size);
-        assert_eq!(ask_volume_patch.len(), spec.patch_size);
+        assert_eq!(bid_price_patch.len(), patch_size);
+        assert_eq!(bid_volume_patch.len(), patch_size);
+        assert_eq!(ask_price_patch.len(), patch_size);
+        assert_eq!(ask_volume_patch.len(), patch_size);
 
         // add patches
         bid_price_patches.push(bid_price_patch);
