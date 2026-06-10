@@ -44,7 +44,6 @@ impl LobTransDataset {
         loss_threshold: f32,
     ) -> LobTransDataset {
         let file = MpkDataReader::<f32>::new(data_path.to_str().unwrap(), AccessType::Sequential);
-
         Self {
             file: Arc::new(file),
             sequence_length,
