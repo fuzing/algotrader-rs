@@ -157,7 +157,7 @@ async fn convert_and_write_data(
 
     let predicted_patches_per_item = ((prediction_temporal_window_size - patch_temporal_window_size) / patch_temporal_stride) + 1;
     let n_tokens = predicted_patches_per_item;
-    let patch_size = 2 + patch_temporal_window_size * lob_levels;
+    let patch_size = patch_temporal_window_size * lob_levels; //  + 2;
     // the model dimension is the sum of the sizes:  ask_price_patch size + ask_volume_patch_size + bid_price_patch size + bid_volume_patch_size
     println!("patch_size: ----------------------> {}", patch_size);
     let d_model = patch_size * 4;
@@ -180,10 +180,10 @@ async fn convert_and_write_data(
 
         for j in (0..=(prediction_temporal_window_size - patch_temporal_window_size)).step_by(patch_temporal_stride) {
             // create each patch - starting with each patch header value pair
-            let mut bid_price_patch: Vec<StorageElem> = vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Bid.value() as StorageElem];
-            let mut bid_volume_patch: Vec<StorageElem> = vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Bid.value() as StorageElem];
-            let mut ask_price_patch: Vec<StorageElem> = vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem];
-            let mut ask_volume_patch: Vec<StorageElem> = vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem];
+            let mut bid_price_patch: Vec<StorageElem> = Vec::new(); // vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Bid.value() as StorageElem];
+            let mut bid_volume_patch: Vec<StorageElem> = Vec::new(); //vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Bid.value() as StorageElem];
+            let mut ask_price_patch: Vec<StorageElem> = Vec::new(); // vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem];
+            let mut ask_volume_patch: Vec<StorageElem> = Vec::new(); // vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem];
 
             for k in 0..patch_temporal_window_size {
                 for l in 0..lob_levels {
