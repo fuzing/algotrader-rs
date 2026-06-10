@@ -86,6 +86,7 @@ async fn decode_data(
 
     println!("Holding for {} intervals", holding_time_intervals);
 
+    println!("Reading MBO data");
     while let Some(mbo) = decoder.decode_record::<MboMsg>().await? {
         if mbo.ts_recv >= start_date_nanos && mbo.ts_recv <= end_date_nanos {
             let results = extractor.push(mbo).await?;
@@ -95,6 +96,7 @@ async fn decode_data(
         }
     }
 
+    println!("Generating Samples");
     let mut all_results_mapped: Vec<IntervalExtractionWithGain> = Vec::new();
     for (index, result) in all_results.iter().enumerate() {
         if let Some(future_result) = all_results.get(index + holding_time_intervals) {
