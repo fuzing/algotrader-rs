@@ -6,8 +6,6 @@
 #cargo run --bin extractor --  \
 #  --prediction-intervals=128 \
 #  --patch-intervals=4 --patch-stride=4 \
-#  --gain-percentage=0.05 --loss-percentage=0.05 \
-#  --gain-repeats=1 --loss-repeats=1 --neutral-repeats=1 \
 #  --holding-time-seconds=5 \
 #  --lob-levels=20 --pretty \
 #  --start-date=2024-07-01 --end-date=2024-09-30 \
@@ -37,11 +35,9 @@ echo "Extracting Data"
 cargo run --bin extractor --  \
   --prediction-intervals=128 \
   --patch-intervals=4 --patch-stride=4 \
-  --gain-percentage=0.05 --loss-percentage=0.05 \
-  --gain-repeats=1 --loss-repeats=1 --neutral-repeats=1 \
   --holding-time-seconds=5 \
   --lob-levels=20 --pretty \
-  --start-date=2025-08-04 --end-date=2025-08-08 \
+  --start-date=2025-08-01 --end-date=2025-10-31 \
   --output-data=/run/media/peter/genetics/algotrader/data/${NAME}-train \
   --output-spec=/run/media/peter/genetics/algotrader/data/${NAME}-spec.json \
   --extraction-interval-nanos=100000000 \
