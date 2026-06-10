@@ -6,5 +6,5 @@ echo "data file stats"
 cargo run --bin data-file-stats --  \
   --gain-threshold=0.08 \
   --loss-threshold=0.08 \
-  --input=/run/media/peter/genetics/algotrader/data/${NAME}-train \
+  --input=/run/media/peter/genetics/algotrader/data/${NAME}-train-shuffled \
 
