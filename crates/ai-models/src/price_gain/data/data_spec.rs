@@ -28,8 +28,6 @@ pub struct PriceGainDataSpec {
     pub volume_mean: f64,               // mean volume for all of the samples
     pub volume_std_dev: f64,            // volume standard deviation
 
-    pub positional_max_timescale: usize,    // parameter for positional encoder
-
     pub start_date: String,
     pub end_date: String,
 }
@@ -52,8 +50,6 @@ impl PriceGainDataSpec {
         volume_mean: f64,
         volume_std_dev: f64,
 
-        positional_max_timescale: usize,
-
         start_date: String,
         end_date: String,
     ) -> Self {
@@ -73,8 +69,6 @@ impl PriceGainDataSpec {
             price_std_dev,
             volume_mean,
             volume_std_dev,
-
-            positional_max_timescale,
 
             start_date,
             end_date,
@@ -114,8 +108,6 @@ pub struct PriceGainDataSpecBuilder {
     pub volume_mean: f64,               // mean volume for all of the samples
     pub volume_std_dev: f64,            // volume standard deviation
 
-    pub positional_max_timescale: usize,    // parameter for positional encoder
-
     pub start_date: String,
     pub end_date: String,
 }
@@ -137,7 +129,6 @@ impl PriceGainDataSpecBuilder {
             price_std_dev: 0.0,
             volume_mean: 0.0,
             volume_std_dev: 0.0,
-            positional_max_timescale: 1_000_000,
 
             start_date: "".to_string(),
             end_date: "".to_string(),
@@ -211,11 +202,6 @@ impl PriceGainDataSpecBuilder {
         self
     }
 
-    pub fn positional_max_timescale(mut self, positional_max_timescale: usize) -> Self {
-        self.positional_max_timescale = positional_max_timescale;
-        self
-    }
-
     pub fn start_date(mut self, start_date: &str) -> Self {
         self.start_date = start_date.to_string();
         self
@@ -242,7 +228,6 @@ impl PriceGainDataSpecBuilder {
             self.price_std_dev,
             self.volume_mean,
             self.volume_std_dev,
-            self.positional_max_timescale,
 
             self.start_date.clone(),
             self.end_date.clone(),

@@ -123,7 +123,7 @@ fn select_device() -> Device {
 fn initialize_model(
     args: &Args,
     spec: &LobTransDataSpec,
-) -> Result<(LobTransModel, Arc<LobTransBatcher>, PositionalEncoding), Box<dyn Error>> {
+) -> Result<(LobTransModel, Arc<LobTransBatcher>), Box<dyn Error>> {
     // Load experiment configuration
     let config = ExperimentConfig::load(format!("{}/config.json", args.artifacts_folder.to_string_lossy()).as_str())
         .expect("Config file present");
@@ -155,21 +155,12 @@ fn initialize_model(
     )
         .init(&device)
         .load_record(record); // Initialize model with loaded weights
-
-    let d_model = spec.token_size;
-    let n_tokens = spec.sequence_length;
-    let positional_max_timescale = spec.positional_max_timescale;
-    let positional_encoder = PositionalEncodingConfig::new(d_model)
-        .with_max_sequence_size(n_tokens)
-        .with_max_timescale(positional_max_timescale)
-        .init(&device);
     
-    Ok((model, batcher, positional_encoder))
+    Ok((model, batcher))
 }
 
 
 fn prepare_sample(
-    positional_encoder: Option<&PositionalEncoding>,
     queue: &VecDeque<IntervalExtraction>,
     spec: &LobTransDataSpec,
 ) -> Result<LobTransItem, Box<dyn Error>> {
@@ -223,47 +214,8 @@ fn prepare_sample(
         tokens.push(token);
     }
 
-    let final_tokens = if let Some(positional_encoder) = positional_encoder {
-        // build a tensor of [batch_size, n_tokens, d_model] with batch size 1 and then add
-        // positional encodings
-        let flat = tokens.into_iter().flatten().collect::<Vec<_>>();
-        assert_eq!(flat.len(), 1 * spec.sequence_length * spec.token_size);
-
-        let device = positional_encoder.devices()[0].clone();
-        let tensor = Tensor::<3, Float>::from_floats(
-            TensorData::new(flat, Shape::new([1, spec.sequence_length, spec.token_size])),
-            &device
-        );
-
-        // add positional encodings and divide by 2.0 to normalize
-        let tensor_with_positions = positional_encoder.forward(tensor).div_scalar(2.0);
-        let vec_with_positions = tensor_with_positions.to_data().iter::<f32>().collect::<Vec<_>>();
-        assert_eq!(vec_with_positions.len(), 1 * spec.sequence_length * spec.token_size);
-        let final_vector = vec_with_positions;
-
-        let nested_vec: Vec<Vec<f32>> = final_vector
-            .chunks(spec.token_size) // Group into chunks of size 'm'
-            .map(|chunk| chunk.to_vec())
-            .collect();
-
-        assert_eq!(nested_vec.len(), spec.sequence_length);
-        nested_vec
-    }
-    else {
-        tokens
-    };
-
-
-    //
-    // // println!("Nested shape [{}, {}]", nested_vec.len(), nested_vec[0].len());
-    //
-    // let sample = LobTransItem::new(
-    //     nested_vec,
-    //     0.0
-    // );
-
     let sample = LobTransItem::new(
-        final_tokens,
+        tokens,
         0.0
     );
 
@@ -274,7 +226,6 @@ fn prepare_sample(
 async fn inference(
     model: &LobTransModel,
     batcher: &Arc<LobTransBatcher>,
-    positional_encoder: Option<&PositionalEncoding>,
     spec: &LobTransDataSpec,
     queue: &VecDeque<IntervalExtraction>
 ) -> Result<bool, Box<dyn Error>> {
@@ -282,7 +233,6 @@ async fn inference(
 
     let mut samples: Vec<LobTransItem> = Vec::new();
     samples.push(prepare_sample(
-        positional_encoder,
         queue,
         spec
     )?);
@@ -325,7 +275,6 @@ async fn inference(
 async fn decode_data(
     model: &LobTransModel,
     batcher: &Arc<LobTransBatcher>,
-    positional_encoder: Option<&PositionalEncoding>,
     path: &PathBuf,
     extractor: &mut impl Extractor<IntervalExtraction>,
     spec: &LobTransDataSpec,
@@ -371,7 +320,6 @@ async fn decode_data(
                     let r = inference(
                         model,
                         batcher,
-                        positional_encoder,
                         spec,
                         &queue,
                     ).await?;
@@ -438,17 +386,10 @@ async fn main() -> Result<(), Box<dyn Error>>
 
     // let mut all_data: Vec<IntervalExtractionWithGain> = Vec::new();
     
-    let (model, batcher, positional_encoder) = initialize_model(&args, &spec)?;
+    let (model, batcher) = initialize_model(&args, &spec)?;
 
     // count model parameters
     println!("Model has {} parameters", model.num_params());
-
-    let positional_encoder = if args.with_positional_encoding {
-        Some(&positional_encoder)
-    }
-    else {
-        None
-    };
 
     for input in inputs {
         let mut extractor = IntervalExtractor::builder()
@@ -459,7 +400,6 @@ async fn main() -> Result<(), Box<dyn Error>>
         decode_data(
             &model,
             &batcher,
-            positional_encoder,
             &input,
             &mut extractor,
             &spec,
@@ -490,10 +430,6 @@ struct Args {
 
     #[arg(long)]
     artifacts_folder: PathBuf,
-
-    #[arg(long)]
-    with_positional_encoding: bool,
-
 
     #[arg()]
     inputs: Vec<PathBuf>,

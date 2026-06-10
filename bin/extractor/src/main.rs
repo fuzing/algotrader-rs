@@ -12,7 +12,6 @@ use extractors::{
 
 use burn::{
     prelude::*,
-    nn::{PositionalEncodingConfig, PositionalEncoding},
     tensor::{
         Device,
         DeviceConfig,
@@ -161,20 +160,6 @@ async fn convert_and_write_data(
     let d_model = patch_size * 4;
     println!("d_model: ---------------------------> {}", d_model);
 
-
-    // CPU based positional encoder
-    let mut device = Device::flex();
-    // let mut device =  Device::libtorch_cuda(burn::tensor::DeviceIndex::Default);
-
-    device
-        .configure(DeviceConfig::default().float_dtype(Elem::dtype()))
-        .unwrap();
-    let positional_encoder = PositionalEncodingConfig::new(d_model)
-        .with_max_sequence_size(n_tokens)
-        .with_max_timescale(args.positional_max_timescale)
-        .init(&device);
-
-
     let mut n_gains: usize = 0;
     let mut n_neutrals: usize = 0;
     let mut n_losses: usize = 0;
@@ -240,24 +225,8 @@ async fn convert_and_write_data(
 
         // build a tensor of [batch_size, n_tokens, d_model] with batch size 1 and then add
         // positional encodings
-        let flat = tokens.into_iter().flatten().collect::<Vec<_>>();
-        assert_eq!(flat.len(), 1 * n_tokens * d_model);
-
-        let mut final_vector = if args.with_positional_encodings {
-            // add positional encodings and divide by 2.0 to normalize
-            let tensor = Tensor::<3, Float>::from_floats(
-                TensorData::new(flat,Shape::new([1, n_tokens, d_model])),
-                &device
-            );
-
-            let tensor_with_positions = positional_encoder.forward(tensor).div_scalar(2.0);
-            let vec_with_positions = tensor_with_positions.to_data().iter::<StorageElem>().collect::<Vec<_>>();
-            assert_eq!(vec_with_positions.len(), 1 * n_tokens * d_model);
-            vec_with_positions
-        }
-        else {
-            flat
-        };
+        let mut final_vector = tokens.into_iter().flatten().collect::<Vec<_>>();
+        assert_eq!(final_vector.len(), 1 * n_tokens * d_model);
 
         // add gain as last position for vector
         final_vector.push(gain as StorageElem);
@@ -283,7 +252,6 @@ async fn convert_and_write_data(
         .price_std_dev(price_std_dev)
         .volume_mean(volume_mean)
         .volume_std_dev(volume_std_dev)
-        .positional_max_timescale(args.positional_max_timescale)
         .start_date(&args.start_date)
         .end_date(&args.end_date)
         .build();
@@ -426,12 +394,6 @@ struct Args {
     // number of intervals to include per patch
     #[arg(long)]
     patch_stride: usize,
-
-    #[arg(long)]
-    with_positional_encodings: bool,
-
-    #[arg(long)]
-    positional_max_timescale: usize,
 
     // start/end dates to extract from/to
     #[arg(long)]

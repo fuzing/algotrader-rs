@@ -175,7 +175,6 @@ async fn train(
 
     let spec = LobTransDataSpec::from_file(&spec_path).expect(&format!("Failed to load spec {}", &spec_path.to_str().unwrap()));
 
-
     // a reasonable heuristic for feedforward size is 4 x token_size
     let output_feed_forward_size = spec.token_size * 4;
 
