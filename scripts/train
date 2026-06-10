@@ -17,7 +17,7 @@ cargo run --bin train -- \
   --shuffle-seed=42 \
   --transformer-heads=8 \
   --transformer-layers=4 \
-  --output-feed-forward-size=1312 \
+  --output-feed-forward-size=1280 \
   --loss-weights=51.976,0.338,52.173 \
   --gain-threshold=0.08 \
   --loss-threshold=0.08 \
