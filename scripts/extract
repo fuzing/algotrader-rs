@@ -26,6 +26,13 @@
 #  --input=/run/media/peter/genetics/algotrader/data/${NAME}-train \
 #  --output=/run/media/peter/genetics/algotrader/data/${NAME}-train-shuffled
 #
+#echo "data file stats"
+#cargo run --bin data-file-stats --  \
+#  --gain-threshold=0.08 \
+#  --loss-threshold=0.08 \
+#  --input=/run/media/peter/genetics/algotrader/data/${NAME}-train-shuffled \
+
+
 
 NAME=COLM
 
@@ -53,4 +60,8 @@ cargo run --bin shuffle-data-file --  \
   --input=/run/media/peter/genetics/algotrader/data/${NAME}-train \
   --output=/run/media/peter/genetics/algotrader/data/${NAME}-train-shuffled
 
-
+echo "data file stats"
+cargo run --bin data-file-stats --  \
+  --gain-threshold=0.08 \
+  --loss-threshold=0.08 \
+  --input=/run/media/peter/genetics/algotrader/data/${NAME}-train-shuffled \
