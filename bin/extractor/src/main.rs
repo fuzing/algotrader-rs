@@ -135,15 +135,6 @@ async fn decode_data(
     Ok(all_results_mapped)
 }
 
-fn format_float(val: f64) -> String {
-    format!("{:.6}", val)
-    // format!("{}", val)
-    //     // .trim_end_matches('0')
-    //     .to_string()
-    // val.to_string()
-}
-
-
 async fn convert_and_write_data(
     args: &Args,
     stats: &DataStatistics,
@@ -230,18 +221,6 @@ async fn convert_and_write_data(
         // our label is found in the snapshot at the end of the prediction temporal window
         // let label = data[i + prediction_temporal_window - 1].trade_gain;
         let gain = data[i + prediction_temporal_window_size - 1].mid_point_gain;
-        let (label, repeats) = (gain as StorageElem, 1);
-            // if gain > args.gain_percentage {
-            //     n_gains += args.gain_repeats;
-            //     (2.0, args.gain_repeats)
-            // } else if gain > -args.loss_percentage {
-            //     n_neutrals += args.neutral_repeats;
-            //     (1.0, args.neutral_repeats)
-            // }
-            // else {
-            //     n_losses += args.loss_repeats;
-            //     (0.0, args.loss_repeats)
-            // };
 
         assert_eq!(bid_price_patches.len(), predicted_patches_per_item);
         assert_eq!(bid_price_patches.len(), n_tokens);
@@ -254,8 +233,6 @@ async fn convert_and_write_data(
                 ask_price_patches[i].clone(),
                 ask_volume_patches[i].clone(),
             ].concat();
-
-            // println!("token length {}", token.len());       // 160
 
             assert_eq!(token.len(), d_model);
             tokens.push(token);
@@ -282,23 +259,11 @@ async fn convert_and_write_data(
             flat
         };
 
-        // add label as last position for vector
-        final_vector.push(label);
-
-        // // format the line as a comma separated list of floats and write to the file
-        // let line = final_vector.into_iter().map(|v| format_float(v)).collect::<Vec<_>>();
-        // let line = line.join(",");
-        // // write the line to the file "repeats" times
-        // for _ in 0..repeats {
-        //     writeln!(csv_file, "{}", line)?;
-        // }
-        for _ in 0..repeats {
-            writer.write(&final_vector)?;
-        }
+        // add gain as last position for vector
+        final_vector.push(gain as StorageElem);
 
         // write to the data file
-
-
+        writer.write(&final_vector)?;
     }
 
     println!("Gains({n_gains}), Neutrals({n_neutrals}), Losses({n_losses})");
@@ -314,19 +279,11 @@ async fn convert_and_write_data(
         .prediction_intervals(args.prediction_intervals)
         .patch_intervals(args.patch_intervals)
         .patch_stride(args.patch_stride)
-        // .gain_percentage(args.gain_percentage)
-        // .loss_percentage(args.loss_percentage)
         .price_mean(price_mean)
         .price_std_dev(price_std_dev)
         .volume_mean(volume_mean)
         .volume_std_dev(volume_std_dev)
         .positional_max_timescale(args.positional_max_timescale)
-        // .gain_repeats(0)
-        // .neutral_repeats(0)
-        // .loss_repeats(0)
-        // .n_gains(n_gains)
-        // .n_neutrals(n_neutrals)
-        // .n_losses(n_losses)
         .start_date(&args.start_date)
         .end_date(&args.end_date)
         .build();
@@ -469,28 +426,6 @@ struct Args {
     // number of intervals to include per patch
     #[arg(long)]
     patch_stride: usize,
-
-
-    // Governs how the prediction is classified.
-    //   If future price >= current_price + gain_percentage then "buy"
-    //   If future price is in the band gain_percentage to loss_percentage then "neutral" (i.e. don't buy)
-    //   If future price is <= loss_percentage then "sell" (i.e. don't buy)
-    //  Use values such as 0.1 (0.1%), meaning gain of 0.1% at the end of the holding_time
-    //
-    // #[arg(long)]
-    // gain_percentage: f64,
-
-    // #[arg(long)]
-    // loss_percentage: f64,
-
-    // #[arg(long)]
-    // neutral_repeats: usize,
-
-    // #[arg(long)]
-    // gain_repeats: usize,
-
-    // #[arg(long)]
-    // loss_repeats: usize,
 
     #[arg(long)]
     with_positional_encodings: bool,

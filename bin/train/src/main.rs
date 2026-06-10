@@ -224,6 +224,8 @@ async fn train(
         .num_workers(4) // Parallel reading/parsing
         .build(dataset_test);
 
+    eprintln!("Loss Weights {:?}", &args.loss_weights);
+
     // Initialize model
     let model = LobTransModelConfig::new(
         spec.sequence_length,
