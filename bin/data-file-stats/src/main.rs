@@ -25,7 +25,6 @@ async fn main() -> Result<(), Box<dyn Error>>
     let n_items = reader.len();
     println!("{} Total items", n_items);
 
-
     let mut n_gains = 0;
     let mut n_neutrals = 0;
     let mut n_losses = 0;
@@ -52,10 +51,15 @@ async fn main() -> Result<(), Box<dyn Error>>
     // balanced formula for weights
     assert_eq!(n_gains + n_neutrals + n_losses, n_items);
     let n_classes = 3;
-    let loss_weight = n_items as f64 / (n_classes as f64 * n_losses as f64);
-    let neutral_weight = n_items as f64 / (n_classes as f64 * n_neutrals as f64);
-    let gain_weight = n_items as f64 / (n_classes as f64 * n_gains as f64);
-    println!("Balanced Formula Weights Matrix: [{:.4},{:.4},{:.4}]", loss_weight, neutral_weight, gain_weight);
+    let bf_loss_weight = n_items as f64 / (n_classes as f64 * n_losses as f64);
+    let bf_neutral_weight = n_items as f64 / (n_classes as f64 * n_neutrals as f64);
+    let bf_gain_weight = n_items as f64 / (n_classes as f64 * n_gains as f64);
+    println!("Balanced Formula Weights Matrix: [{:.3},{:.3},{:.3}]", bf_loss_weight, bf_neutral_weight, bf_gain_weight);
+
+    let if_loss_weight = n_items as f64 / n_losses as f64;
+    let if_neutral_weight = n_items as f64 / n_neutrals as f64;
+    let if_gain_weight = n_items as f64 / n_gains as f64;
+    println!("Inverse Frequency Weights Matrix: [{:.3},{:.3},{:.3}]", if_loss_weight, if_neutral_weight, if_gain_weight);
 
     Ok(())
 }
