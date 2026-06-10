@@ -314,19 +314,19 @@ async fn convert_and_write_data(
         .prediction_intervals(args.prediction_intervals)
         .patch_intervals(args.patch_intervals)
         .patch_stride(args.patch_stride)
-        .gain_percentage(args.gain_percentage)
-        .loss_percentage(args.loss_percentage)
+        // .gain_percentage(args.gain_percentage)
+        // .loss_percentage(args.loss_percentage)
         .price_mean(price_mean)
         .price_std_dev(price_std_dev)
         .volume_mean(volume_mean)
         .volume_std_dev(volume_std_dev)
         .positional_max_timescale(args.positional_max_timescale)
-        .gain_repeats(args.gain_repeats)
-        .neutral_repeats(args.neutral_repeats)
-        .loss_repeats(args.loss_repeats)
-        .n_gains(n_gains)
-        .n_neutrals(n_neutrals)
-        .n_losses(n_losses)
+        // .gain_repeats(0)
+        // .neutral_repeats(0)
+        // .loss_repeats(0)
+        // .n_gains(n_gains)
+        // .n_neutrals(n_neutrals)
+        // .n_losses(n_losses)
         .start_date(&args.start_date)
         .end_date(&args.end_date)
         .build();
@@ -477,20 +477,20 @@ struct Args {
     //   If future price is <= loss_percentage then "sell" (i.e. don't buy)
     //  Use values such as 0.1 (0.1%), meaning gain of 0.1% at the end of the holding_time
     //
-    #[arg(long)]
-    gain_percentage: f64,
+    // #[arg(long)]
+    // gain_percentage: f64,
 
-    #[arg(long)]
-    loss_percentage: f64,
+    // #[arg(long)]
+    // loss_percentage: f64,
 
-    #[arg(long)]
-    neutral_repeats: usize,
+    // #[arg(long)]
+    // neutral_repeats: usize,
 
-    #[arg(long)]
-    gain_repeats: usize,
+    // #[arg(long)]
+    // gain_repeats: usize,
 
-    #[arg(long)]
-    loss_repeats: usize,
+    // #[arg(long)]
+    // loss_repeats: usize,
 
     #[arg(long)]
     with_positional_encodings: bool,

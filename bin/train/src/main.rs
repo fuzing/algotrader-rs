@@ -179,7 +179,7 @@ async fn train(
     // a reasonable heuristic for feedforward size is 4 x token_size
     let output_feed_forward_size = spec.token_size * 4;
 
-    let full_dataset = LobTransDataset::new(dataset_path, spec.sequence_length, spec.token_size, 0.08, 0.08);
+    let full_dataset = LobTransDataset::new(dataset_path, spec.sequence_length, spec.token_size, args.gain_threshold, args.loss_threshold);
     let config = ExperimentConfig::new(
         // don't use the args passed to the program, use the 4x version from above
         // TransformerEncoderConfig::new(spec.token_size, args.output_feed_forward_size, args.transformer_heads, args.transformer_layers)
@@ -230,7 +230,7 @@ async fn train(
         spec.token_size,
         config.transformer.clone(),
         LobTransDataset::num_classes(),
-    ).with_loss_weights(Some(vec![1.0, 1.0, 1.0]),)
+    ).with_loss_weights(args.loss_weights.clone())
         .init(&strategy.main_device().clone().autodiff());
 
     // Initialize optimizer
@@ -334,6 +334,15 @@ struct Args {
 
     #[arg(long)]
     shuffle_seed: u64,
+
+    #[arg(long, value_delimiter = ',')]
+    loss_weights: Option<Vec<f32>>,
+
+    #[arg(long)]
+    gain_threshold: f32,
+
+    #[arg(long)]
+    loss_threshold: f32,
 
     #[arg(long)]
     transformer_heads: usize,

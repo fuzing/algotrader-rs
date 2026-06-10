@@ -21,9 +21,7 @@ pub struct LobTransDataSpec {
     pub lob_levels: usize,              // number of levels within the LOB to use for patches
     pub prediction_intervals: usize,    // number of intervals/snapshots to use for predictions
     pub patch_intervals: usize,         // number of intervals to use per patch
-    pub patch_stride: usize,            // number of intervals to skip for each patch (usually same as patch_intervals)
-    pub gain_percentage: f64,           // percentage gain to achieve by holding_time for "buy" recommendation
-    pub loss_percentage: f64,           // percentage loss to achieve by holding_time for "sell" recommendation
+    pub patch_stride: usize,            // number of intervals to skip for each patch (usually same as patch_intervals)S
     
     pub price_mean: f64,                // mean price for all of the samples
     pub price_std_dev: f64,             // price standard deviation
@@ -31,14 +29,6 @@ pub struct LobTransDataSpec {
     pub volume_std_dev: f64,            // volume standard deviation
 
     pub positional_max_timescale: usize,    // parameter for positional encoder
-
-    pub gain_repeats: usize,
-    pub neutral_repeats: usize,
-    pub loss_repeats: usize,
-
-    pub n_gains: usize,
-    pub n_neutrals: usize,
-    pub n_losses: usize,
 
     pub start_date: String,
     pub end_date: String,
@@ -56,8 +46,6 @@ impl LobTransDataSpec {
         prediction_intervals: usize,
         patch_intervals: usize,
         patch_stride: usize,
-        gain_percentage: f64,
-        loss_percentage: f64,
         
         price_mean: f64,
         price_std_dev: f64,
@@ -65,14 +53,6 @@ impl LobTransDataSpec {
         volume_std_dev: f64,
 
         positional_max_timescale: usize,
-
-        gain_repeats: usize,
-        neutral_repeats: usize,
-        loss_repeats: usize,
-
-        n_gains: usize,
-        n_neutrals: usize,
-        n_losses: usize,
 
         start_date: String,
         end_date: String,
@@ -88,8 +68,6 @@ impl LobTransDataSpec {
             prediction_intervals,
             patch_intervals,
             patch_stride,
-            gain_percentage,
-            loss_percentage,
             
             price_mean,
             price_std_dev,
@@ -97,14 +75,6 @@ impl LobTransDataSpec {
             volume_std_dev,
 
             positional_max_timescale,
-
-            gain_repeats,
-            neutral_repeats,
-            loss_repeats,
-
-            n_gains,
-            n_neutrals,
-            n_losses,
 
             start_date,
             end_date,
@@ -138,8 +108,6 @@ pub struct LobTransDataSpecBuilder {
     pub prediction_intervals: usize,    // number of intervals/snapshots to use for predictions
     pub patch_intervals: usize,         // number of intervals to use per patch
     pub patch_stride: usize,            // number of intervals to skip for each patch (usually same as patch_intervals)
-    pub gain_percentage: f64,           // percentage gain to achieve by holding_time for "buy" recommendation
-    pub loss_percentage: f64,           // percentage loss to achieve by holding_time for "sell" recommendation
 
     pub price_mean: f64,                // mean price for all of the samples
     pub price_std_dev: f64,             // price standard deviation
@@ -147,14 +115,6 @@ pub struct LobTransDataSpecBuilder {
     pub volume_std_dev: f64,            // volume standard deviation
 
     pub positional_max_timescale: usize,    // parameter for positional encoder
-
-    pub gain_repeats: usize,
-    pub neutral_repeats: usize,
-    pub loss_repeats: usize,
-
-    pub n_gains: usize,
-    pub n_neutrals: usize,
-    pub n_losses: usize,
 
     pub start_date: String,
     pub end_date: String,
@@ -173,21 +133,11 @@ impl LobTransDataSpecBuilder {
             prediction_intervals: 64,
             patch_intervals: 8,
             patch_stride: 8,
-            gain_percentage: 0.1,
-            loss_percentage: 0.1,
             price_mean: 0.0,
             price_std_dev: 0.0,
             volume_mean: 0.0,
             volume_std_dev: 0.0,
             positional_max_timescale: 1_000_000,
-
-            gain_repeats: 1,
-            neutral_repeats: 1,
-            loss_repeats: 1,
-
-            n_gains: 0,
-            n_neutrals: 0,
-            n_losses: 0,
 
             start_date: "".to_string(),
             end_date: "".to_string(),
@@ -240,15 +190,6 @@ impl LobTransDataSpecBuilder {
         self.patch_stride = patch_stride;
         self
     }
-    pub fn gain_percentage(mut self, gain_percentage: f64) -> Self {
-        self.gain_percentage = gain_percentage;
-        self
-    }
-
-    pub fn loss_percentage(mut self, loss_percentage: f64) -> Self {
-        self.loss_percentage = loss_percentage;
-        self
-    }
 
     pub fn price_mean(mut self, price_mean: f64) -> Self {
         self.price_mean = price_mean;
@@ -276,37 +217,6 @@ impl LobTransDataSpecBuilder {
     }
 
 
-    pub fn gain_repeats(mut self, gain_repeats: usize) -> Self {
-        self.gain_repeats = gain_repeats;
-        self
-    }
-
-    pub fn neutral_repeats(mut self, neutral_repeats: usize) -> Self {
-        self.neutral_repeats = neutral_repeats;
-        self
-    }
-
-    pub fn loss_repeats(mut self, loss_repeats: usize) -> Self {
-        self.loss_repeats = loss_repeats;
-        self
-    }
-
-
-    pub fn n_gains(mut self, n_gains: usize) -> Self {
-        self.n_gains = n_gains;
-        self
-    }
-
-    pub fn n_neutrals(mut self, n_neutrals: usize) -> Self {
-        self.n_neutrals = n_neutrals;
-        self
-    }
-
-    pub fn n_losses(mut self, n_losses: usize) -> Self {
-        self.n_losses = n_losses;
-        self
-    }
-
     pub fn start_date(mut self, start_date: &str) -> Self {
         self.start_date = start_date.to_string();
         self
@@ -328,21 +238,11 @@ impl LobTransDataSpecBuilder {
             self.prediction_intervals,
             self.patch_intervals,
             self.patch_stride,
-            self.gain_percentage,
-            self.loss_percentage,
             self.price_mean,
             self.price_std_dev,
             self.volume_mean,
             self.volume_std_dev,
             self.positional_max_timescale,
-
-            self.gain_repeats,
-            self.neutral_repeats,
-            self.loss_repeats,
-            
-            self.n_gains,
-            self.n_neutrals,
-            self.n_losses,
 
             self.start_date.clone(),
             self.end_date.clone(),

@@ -84,13 +84,13 @@ impl Dataset<PriceGainItem> for PriceGainDataset {
         // Last value from the row is the "label"
         let outcome = values.pop()?; // O(1)
         let label = if outcome >= self.gain_threshold {
-            2.0
+            2.0     // gain
         }
-        else if outcome > self.loss_threshold {
-            1.0
+        else if outcome > -self.loss_threshold {
+            1.0     // neutral
         }
         else {
-            0.0
+            0.0     // loss
         };
 
         // now arrange into [sequence_length, d_model]
