@@ -14,6 +14,11 @@
 #  --extraction-interval-nanos=100000000 \
 #  'KHC-XNAS.ITCH-2024-01-01 00:00:00 UTC-2024-12-31 23:59:59 UTC-mbo.dbn.zst'
 #
+#echo "data file stats"
+#cargo run --bin data-file-stats --  \
+#  --gain-threshold=0.08 \
+#  --loss-threshold=0.08 \
+#  --input=/run/media/peter/genetics/algotrader/data/${NAME}-train
 #
 #echo "Shuffling Data"
 #cargo run --bin shuffle-data-file --  \
@@ -21,37 +26,34 @@
 #  --input=/run/media/peter/genetics/algotrader/data/${NAME}-train \
 #  --output=/run/media/peter/genetics/algotrader/data/${NAME}-train-shuffled
 #
-#echo "data file stats"
-#cargo run --bin data-file-stats --  \
-#  --gain-threshold=0.08 \
-#  --loss-threshold=0.08 \
-#  --input=/run/media/peter/genetics/algotrader/data/${NAME}-train-shuffled \
+
 
 
 
 NAME=COLM
 
-echo "Extracting Data"
-cargo run --bin extractor --  \
-  --prediction-intervals=128 \
-  --patch-intervals=4 --patch-stride=4 \
-  --holding-time-seconds=5 \
-  --lob-levels=20 --pretty \
-  --start-date=2025-08-01 --end-date=2025-10-31 \
-  --output-data=/run/media/peter/genetics/algotrader/data/${NAME}-train \
-  --output-spec=/run/media/peter/genetics/algotrader/data/${NAME}-spec.json \
-  --extraction-interval-nanos=100000000 \
-  'COLM-XNAS.ITCH-2025-01-01 00:00:00 UTC-2025-12-31 23:59:59 UTC-mbo.dbn.zst'
-
-
-echo "Shuffling Data"
-cargo run --bin shuffle-data-file --  \
-  --seed=42 \
-  --input=/run/media/peter/genetics/algotrader/data/${NAME}-train \
-  --output=/run/media/peter/genetics/algotrader/data/${NAME}-train-shuffled
+#echo "Extracting Data"
+#cargo run --bin extractor --  \
+#  --prediction-intervals=128 \
+#  --patch-intervals=4 --patch-stride=4 \
+#  --holding-time-seconds=5 \
+#  --lob-levels=20 --pretty \
+#  --start-date=2025-08-01 --end-date=2025-10-31 \
+#  --output-data=/run/media/peter/genetics/algotrader/data/${NAME}-train \
+#  --output-spec=/run/media/peter/genetics/algotrader/data/${NAME}-spec.json \
+#  --extraction-interval-nanos=100000000 \
+#  'COLM-XNAS.ITCH-2025-01-01 00:00:00 UTC-2025-12-31 23:59:59 UTC-mbo.dbn.zst'
 
 echo "data file stats"
 cargo run --bin data-file-stats --  \
   --gain-threshold=0.08 \
   --loss-threshold=0.08 \
-  --input=/run/media/peter/genetics/algotrader/data/${NAME}-train-shuffled \
+  --input=/run/media/peter/genetics/algotrader/data/${NAME}-train
+
+
+#echo "Shuffling Data"
+#cargo run --bin shuffle-data-file --  \
+#  --seed=42 \
+#  --input=/run/media/peter/genetics/algotrader/data/${NAME}-train \
+#  --output=/run/media/peter/genetics/algotrader/data/${NAME}-train-shuffled
+#

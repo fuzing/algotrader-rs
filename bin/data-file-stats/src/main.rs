@@ -42,7 +42,7 @@ async fn main() -> Result<(), Box<dyn Error>>
             n_losses += 1;
         }
 
-        if (i % 1_000) == 0 {
+        if (i % 10_000) == 0 {
             println!("Processed {} of {}", i, n_items);
         }
     }
@@ -54,12 +54,25 @@ async fn main() -> Result<(), Box<dyn Error>>
     let bf_loss_weight = n_items as f64 / (n_classes as f64 * n_losses as f64);
     let bf_neutral_weight = n_items as f64 / (n_classes as f64 * n_neutrals as f64);
     let bf_gain_weight = n_items as f64 / (n_classes as f64 * n_gains as f64);
-    println!("Balanced Formula Weights Matrix: [{:.3},{:.3},{:.3}]", bf_loss_weight, bf_neutral_weight, bf_gain_weight);
+    println!("Inverse Frequency Weights Matrix: [{:.3},{:.3},{:.3}]", bf_loss_weight, bf_neutral_weight, bf_gain_weight);
 
+    // another kind
     let if_loss_weight = n_items as f64 / n_losses as f64;
     let if_neutral_weight = n_items as f64 / n_neutrals as f64;
     let if_gain_weight = n_items as f64 / n_gains as f64;
-    println!("Inverse Frequency Weights Matrix: [{:.3},{:.3},{:.3}]", if_loss_weight, if_neutral_weight, if_gain_weight);
+    println!("Simplified Inverse Frequency Weights Matrix: [{:.3},{:.3},{:.3}]", if_loss_weight, if_neutral_weight, if_gain_weight);
+
+    // log scaled inverse frequency
+    let lsln_loss_weight = (1.0 + (n_items as f64 / n_losses as f64)).ln();
+    let lsln_neutral_weight = (1.0 + (n_items as f64 / n_neutrals as f64)).ln();
+    let lsln_gain_weight = (1.0 + (n_items as f64 / n_gains as f64)).ln();
+    println!("Log Scaled Ln - Inverse Frequency Weights Matrix: [{:.3},{:.3},{:.3}]", lsln_loss_weight, lsln_neutral_weight, lsln_gain_weight);
+
+    // log scaled inverse frequency
+    let lslog10_loss_weight = 1.0 / (n_classes as f64 + n_losses as f64 / n_items as f64).log10();
+    let lslog10_neutral_weight = 1.0 / (n_classes as f64 + n_neutrals as f64 / n_items as f64).log10();
+    let lslog10_gain_weight = 1.0 / (n_classes as f64 + n_gains as f64 / n_items as f64).log10();
+    println!("Log Scaled Log10 - Inverse Frequency Weights Matrix: [{:.3},{:.3},{:.3}]", lslog10_loss_weight, lslog10_neutral_weight, lslog10_gain_weight);
 
     Ok(())
 }
