@@ -16,8 +16,8 @@ cargo run --bin extractor --  \
 
 echo "data file stats"
 cargo run --bin data-file-stats --  \
-  --gain-threshold=0.05 \
-  --loss-threshold=0.05 \
+  --gain-threshold=0.06 \
+  --loss-threshold=0.06 \
   --input=/run/media/peter/genetics/algotrader/data/${NAME}-train
 
 echo "Shuffling Data"

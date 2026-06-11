@@ -276,7 +276,7 @@ async fn train(
         .metric_train_numeric(LearningRateMetric::new())
         .with_file_checkpointer(CompactRecorder::new())
         .with_training_strategy(strategy.into())
-        .early_stopping(early_stopping)
+        // .early_stopping(early_stopping)
         .num_epochs(config.num_epochs)
         .summary();
 

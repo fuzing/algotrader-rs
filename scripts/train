@@ -12,11 +12,11 @@ cargo run --bin train -- \
   --spec-file=${NAME}-spec.json \
   --dataset-file=${NAME}-train-shuffled \
   --batch-size=64 \
-  --num-epochs=5 \
+  --num-epochs=8 \
   --dropout=0.1 \
   --shuffle-seed=42 \
-  --transformer-heads=12 \
-  --transformer-layers=12 \
+  --transformer-heads=16 \
+  --transformer-layers=16 \
   --output-feed-forward-size=960 \
   --loss-weights=53.024,1.038,56.968 \
   --gain-threshold=0.05 \
@@ -56,7 +56,20 @@ cargo run --bin train -- \
 
 # Training Results
 # Heads, Layers = (12,12)
+#| Split | Metric                             | Min.     | Epoch    | Max.     | Epoch    |
+#|-------|------------------------------------|----------|----------|----------|----------|
+#| Train | Accuracy                           | 68.996   | 1        | 87.141   | 5        |
+#| Train | Learning Rate                      | 2.938e-6 | 5        | 9.600e-6 | 1        |
+#| Train | Loss                               | 0.242    | 5        | 0.792    | 1        |
+#| Train | Precision @ Threshold(0.5) [Macro] | 36.218   | 1        | 38.061   | 5        |
+#| Train | Recall @ Threshold(0.5) [Macro]    | 68.164   | 1        | 97.481   | 5        |
+#| Valid | Accuracy                           | 70.952   | 1        | 87.272   | 5        |
+#| Valid | Loss                               | 0.219    | 5        | 0.547    | 1        |
+#| Valid | Precision @ Threshold(0.5) [Macro] | 36.854   | 1        | 38.004   | 5        |
+#| Valid | Recall @ Threshold(0.5) [Macro]    | 85.863   | 1        | 98.210   | 5        |
+# In band profit ($444) for 1 week
+
+# Training Results
+# Heads, Layers = (16,16)
 # In band profit ($a) for 1 week
-
-
 
