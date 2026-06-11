@@ -44,7 +44,7 @@ use burn::{
         Learner,
         SupervisedTraining,
         metric::{
-            classification::ClassificationMetricConfig,
+            // classification::ClassificationMetricConfig,
             AccuracyMetric, CudaMetric, IterationSpeedMetric, LearningRateMetric, LossMetric,
             PrecisionMetric, RecallMetric,
         }
@@ -260,7 +260,7 @@ async fn train(
         .metric_valid_numeric(RecallMetric::default())
         .metric_train_numeric(PrecisionMetric::default())
         .metric_valid_numeric(PrecisionMetric::default())
-        .metric_train_numeric(RecallMetric::new())
+        // .metric_train_numeric(RecallMetric::new())
 
         .metric_train_numeric(LearningRateMetric::new())
         .with_file_checkpointer(CompactRecorder::new())

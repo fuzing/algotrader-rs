@@ -24,7 +24,8 @@ cargo run --bin train -- \
   --artifacts-folder=/run/media/peter/genetics/algotrader/data/${NAME}-artifacts
 
 #  --loss-weights=7.442,0.694,7.124 \
-
+#  --loss-weights=1500.0,1.0,1500.0 \
+#  --loss-weights=1.0,25.0,1.0 \
 
 
 # COLM
