@@ -157,7 +157,9 @@ async fn convert_and_write_data(
 
     let predicted_patches_per_item = ((prediction_temporal_window_size - patch_temporal_window_size) / patch_temporal_stride) + 1;
     let n_tokens = predicted_patches_per_item;
+
     let patch_size = patch_temporal_window_size * lob_levels; //  + 2;
+
     // the model dimension is the sum of the sizes:  ask_price_patch size + ask_volume_patch_size + bid_price_patch size + bid_volume_patch_size
     println!("patch_size: ----------------------> {}", patch_size);
     let d_model = patch_size * 4;

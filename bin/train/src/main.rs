@@ -21,11 +21,16 @@ use dotenv::dotenv;
 
 use burn::{
     data::{
-        dataloader::{DataLoaderBuilder, DataLoader},
-        dataset::transform::SamplerDataset
+        dataloader::{DataLoaderBuilder, DataLoader, Dataset},
+        dataset::transform::{PartialDataset,SamplerDataset},
     },
     lr_scheduler::noam::NoamLrSchedulerConfig,
-    nn::{attention::SeqLengthOption, transformer::TransformerEncoderConfig},
+    nn::{
+        SwiGluConfig,
+        activation::ActivationConfig,
+        attention::SeqLengthOption,
+        transformer::TransformerEncoderConfig
+    },
     optim::{
         AdamConfig,
         decay::{
@@ -39,7 +44,9 @@ use burn::{
         Learner,
         SupervisedTraining,
         metric::{
+            classification::ClassificationMetricConfig,
             AccuracyMetric, CudaMetric, IterationSpeedMetric, LearningRateMetric, LossMetric,
+            PrecisionMetric, RecallMetric,
         }
     },
     tensor::{
@@ -50,10 +57,6 @@ use burn::{
     },
 };
 use std::sync::Arc;
-use burn::data::dataloader::Dataset;
-use burn::data::dataset::transform::PartialDataset;
-use burn::nn::activation::ActivationConfig;
-use burn::nn::SwiGluConfig;
 use ai_models::lob_trans::{
     data::{
         batcher::{LobTransBatcher, LobTransTrainingBatch},
@@ -208,7 +211,6 @@ async fn train(
         create_splits(full_dataset, (4,1,0));
 
 
-    // ---- Build DataLoader ----
     let batcher = LobTransBatcher::new();
 
     let dataloader_train: Arc<dyn DataLoader<LobTransTrainingBatch>> = DataLoaderBuilder::new(batcher.clone())
@@ -231,7 +233,8 @@ async fn train(
         spec.token_size,
         config.transformer.clone(),
         LobTransDataset::num_classes(),
-    ).with_loss_weights(args.loss_weights.clone())
+    )
+        .with_loss_weights(args.loss_weights.clone())
         .init(&strategy.main_device().clone().autodiff());
 
     // Initialize optimizer
@@ -252,6 +255,13 @@ async fn train(
         .metric_valid_numeric(LossMetric::new())
         .metric_train_numeric(AccuracyMetric::new())
         .metric_valid_numeric(AccuracyMetric::new())
+
+        .metric_train_numeric(RecallMetric::default())
+        .metric_valid_numeric(RecallMetric::default())
+        .metric_train_numeric(PrecisionMetric::default())
+        .metric_valid_numeric(PrecisionMetric::default())
+        .metric_train_numeric(RecallMetric::new())
+
         .metric_train_numeric(LearningRateMetric::new())
         .with_file_checkpointer(CompactRecorder::new())
         .with_training_strategy(strategy.into())

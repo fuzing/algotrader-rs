@@ -1,22 +1,17 @@
 #!/usr/bin/env bash
 # best profit 11-04 to 11-08 is $85.50
-#cargo run --bin historical-inference -- \
-#  --start-date=2024-12-01 --end-date=2024-12-07 \
-#  --spec-file=/run/media/peter/genetics/algotrader/data/KHC-spec.json \
-#  --artifacts-folder=/run/media/peter/genetics/algotrader/data/KHC-artifacts \
-# 'KHC-XNAS.ITCH-2024-01-01 00:00:00 UTC-2024-12-31 23:59:59 UTC-mbo.dbn.zst'
-
-#  --with-positional-encoding \
-#  --start-date=2024-11-04 --end-date=2024-11-08 \
-
-
 cargo run --bin historical-inference -- \
-  --start-date=2025-08-13 --end-date=2025-08-13 \
-  --spec-file=/run/media/peter/genetics/algotrader/data/COLM-spec.json \
-  --artifacts-folder=/run/media/peter/genetics/algotrader/data/COLM-artifacts \
- 'COLM-XNAS.ITCH-2025-01-01 00:00:00 UTC-2025-12-31 23:59:59 UTC-mbo.dbn.zst'
+  --start-date=2024-09-02 --end-date=2024-09-06 \
+  --spec-file=/run/media/peter/genetics/algotrader/data/KHC-spec.json \
+  --artifacts-folder=/run/media/peter/genetics/algotrader/data/KHC-artifacts \
+ 'KHC-XNAS.ITCH-2024-01-01 00:00:00 UTC-2024-12-31 23:59:59 UTC-mbo.dbn.zst'
 
 
-#  --start-date=2025-08-04 --end-date=2025-08-08 \
-#  --start-date=2025-08-11 --end-date=2025-08-11 \
+
+#cargo run --bin historical-inference -- \
+#  --start-date=2025-08-11 --end-date=2025-08-15 \
+#  --spec-file=/run/media/peter/genetics/algotrader/data/COLM-spec.json \
+#  --artifacts-folder=/run/media/peter/genetics/algotrader/data/COLM-artifacts \
+# 'COLM-XNAS.ITCH-2025-01-01 00:00:00 UTC-2025-12-31 23:59:59 UTC-mbo.dbn.zst'
+
 
