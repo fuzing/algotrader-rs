@@ -48,6 +48,12 @@ async fn main() -> Result<(), Box<dyn Error>>
     }
 
     println!("Total samples: {}", reader.len());
+    println!("Absolute => Gains: ({}).  Neutrals ({}).  Losses ({})", n_gains, n_neutrals, n_losses);
+    println!("Percentage => Gains: ({:.3}%).  Neutrals ({:.3}%).  Losses ({:.3}%)",
+             n_gains as f64 / n_items as f64 * 100.0,
+             n_neutrals as f64 / n_items as f64 * 100.00,
+             n_losses as f64 / n_items as f64 * 100.00
+    );
     // balanced formula for weights
     assert_eq!(n_gains + n_neutrals + n_losses, n_items);
     let n_classes = 3;

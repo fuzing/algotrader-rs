@@ -43,10 +43,13 @@ use burn::{
         ExecutionStrategy,
         Learner,
         SupervisedTraining,
+        StoppingCondition,
+        EarlyStoppingStrategy, MetricEarlyStoppingStrategy,
         metric::{
             // classification::ClassificationMetricConfig,
             AccuracyMetric, CudaMetric, IterationSpeedMetric, LearningRateMetric, LossMetric,
             PrecisionMetric, RecallMetric,
+            store::{Aggregate, Direction, Split},
         }
     },
     tensor::{
@@ -246,6 +249,14 @@ async fn train(
         .with_model_size(config.transformer.d_model)
         .init()?;
 
+    let early_stopping = MetricEarlyStoppingStrategy::new(
+        &LossMetric::new(),         // track validation loss
+        Aggregate::Mean,
+        Direction::Lowest,
+        Split::Valid,
+        StoppingCondition::NoImprovementSince { n_epochs: 2 }
+    );
+
     // Initialize learner
     let training = SupervisedTraining::new(artifact_path, dataloader_train, dataloader_test)
         .metric_train(CudaMetric::new())
@@ -265,6 +276,7 @@ async fn train(
         .metric_train_numeric(LearningRateMetric::new())
         .with_file_checkpointer(CompactRecorder::new())
         .with_training_strategy(strategy.into())
+        .early_stopping(early_stopping)
         .num_epochs(config.num_epochs)
         .summary();
 

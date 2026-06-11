@@ -180,10 +180,10 @@ fn prepare_sample(
         let mut ask_price_patch: Vec<StorageElem> = Vec::with_capacity(patch_size);
         let mut ask_volume_patch: Vec<StorageElem> = Vec::with_capacity(patch_size);
 
-        bid_price_patch.extend(vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Bid.value() as StorageElem]);
-        bid_volume_patch.extend(vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Bid.value() as StorageElem]);
-        ask_price_patch.extend(vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem]);
-        ask_volume_patch.extend(vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem]);
+        // bid_price_patch.extend(vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Bid.value() as StorageElem]);
+        // bid_volume_patch.extend(vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Bid.value() as StorageElem]);
+        // ask_price_patch.extend(vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem]);
+        // ask_volume_patch.extend(vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem]);
         
         for k in 0..spec.patch_intervals {
             for l in 0..spec.lob_levels {

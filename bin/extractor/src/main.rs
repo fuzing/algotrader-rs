@@ -159,16 +159,13 @@ async fn convert_and_write_data(
     let n_tokens = predicted_patches_per_item;
 
     // +2 if you're providing the patch "hints" of bid/ask side, and price/volume type
-    let patch_size = patch_temporal_window_size * lob_levels + 2;
+    let patch_size = patch_temporal_window_size * lob_levels; // + 2;
 
     // the model dimension is the sum of the sizes:  ask_price_patch size + ask_volume_patch_size + bid_price_patch size + bid_volume_patch_size
     println!("patch_size: ----------------------> {}", patch_size);
     let d_model = patch_size * 4;
     println!("d_model: ---------------------------> {}", d_model);
 
-    let mut n_gains: usize = 0;
-    let mut n_neutrals: usize = 0;
-    let mut n_losses: usize = 0;
 
     //
     // send it
@@ -188,10 +185,10 @@ async fn convert_and_write_data(
             let mut ask_price_patch: Vec<StorageElem> = Vec::with_capacity(patch_size);
             let mut ask_volume_patch: Vec<StorageElem> = Vec::with_capacity(patch_size);
 
-            bid_price_patch.extend(vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Bid.value() as StorageElem]);
-            bid_volume_patch.extend(vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Bid.value() as StorageElem]);
-            ask_price_patch.extend(vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem]);
-            ask_volume_patch.extend(vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem]);
+            // bid_price_patch.extend(vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Bid.value() as StorageElem]);
+            // bid_volume_patch.extend(vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Bid.value() as StorageElem]);
+            // ask_price_patch.extend(vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem]);
+            // ask_volume_patch.extend(vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem]);
 
             for k in 0..patch_temporal_window_size {
                 for l in 0..lob_levels {
@@ -250,7 +247,6 @@ async fn convert_and_write_data(
         }
     }
 
-    println!("Gains({n_gains}), Neutrals({n_neutrals}), Losses({n_losses})");
 
     // write the spec file
     let data_spec = LobTransDataSpecBuilder::new()
