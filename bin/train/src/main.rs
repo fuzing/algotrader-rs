@@ -256,11 +256,11 @@ async fn train(
         .metric_train_numeric(AccuracyMetric::new())
         .metric_valid_numeric(AccuracyMetric::new())
 
+        // .metric_train_numeric(RecallMetric::new())
         .metric_train_numeric(RecallMetric::default())
         .metric_valid_numeric(RecallMetric::default())
         .metric_train_numeric(PrecisionMetric::default())
         .metric_valid_numeric(PrecisionMetric::default())
-        // .metric_train_numeric(RecallMetric::new())
 
         .metric_train_numeric(LearningRateMetric::new())
         .with_file_checkpointer(CompactRecorder::new())
