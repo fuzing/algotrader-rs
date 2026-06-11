@@ -158,6 +158,7 @@ async fn convert_and_write_data(
     let predicted_patches_per_item = ((prediction_temporal_window_size - patch_temporal_window_size) / patch_temporal_stride) + 1;
     let n_tokens = predicted_patches_per_item;
 
+    // +2 if you're providing the patch "hints" of bid/ask side, and price/volume type
     let patch_size = patch_temporal_window_size * lob_levels + 2;
 
     // the model dimension is the sum of the sizes:  ask_price_patch size + ask_volume_patch_size + bid_price_patch size + bid_volume_patch_size
@@ -183,12 +184,13 @@ async fn convert_and_write_data(
         for j in (0..=(prediction_temporal_window_size - patch_temporal_window_size)).step_by(patch_temporal_stride) {
             // // create each patch - starting with each patch header value pair
             let mut bid_price_patch: Vec<StorageElem> = Vec::with_capacity(patch_size);
-            bid_price_patch.extend(vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Bid.value() as StorageElem]);
             let mut bid_volume_patch: Vec<StorageElem> = Vec::with_capacity(patch_size);
-            bid_volume_patch.extend(vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Bid.value() as StorageElem]);
             let mut ask_price_patch: Vec<StorageElem> = Vec::with_capacity(patch_size);
-            ask_price_patch.extend(vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem]);
             let mut ask_volume_patch: Vec<StorageElem> = Vec::with_capacity(patch_size);
+
+            bid_price_patch.extend(vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Bid.value() as StorageElem]);
+            bid_volume_patch.extend(vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Bid.value() as StorageElem]);
+            ask_price_patch.extend(vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem]);
             ask_volume_patch.extend(vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem]);
 
             for k in 0..patch_temporal_window_size {
