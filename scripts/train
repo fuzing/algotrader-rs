@@ -18,7 +18,7 @@ cargo run --bin train -- \
   --transformer-heads=8 \
   --transformer-layers=4 \
   --output-feed-forward-size=1280 \
-  --loss-weights=1500.0,1.0,1500.0 \
+  --loss-weights=1.0,25.0,1.0 \
   --gain-threshold=0.08 \
   --loss-threshold=0.08 \
   --artifacts-folder=/run/media/peter/genetics/algotrader/data/${NAME}-artifacts
@@ -55,3 +55,14 @@ cargo run --bin train -- \
 #| Valid | Recall @ Threshold(0.5) [Macro]    | 97.519   | 1        | 99.103   | 5        |
 #
 
+#| Split | Metric                             | Min.     | Epoch    | Max.     | Epoch    |
+#|-------|------------------------------------|----------|----------|----------|----------|
+#| Train | Accuracy                           | 98.034   | 1        | 98.919   | 5        |
+#| Train | Learning Rate                      | 2.544e-6 | 5        | 8.313e-6 | 1        |
+#| Train | Loss                               | 0.068    | 5        | 0.227    | 1        |
+#| Train | Precision @ Threshold(0.5) [Macro] | 35.238   | 2        | 37.951   | 5        |
+#| Train | Recall @ Threshold(0.5) [Macro]    | 97.657   | 1        | 99.154   | 5        |
+#| Valid | Accuracy                           | 97.542   | 2        | 98.109   | 4        |
+#| Valid | Loss                               | 0.068    | 5        | 0.132    | 1        |
+#| Valid | Precision @ Threshold(0.5) [Macro] | 34.086   | 1        | 37.350   | 4        |
+#| Valid | Recall @ Threshold(0.5) [Macro]    | 98.150   | 1        | 98.735   | 5        |
