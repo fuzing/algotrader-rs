@@ -31,3 +31,29 @@ cargo run --bin train -- \
 #Log Scaled Ln - Inverse Frequency Weights Matrix: [5.968,0.695,6.197]
 #Log Scaled Log10 - Inverse Frequency Weights Matrix: [2.094,1.662,2.095]
 
+# 1.0, 1.0, 1.0
+#| Split | Metric                             | Min.     | Epoch    | Max.     | Epoch    |
+#|-------|------------------------------------|----------|----------|----------|----------|
+#| Train | Accuracy                           | 93.417   | 1        | 96.637   | 2        |
+#| Train | Learning Rate                      | 1.458e-5 | 2        | 1.911e-5 | 1        |
+#| Train | Loss                               | 0.149    | 2        | 0.222    | 1        |
+#| Train | Precision @ Threshold(0.5) [Macro] | 90.340   | 2        | 93.208   | 1        |
+#| Train | Recall @ Threshold(0.5) [Macro]    | 45.892   | 1        | 48.720   | 2        |
+#| Valid | Accuracy                           | 96.856   | 1        | 96.856   | 2        |
+#| Valid | Loss                               | 0.136    | 2        | 0.144    | 1        |
+#| Valid | Precision @ Threshold(0.5) [Macro] | 87.847   | 2        | 96.856   | 1        |
+#| Valid | Recall @ Threshold(0.5) [Macro]    | 48.934   | 1        | 49.608   | 2        |
+
+
+# 129.931, 0.335, 163.375
+#| Split | Metric                             | Min.     | Epoch    | Max.     | Epoch    |
+#|-------|------------------------------------|----------|----------|----------|----------|
+#| Train | Accuracy                           | 18.994   | 1        | 30.582   | 2        |
+#| Train | Learning Rate                      | 1.458e-5 | 2        | 1.911e-5 | 1        |
+#| Train | Loss                               | 0.758    | 2        | 0.928    | 1        |
+#| Train | Precision @ Threshold(0.5) [Macro] | 33.310   | 1        | 34.979   | 2        |
+#| Train | Recall @ Threshold(0.5) [Macro]    | 43.974   | 1        | 56.370   | 2        |
+#| Valid | Accuracy                           | 25.325   | 1        | 29.954   | 2        |
+#| Valid | Loss                               | 0.687    | 2        | 0.793    | 1        |
+#| Valid | Precision @ Threshold(0.5) [Macro] | 35.020   | 1        | 35.053   | 2        |
+#| Valid | Recall @ Threshold(0.5) [Macro]    | 52.549   | 1        | 62.981   | 2        |

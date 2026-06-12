@@ -156,15 +156,15 @@ async fn convert_and_write_data(
     let volume_std_dev = stats.volume_std_dev;
 
     let predicted_patches_per_item = ((prediction_temporal_window_size - patch_temporal_window_size) / patch_temporal_stride) + 1;
-    let n_tokens = predicted_patches_per_item;
+    let sequence_length = predicted_patches_per_item * 2;       // 4 patches divided by 2 gives (price/volume)-bid and (price/volume)-ask
 
     // +2 if you're providing the patch "hints" of bid/ask side, and price/volume type
     let patch_size = patch_temporal_window_size * lob_levels; // + 2;
 
     // the model dimension is the sum of the sizes:  ask_price_patch size + ask_volume_patch_size + bid_price_patch size + bid_volume_patch_size
     println!("patch_size: ----------------------> {}", patch_size);
-    let d_model = patch_size * 4;
-    println!("d_model: ---------------------------> {}", d_model);
+    let token_size = patch_size * 2;       // a price patch and a volume patch
+    println!("token_size: ---------------------------> {}", token_size);
 
 
     //
@@ -216,25 +216,31 @@ async fn convert_and_write_data(
         let gain = data[i + prediction_temporal_window_size - 1].mid_point_gain;
 
         assert_eq!(bid_price_patches.len(), predicted_patches_per_item);
-        assert_eq!(bid_price_patches.len(), n_tokens);
 
-        let mut tokens: Vec<Vec<StorageElem>> = Vec::with_capacity(n_tokens);
-        for i in 0..n_tokens {
+        let mut tokens: Vec<Vec<StorageElem>> = Vec::with_capacity(sequence_length);
+        for i in 0..predicted_patches_per_item {
             let token = [
                 bid_price_patches[i].clone(),
                 bid_volume_patches[i].clone(),
+            ].concat();
+
+            assert_eq!(token.len(), token_size);
+            tokens.push(token);
+
+            let token = [
                 ask_price_patches[i].clone(),
                 ask_volume_patches[i].clone(),
             ].concat();
 
-            assert_eq!(token.len(), d_model);
+            assert_eq!(token.len(), token_size);
             tokens.push(token);
+
         }
 
-        // build a tensor of [batch_size, n_tokens, d_model] with batch size 1 and then add
+        // build a tensor of [batch_size, sequence_length, token_size] with batch size 1 and then add
         // positional encodings
         let mut final_vector = tokens.into_iter().flatten().collect::<Vec<_>>();
-        assert_eq!(final_vector.len(), 1 * n_tokens * d_model);
+        assert_eq!(final_vector.len(), 1 * sequence_length * token_size);
 
         // add gain as last position for vector
         final_vector.push(gain as StorageElem);
@@ -250,9 +256,9 @@ async fn convert_and_write_data(
 
     // write the spec file
     let data_spec = LobTransDataSpecBuilder::new()
-        .sequence_length(predicted_patches_per_item)
+        .sequence_length(sequence_length)
         .patch_size(patch_size)
-        .token_size(d_model)
+        .token_size(token_size)
         .extraction_interval_nanos(args.extraction_interval_nanos)
         .holding_time_seconds(args.holding_time_seconds)
         .lob_levels(args.lob_levels)

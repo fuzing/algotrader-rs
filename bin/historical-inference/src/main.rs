@@ -150,8 +150,11 @@ fn initialize_model(
     let model = LobTransModelConfig::new(
         spec.sequence_length,
         spec.token_size,
-        config.transformer.clone().with_dropout(0.0),           // override dropout for inference
         n_classes,
+        config.embedder.clone(),
+        config.transformer.clone().with_dropout(0.0),           // override dropout for inference
+        config.lstm.clone(),
+        config.mlp.clone(),
     )
         .init(&device)
         .load_record(record); // Initialize model with loaded weights
@@ -206,13 +209,20 @@ fn prepare_sample(
         ask_volume_patches.push(ask_volume_patch);
     }
 
-    assert_eq!(bid_price_patches.len(), spec.sequence_length);
+    let patches_per_item = spec.sequence_length / 2;
+    assert_eq!(bid_price_patches.len(), patches_per_item);
 
     let mut tokens = Vec::with_capacity(spec.sequence_length);
-    for i in 0..spec.sequence_length {
+    for i in 0..patches_per_item {
         let token = [
             bid_price_patches[i].clone(),
             bid_volume_patches[i].clone(),
+        ].concat();
+
+        assert_eq!(token.len(), spec.token_size);
+        tokens.push(token);
+
+        let token = [
             ask_price_patches[i].clone(),
             ask_volume_patches[i].clone(),
         ].concat();

@@ -191,7 +191,7 @@ async fn train(
     let full_dataset = LobTransDataset::new(dataset_path, spec.sequence_length, spec.token_size, args.gain_threshold, args.loss_threshold);
     let config = ExperimentConfig::new(
 
-        EmbedderConfig::new(spec.sequence_length, spec.token_size),
+        EmbedderConfig::new(spec.sequence_length, spec.token_size, spec.token_size),
 
         // TODO - test with variations of norm_first
         TransformerEncoderConfig::new(spec.token_size, transformer_feed_forward_size, args.transformer_heads, args.transformer_layers)
@@ -216,7 +216,7 @@ async fn train(
         //             nn.LayerNorm(lstm_hidden_dim),
         //             nn.Linear(lstm_hidden_dim, num_classes)
         //         )
-        MLPConfig::new(spec.token_size, 1024, 3),
+        MLPConfig::new(spec.token_size, spec.token_size * 4, 3),
 
         AdamConfig::new().with_weight_decay(Some(WeightDecayConfig::new(5e-5))),
         args.batch_size,         // batch size
