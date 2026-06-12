@@ -24,5 +24,7 @@ pub struct ExperimentConfig {
     pub device_seed: u64,
     pub shuffle_seed: u64,
     pub num_epochs: usize,
+    pub lstm_layers: usize,
+    pub lstm_hidden_size: usize,
 }
 

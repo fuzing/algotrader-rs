@@ -151,6 +151,7 @@ fn initialize_model(
         spec.sequence_length,
         spec.token_size,
         n_classes,
+        config.lstm_layers,
         config.embedder.clone(),
         config.transformer.clone().with_dropout(0.0),           // override dropout for inference
         config.lstm.clone(),

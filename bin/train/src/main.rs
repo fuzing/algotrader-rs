@@ -191,7 +191,7 @@ async fn train(
 
     let full_dataset = LobTransDataset::new(dataset_path, spec.sequence_length, spec.token_size, args.gain_threshold, args.loss_threshold);
 
-    let d_model = spec.token_size / 2;
+    let d_model = spec.token_size * 2;
 
     let config = ExperimentConfig::new(
 
@@ -212,7 +212,7 @@ async fn train(
         //             batch_first=True,
         //             dropout=0.1 if num_lstm_layers > 1 else 0.0
         //         )
-        LstmConfig::new(d_model, 64, false)
+        LstmConfig::new(d_model, d_model, false)
             .with_batch_first(true),
 
         // TODO - check / change??
@@ -227,6 +227,8 @@ async fn train(
         args.device_seed,         // shuffle seed
         args.shuffle_seed,         // shuffle seed
         args.num_epochs,          // number of epochs
+        args.lstm_layers,
+        args.lstm_hidden_size,
     );
 
     create_artifact_dir(artifact_path);
@@ -260,13 +262,15 @@ async fn train(
         .build(dataset_test);
 
     eprintln!("Loss Weights {:?}", &args.loss_weights);
+    // eprintln!("LSTM config {}", &config.lstm);
 
     // Initialize model
     let model = LobTransModelConfig::new(
         spec.sequence_length,
         spec.token_size,
         LobTransDataset::num_classes(),
-
+        config.lstm_layers,
+        config.lstm_hidden_size,
         config.embedder.clone(),
         config.transformer.clone(),
         config.lstm.clone(),
@@ -411,6 +415,12 @@ struct Args {
 
     #[arg(long)]
     transformer_layers: usize,
+
+    #[arg(long)]
+    lstm_layers: usize,
+
+    #[arg(long)]
+    lstm_hidden_size: usize,
 
     #[arg(long)]
     artifacts_folder: String,

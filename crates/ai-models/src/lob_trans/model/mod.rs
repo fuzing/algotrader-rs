@@ -43,6 +43,8 @@ pub struct LobTransModelConfig {
     token_size: usize,             // model embedding size
     n_classes: usize,
     loss_weights: Option<Vec<f32>>,
+    lstm_layers: usize,
+    lstm_hidden_size: usize,
 
     embedder: EmbedderConfig,
     transformer: TransformerEncoderConfig,
@@ -57,6 +59,8 @@ pub struct LobTransModel {
     token_size: usize,
     n_classes: usize,
     loss_weights: Option<Vec<f32>>,
+    lstm_layers: usize,
+    lstm_hidden_size: usize,
 
     embedder: Embedder,
     transformer: TransformerEncoder,
@@ -70,7 +74,7 @@ impl LobTransModelConfig {
     pub fn init(&self, device: &Device) -> LobTransModel {
         let embedder = self.embedder.init(&device);
         let transformer = self.transformer.init(device);
-        let lstm = (0..6).map(|index| {
+        let lstm = (0..self.lstm_layers).map(|index| {
             self.lstm.init(&device)
         }).collect::<Vec<_>>();
         let output = self.mlp.init(device);
@@ -80,6 +84,8 @@ impl LobTransModelConfig {
             token_size: self.token_size,
             n_classes: self.n_classes,
             loss_weights: self.loss_weights.clone(),
+            lstm_layers: self.lstm_layers,
+            lstm_hidden_size: self.lstm_hidden_size,
 
             embedder,
             transformer,
@@ -105,35 +111,54 @@ impl LobTransModel {
         // formulate the embedding tokens
         let x = self.embedder.forward(tokens);
 
+        // eprintln!("Transformer embeddings shape {}", x.shape());
+
         // through the transformer
         let x = self
             .transformer
             .forward(TransformerEncoderInput::new(x));
 
+        // eprintln!("Transformer output shape {}", x.shape());
+
         // we are only interested in the class token from the transformer output
-        // let encoded_class = encoded.slice([0..batch_size, 0..1, 0..token_size]);
         let x = x.slice([0..batch_size, 0..1]);
 
-        // let (x, lstm_state) = self.lstm[0].forward(x, None);
+        // eprintln!("LSTM input shape {}", x.shape());
+
+        // through the lstm layers
+        let mut x = x;
+        for layer in self.lstm.iter() {
+            let (result, f) = layer.forward(x, None);
+            x = result;
+        }
+
+        // eprintln!("LSTM output shape {}", x.shape());
 
         // through the output linear layer
         let x = self.output.forward(x);
 
+        // eprintln!("MLP output shape {}", x.shape());
+        // eprintln!("MLP output {}", x);
+
         // classify, using only the class token
-        let output_classification = x
+        let x = x
             // .slice([0..batch_size, 0..1, 0..d_model])
             .reshape([batch_size, self.n_classes]);
 
+        // eprintln!("Classification shape {}", x.shape());
+        // eprintln!("Classification {}", x);
+        // panic!("yep");
+
         let loss = CrossEntropyLossConfig::new()
             .with_weights(self.loss_weights.clone())
-            .init(&output_classification.device())
-            .forward(output_classification.clone(), labels.clone());
+            .init(&x.device())
+            .forward(x.clone(), labels.clone());
 
 
         // Return the output and loss
         ClassificationOutput {
             loss,
-            output: output_classification,
+            output: x,
             targets: labels,
         }
 
@@ -159,21 +184,24 @@ impl LobTransModel {
             .forward(TransformerEncoderInput::new(x));
 
         // we are only interested in the class token from the transformer output
-        // let encoded_class = encoded.slice([0..batch_size, 0..1, 0..token_size]);
         let x = x.slice([0..batch_size, 0..1]);
 
-        // through the lstm
-        // let (x, lstm_state) = self.lstm[0].forward(encoded_class, None);
+        // through the lstm layers
+        let mut x = x;
+        for layer in self.lstm.iter() {
+            let (result, _) = layer.forward(x, None);
+            x = result;
+        }
 
         // through the output linear layer
         let x = self.output.forward(x);
 
         // classify, using only the class token
-        let output_classification = x
+        let x = x
             // .slice([0..batch_size, 0..1, 0..d_model])
             .reshape([batch_size, self.n_classes]);
 
-        softmax(output_classification, 1)
+        softmax(x, 1)
     }
 }
 

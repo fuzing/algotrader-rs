@@ -8,13 +8,7 @@ use burn::{
     module::{
         Module, ModuleDisplay, Content, DisplaySettings, Initializer, Param,
     },
-    nn::{
-        conv::{
-            Conv2dConfig, Conv2d,
-        },
-        PaddingConfig2d,
-        LinearConfig, Linear,
-    },
+    nn::{LinearConfig, Linear},
     config::Config,
     prelude::*,
     tensor::{Distribution},
@@ -66,15 +60,6 @@ impl Embedder {
         d_model: usize,             // size of model after linear stage
     ) -> Self {
 
-        //
-        // let conv = Conv2dConfig::new(
-        //     [4,token_size],                 // input/output channel size
-        //     [patch_size, patch_size],
-        // )
-        //     .with_stride([patch_size, patch_size])
-        //     .with_padding(PaddingConfig2d::Valid)
-        //     .init(device);
-
         let linear = LinearConfig::new(token_size, d_model).init(device);
 
         // only 1 class token (will be expanded/duplicated in model)
@@ -91,7 +76,6 @@ impl Embedder {
             sequence_length,
             token_size,
             d_model,
-            // conv,
             linear,
             class_tokens,
             positional_embeddings,
@@ -102,21 +86,22 @@ impl Embedder {
         let [batch_size, sequence_length, token_size] = tokens.dims();
 
         // projection
-        let projection = self.linear.forward(tokens);
+        let x = self.linear.forward(tokens);
 
         // expand the class tokens
         let class_tokens = self.class_tokens.val().expand([batch_size as i32, -1, -1]);
 
         // prepend the class tokens
-        let tokens_with_class = Tensor::cat(vec![class_tokens, projection], 1);
-        // let tokens_with_class = Tensor::cat(vec![class_tokens, transposed], 1);
+        let x = Tensor::cat(vec![class_tokens, x], 1);
 
         // add the positional encoding
-        let tokens_with_class_and_positional_encoding = tokens_with_class.add(self.positional_embeddings.val());
-        // TODO - PMB - should we divide by 2 or not?
+        let x = x.add(self.positional_embeddings.val());
+
+        // divide by 2 to normalize
+        let x = x.div_scalar(2.0);
 
         // and return that
-        tokens_with_class_and_positional_encoding
+        x
     }
 }
 
