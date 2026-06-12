@@ -21,6 +21,7 @@ use burn::{
         loss::CrossEntropyLossConfig,
         transformer::{TransformerEncoder, TransformerEncoderConfig, TransformerEncoderInput},
         conv::{Conv2dConfig, Conv2d},
+        lstm::{LstmConfig, Lstm},
     },
     prelude::*,
     tensor::{
@@ -45,6 +46,7 @@ pub struct LobTransModelConfig {
 
     embedder: EmbedderConfig,
     transformer: TransformerEncoderConfig,
+    lstm: LstmConfig,
     mlp: MLPConfig,
 }
 
@@ -58,6 +60,7 @@ pub struct LobTransModel {
 
     embedder: Embedder,
     transformer: TransformerEncoder,
+    lstm: Lstm,
     output: MLP,
 }
 
@@ -67,6 +70,7 @@ impl LobTransModelConfig {
     pub fn init(&self, device: &Device) -> LobTransModel {
         let embedder = self.embedder.init(&device);
         let transformer = self.transformer.init(device);
+        let lstm = self.lstm.init(&device);
         let output = self.mlp.init(device);
 
         LobTransModel {
@@ -77,6 +81,7 @@ impl LobTransModelConfig {
 
             embedder,
             transformer,
+            lstm,
             output,
         }
     }

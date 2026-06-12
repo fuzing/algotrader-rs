@@ -22,27 +22,21 @@ use burn::{
 
 #[derive(Config, Debug)]
 pub struct EmbedderConfig {
-    // pub sequence_length: usize,
-    // pub token_size: usize,
-    pub patch_size: usize,
+    pub sequence_length: usize,
+    pub token_size: usize,
+    pub d_model: usize,                 // size of model after linear stage
 }
 
 
 #[derive(Module, Debug)]
 #[module(custom_display)]
 pub struct Embedder {
-    // pub sequence_length: usize,
-    // pub token_size: usize,
-    //
-    // // convolution
-    // conv: Conv2d,
+    pub sequence_length: usize,
+    pub token_size: usize,
+    pub d_model: usize,
 
-
-    patch_width: usize,
-    patch_dim: usize,
-    num_patches: usize,
-
-
+    // input linear layer
+    linear: Linear,
 
     // [batch_size, class_token]
     class_tokens: Param<Tensor<3>>,
@@ -58,6 +52,7 @@ impl EmbedderConfig {
             device,
             self.sequence_length,
             self.token_size,
+            self.d_model,
         )
     }
 }
@@ -66,16 +61,11 @@ impl EmbedderConfig {
 impl Embedder {
     pub fn new(
         device: &Device,
-        // sequence_length: usize,
-        // token_size: usize,
-        lob_depth: usize,
-        window_size: usize,
-        patch_width: usize,
-        d_model: usize,
+        sequence_length: usize,     // the total number of patch-pairs
+        token_size: usize,          // each token should be the size of 2 patches (i.e. price/volume)
+        d_model: usize,             // size of model after linear stage
     ) -> Self {
 
-        // // TODO - get this in here somehow (hard coded at 4 channels * 15 values *
-        // let patch_size = 60;
         //
         // let conv = Conv2dConfig::new(
         //     [4,token_size],                 // input/output channel size
@@ -85,55 +75,40 @@ impl Embedder {
         //     .with_padding(PaddingConfig2d::Valid)
         //     .init(device);
 
-        // calculate a projection size of a flattened patch (2 channels * patch_height * patch_width)
-        let patch_dim = 2 * lob_depth * patch_width;
-        let num_patches = ;
-
-
+        let linear = LinearConfig::new(token_size, d_model).init(device);
 
         // only 1 class token (will be expanded/duplicated in model)
         let class_tokens = Param::from_tensor(
-            Tensor::random([1, 1, token_size], Distribution::default(), device)
+            Tensor::random([1, 1, d_model], Distribution::default(), device)
         );
 
         // learnable position encodings
         let positional_embeddings = Param::from_tensor(
-            Tensor::random([1, sequence_length + 1, token_size], Distribution::default(), device)
+            Tensor::random([1, sequence_length + 1, d_model], Distribution::default(), device)
         );
 
         Self {
+            sequence_length,
+            token_size,
+            d_model,
             // conv,
-            // sequence_length,
-            // token_size,
-
-            patch_size,
-
-
+            linear,
             class_tokens,
             positional_embeddings,
         }
     }
 
     pub fn forward(&self, tokens: Tensor<3>) -> Tensor<3> {
-        // TODO - get this in here somehow
-        // let batch_size = 64;
         let [batch_size, sequence_length, token_size] = tokens.dims();
-        // let [batch_size, sequence_length, token_size] = tokens.dims();
-        //
-        //
-        // // perform convolution
-        // let patch_embeddings = self.conv.forward(tokens);
-        // let flattened = patch_embeddings.flatten(2,-1);
-        // // transpose is performed with a permute in Burn AI
-        // let transposed = flattened.permute([0,2,1]);
 
+        // projection
+        let projection = self.linear.forward(tokens);
 
-        // // expand the class tokens
+        // expand the class tokens
         let class_tokens = self.class_tokens.val().expand([batch_size as i32, -1, -1]);
 
-
         // prepend the class tokens
-        let tokens_with_class = Tensor::cat(vec![class_tokens, tokens], 1);
+        let tokens_with_class = Tensor::cat(vec![class_tokens, projection], 1);
         // let tokens_with_class = Tensor::cat(vec![class_tokens, transposed], 1);
 
         // add the positional encoding

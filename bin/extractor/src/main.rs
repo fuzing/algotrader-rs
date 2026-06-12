@@ -204,7 +204,7 @@ async fn convert_and_write_data(
             assert_eq!(ask_price_patch.len(), patch_size);
             assert_eq!(ask_volume_patch.len(), patch_size);
 
-            // add patches
+            // add the 4 patches
             bid_price_patches.push(bid_price_patch);
             bid_volume_patches.push(bid_volume_patch);
             ask_price_patches.push(ask_price_patch);

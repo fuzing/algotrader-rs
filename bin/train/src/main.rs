@@ -60,6 +60,7 @@ use burn::{
     },
 };
 use std::sync::Arc;
+use burn::nn::LstmConfig;
 use ai_models::lob_trans::{
     data::{
         batcher::{LobTransBatcher, LobTransTrainingBatch},
@@ -199,6 +200,22 @@ async fn train(
             .with_dropout(args.dropout),
             /*.with_activation(ActivationConfig::SwiGlu(SwiGluConfig::new())),*/
 
+        // TODO - change number of hidden?
+        //        self.lstm = nn.LSTM(
+        //             input_size=d_model,
+        //             hidden_size=lstm_hidden_dim,
+        //             num_layers=num_lstm_layers,
+        //             batch_first=True,
+        //             dropout=0.1 if num_lstm_layers > 1 else 0.0
+        //         )
+        LstmConfig::new(spec.token_size, 64, false)
+            .with_batch_first(true),
+
+        // TODO - check / change??
+        //        self.mlp_head = nn.Sequential(
+        //             nn.LayerNorm(lstm_hidden_dim),
+        //             nn.Linear(lstm_hidden_dim, num_classes)
+        //         )
         MLPConfig::new(spec.token_size, 1024, 3),
 
         AdamConfig::new().with_weight_decay(Some(WeightDecayConfig::new(5e-5))),
@@ -246,6 +263,7 @@ async fn train(
 
         config.embedder.clone(),
         config.transformer.clone(),
+        config.lstm.clone(),
         config.mlp.clone(),
     )
         .with_loss_weights(args.loss_weights.clone())

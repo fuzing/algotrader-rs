@@ -4,7 +4,7 @@ use burn::{
     optim::AdamConfig,
     prelude::*,
 };
-
+use burn::nn::LstmConfig;
 use super::model::{
     embedder::EmbedderConfig,
     mlp::MLPConfig,
@@ -17,6 +17,7 @@ use super::model::{
 pub struct ExperimentConfig {
     pub embedder: EmbedderConfig,
     pub transformer: TransformerEncoderConfig,
+    pub lstm: LstmConfig,
     pub mlp: MLPConfig,
     pub optimizer: AdamConfig,
     pub batch_size: usize,
