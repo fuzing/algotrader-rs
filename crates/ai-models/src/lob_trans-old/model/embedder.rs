@@ -13,7 +13,6 @@ use burn::{
             Conv2dConfig, Conv2d,
         },
         PaddingConfig2d,
-        LinearConfig, Linear,
     },
     config::Config,
     prelude::*,
@@ -22,27 +21,19 @@ use burn::{
 
 #[derive(Config, Debug)]
 pub struct EmbedderConfig {
-    // pub sequence_length: usize,
-    // pub token_size: usize,
-    pub patch_size: usize,
+    pub sequence_length: usize,
+    pub token_size: usize,
 }
 
 
 #[derive(Module, Debug)]
 #[module(custom_display)]
 pub struct Embedder {
-    // pub sequence_length: usize,
-    // pub token_size: usize,
-    //
-    // // convolution
-    // conv: Conv2d,
+    pub sequence_length: usize,
+    pub token_size: usize,
 
-
-    patch_width: usize,
-    patch_dim: usize,
-    num_patches: usize,
-
-
+    // convolution
+    conv: Conv2d,
 
     // [batch_size, class_token]
     class_tokens: Param<Tensor<3>>,
@@ -66,29 +57,20 @@ impl EmbedderConfig {
 impl Embedder {
     pub fn new(
         device: &Device,
-        // sequence_length: usize,
-        // token_size: usize,
-        lob_depth: usize,
-        window_size: usize,
-        patch_width: usize,
-        d_model: usize,
+        sequence_length: usize,
+        token_size: usize,
     ) -> Self {
 
-        // // TODO - get this in here somehow (hard coded at 4 channels * 15 values *
-        // let patch_size = 60;
-        //
-        // let conv = Conv2dConfig::new(
-        //     [4,token_size],                 // input/output channel size
-        //     [patch_size, patch_size],
-        // )
-        //     .with_stride([patch_size, patch_size])
-        //     .with_padding(PaddingConfig2d::Valid)
-        //     .init(device);
+        // TODO - get this in here somehow (hard coded at 4 channels * 15 values *
+        let patch_size = 60;
 
-        // calculate a projection size of a flattened patch (2 channels * patch_height * patch_width)
-        let patch_dim = 2 * lob_depth * patch_width;
-        let num_patches = ;
-
+        let conv = Conv2dConfig::new(
+            [4,token_size],                 // input/output channel size
+            [patch_size, patch_size],
+        )
+            .with_stride([patch_size, patch_size])
+            .with_padding(PaddingConfig2d::Valid)
+            .init(device);
 
 
         // only 1 class token (will be expanded/duplicated in model)
@@ -102,13 +84,9 @@ impl Embedder {
         );
 
         Self {
-            // conv,
-            // sequence_length,
-            // token_size,
-
-            patch_size,
-
-
+            conv,
+            sequence_length,
+            token_size,
             class_tokens,
             positional_embeddings,
         }

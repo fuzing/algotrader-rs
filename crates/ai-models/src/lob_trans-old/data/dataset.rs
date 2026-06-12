@@ -20,7 +20,6 @@ use data_handlers::{
 
 #[derive(new, Clone, Debug)]
 pub struct LobTransItem {
-    // should look like an image, which would normally be [channels, height, width]
     pub features: Vec<Vec<f32>>,        // [sequence_length, token_size]
     pub label: f32,
 }

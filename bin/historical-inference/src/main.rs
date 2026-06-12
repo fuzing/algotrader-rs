@@ -184,9 +184,9 @@ fn prepare_sample(
         // bid_volume_patch.extend(vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Bid.value() as StorageElem]);
         // ask_price_patch.extend(vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem]);
         // ask_volume_patch.extend(vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem]);
-        
-        for k in 0..spec.patch_intervals {
-            for l in 0..spec.lob_levels {
+
+        for l in 0..spec.lob_levels {
+            for k in 0..spec.patch_intervals {
                 bid_price_patch.push(((queue[j + k].bids[l].price - spec.price_mean) / spec.price_std_dev) as StorageElem);
                 bid_volume_patch.push(((queue[j + k].bids[l].volume as f64 - spec.volume_mean) / spec.volume_std_dev) as StorageElem);
                 ask_price_patch.push(((queue[j + k].asks[l].price - spec.price_mean) / spec.price_std_dev) as StorageElem);

@@ -190,8 +190,8 @@ async fn convert_and_write_data(
             // ask_price_patch.extend(vec![LobTransPatchType::Price.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem]);
             // ask_volume_patch.extend(vec![LobTransPatchType::Volume.value() as StorageElem, LobTransPatchSide::Ask.value() as StorageElem]);
 
-            for k in 0..patch_temporal_window_size {
-                for l in 0..lob_levels {
+            for l in 0..lob_levels {
+                for k in 0..patch_temporal_window_size {
                     bid_price_patch.push(((data[i + j + k].bids[l].price - price_mean) / price_std_dev) as StorageElem);
                     bid_volume_patch.push(((data[i + j + k].bids[l].volume as f64 - volume_mean) / volume_std_dev) as StorageElem);
                     ask_price_patch.push(((data[i + j + k].asks[l].price - price_mean) / price_std_dev) as StorageElem);
