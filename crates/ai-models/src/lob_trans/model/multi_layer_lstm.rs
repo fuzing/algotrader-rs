@@ -236,3 +236,74 @@ impl MultiLayerLstm {
 //     }
 // }
 
+
+
+
+//use burn::{
+//     nn::rnn::{Lstm, LstmConfig, RnnState},
+//     tensor::{backend::Backend, Tensor},
+//     module::Module,
+// };
+//
+// #[derive(Module, Debug, Clone)]
+// pub struct MultiLayerLstm<B: Backend> {
+//     layers: Vec<Lstm<B>>,
+//     num_layers: usize,
+//     hidden_size: usize,
+// }
+//
+// impl<B: Backend> MultiLayerLstm<B> {
+//     pub fn new(
+//         input_size: usize,
+//         hidden_size: usize,
+//         num_layers: usize,
+//         dropout: f64,
+//         device: &B::Device,
+//     ) -> Self {
+//         let mut layers = Vec::with_capacity(num_layers);
+//
+//         for i in 0..num_layers {
+//             let current_input_size = if i == 0 { input_size } else { hidden_size };
+//             let config = LstmConfig::new(current_input_size, hidden_size)
+//                 .with_dropout(if i == num_layers - 1 { 0.0 } else { dropout });
+//
+//             layers.push(config.init(device));
+//         }
+//
+//         Self {
+//             layers,
+//             num_layers,
+//             hidden_size,
+//         }
+//     }
+//
+//     /// Forward pass matching PyTorch's `(output, (h_n, c_n))` signature
+//     pub fn forward(
+//         &self,
+//         input: Tensor<B, 3>,
+//         state: Option<RnnState<B>>,
+//     ) -> (Tensor<B, 3>, RnnState<B>) {
+//         let mut current_input = input;
+//         let mut next_states = Vec::with_capacity(self.num_layers);
+//
+//         // Unpack existing states or initialize empty ones
+//         let mut states = match state {
+//             Some(s) => s.states,
+//             None => vec![(None, None); self.num_layers],
+//         };
+//
+//         for i in 0..self.num_layers {
+//             let (h_state, c_state) = states[i].clone();
+//
+//             // Lstm returns: (whole_sequence_output, final_layer_state)
+//             let (output, layer_state) = self.layers[i].forward(current_input.clone(), h_state, c_state);
+//
+//             next_states.push((layer_state.hidden.clone(), layer_state.cell.clone()));
+//             current_input = output; // Output of current layer becomes input to the next layer
+//         }
+//
+//         // Return the final sequence output and the combined states for the whole multi-layer network
+//         (current_input, RnnState::new(next_states))
+//     }
+// }
+
