@@ -191,18 +191,18 @@ async fn train(
 
     let full_dataset = LobTransDataset::new(dataset_path, spec.sequence_length, spec.token_size, args.gain_threshold, args.loss_threshold);
 
-    let d_model = spec.token_size * 2;
+    let transformer_d_model = spec.token_size * 2;
 
     let config = ExperimentConfig::new(
 
-        EmbedderConfig::new(spec.sequence_length, spec.token_size, d_model),
+        EmbedderConfig::new(spec.sequence_length, spec.token_size, transformer_d_model),
 
         // TODO - test with variations of norm_first
-        TransformerEncoderConfig::new(d_model, transformer_feed_forward_size, args.transformer_heads, args.transformer_layers)
+        TransformerEncoderConfig::new(transformer_d_model, transformer_feed_forward_size, args.transformer_heads, args.transformer_layers)
             .with_norm_first(true)
             // .with_quiet_softmax(true)
             .with_dropout(args.transformer_dropout),
-            /*.with_activation(ActivationConfig::SwiGlu(SwiGluConfig::new())),*/
+        /*.with_activation(ActivationConfig::SwiGlu(SwiGluConfig::new())),*/
 
         // TODO - change number of hidden?
         //        self.lstm = nn.LSTM(
@@ -212,7 +212,7 @@ async fn train(
         //             batch_first=True,
         //             dropout=0.1 if num_lstm_layers > 1 else 0.0
         //         )
-        LstmConfig::new(d_model, d_model, false)
+        LstmConfig::new(transformer_d_model, transformer_d_model, false)
             .with_batch_first(true),
 
         // TODO - check / change??
@@ -220,7 +220,7 @@ async fn train(
         //             nn.LayerNorm(lstm_hidden_dim),
         //             nn.Linear(lstm_hidden_dim, num_classes)
         //         )
-        MLPConfig::new(d_model, output_mlp_hidden_size, 3),
+        MLPConfig::new(transformer_d_model, output_mlp_hidden_size, 3),
 
         AdamConfig::new().with_weight_decay(Some(WeightDecayConfig::new(5e-5))),
         args.batch_size,         // batch size

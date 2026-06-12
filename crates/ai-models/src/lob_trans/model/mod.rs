@@ -75,6 +75,14 @@ impl LobTransModelConfig {
         let embedder = self.embedder.init(&device);
         let transformer = self.transformer.init(device);
         let lstm = (0..self.lstm_layers).map(|index| {
+            // if index == 0 {
+            //     LstmConfig::new(self.token_size, self.lstm_hidden_size, false)
+            //         .with_batch_first(true).init(device)
+            // }
+            // else {
+            //     LstmConfig::new(self.lstm_hidden_size, self.lstm_hidden_size, false)
+            //         .with_batch_first(true).init(device)                
+            // }
             self.lstm.init(&device)
         }).collect::<Vec<_>>();
         let output = self.mlp.init(device);
