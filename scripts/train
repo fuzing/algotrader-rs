@@ -17,7 +17,7 @@ cargo run --bin train -- \
   --shuffle-seed=42 \
   --transformer-heads=4 \
   --transformer-layers=2 \
-  --loss-weights=129.931,0.335,163.375 \
+  --loss-weights=50.0,1.0,50.0 \
   --gain-threshold=0.05 \
   --loss-threshold=0.05 \
   --artifacts-folder=/run/media/peter/genetics/algotrader/data/${NAME}-artifacts
@@ -30,3 +30,48 @@ cargo run --bin train -- \
 #Simplified Inverse Frequency Weights Matrix: [389.792,1.005,490.125]
 #Log Scaled Ln - Inverse Frequency Weights Matrix: [5.968,0.695,6.197]
 #Log Scaled Log10 - Inverse Frequency Weights Matrix: [2.094,1.662,2.095]
+
+
+# High Weights (129.931,0.335,163.375)
+#| Split | Metric                             | Min.     | Epoch    | Max.     | Epoch    |
+#|-------|------------------------------------|----------|----------|----------|----------|
+#| Train | Accuracy                           | 26.440   | 1        | 61.675   | 8        |
+#| Train | Learning Rate                      | 4.547e-6 | 8        | 1.351e-5 | 1        |
+#| Train | Loss                               | 0.284    | 8        | 0.880    | 1        |
+#| Train | Precision @ Threshold(0.5) [Macro] | 35.828   | 2        | NaN      | 1        |
+#| Train | Recall @ Threshold(0.5) [Macro]    | 17.245   | 1        | 85.473   | 8        |
+#| Valid | Accuracy                           | 29.935   | 1        | 63.145   | 8        |
+#| Valid | Loss                               | 0.245    | 8        | 0.721    | 1        |
+#| Valid | Precision @ Threshold(0.5) [Macro] | 35.436   | 1        | 36.834   | 8        |
+#| Valid | Recall @ Threshold(0.5) [Macro]    | 41.832   | 1        | 87.438   | 8        |
+
+# Medium Weights (50.0, 1.0, 50.0)
+#| Split | Metric                             | Min.     | Epoch    | Max.     | Epoch    |
+#|-------|------------------------------------|----------|----------|----------|----------|
+#| Train | Accuracy                           | 67.883   | 1        | 85.334   | 8        |
+#| Train | Learning Rate                      | 4.547e-6 | 8        | 1.351e-5 | 1        |
+#| Train | Loss                               | 0.295    | 8        | 0.890    | 1        |
+#| Train | Precision @ Threshold(0.5) [Macro] | 36.800   | 2        | NaN      | 1        |
+#| Train | Recall @ Threshold(0.5) [Macro]    | 35.594   | 1        | 91.674   | 8        |
+#| Valid | Accuracy                           | 62.580   | 1        | 84.400   | 8        |
+#| Valid | Loss                               | 0.254    | 8        | 0.719    | 1        |
+#| Valid | Precision @ Threshold(0.5) [Macro] | 35.629   | 1        | 39.439   | 5        |
+#| Valid | Recall @ Threshold(0.5) [Macro]    | 52.066   | 1        | 94.049   | 8        |
+
+
+
+# Low/Even Weights (1.0, 1.0, 1.0)
+#| Split | Metric                             | Min.     | Epoch    | Max.     | Epoch    |
+#|-------|------------------------------------|----------|----------|----------|----------|
+#| Train | Accuracy                           | 70.634   | 1        | 85.092   | 8        |
+#| Train | Learning Rate                      | 4.547e-6 | 8        | 1.351e-5 | 1        |
+#| Train | Loss                               | 0.298    | 8        | 0.887    | 1        |
+#| Train | Precision @ Threshold(0.5) [Macro] | 36.922   | 2        | NaN      | 1        |
+#| Train | Recall @ Threshold(0.5) [Macro]    | 39.092   | 1        | 94.183   | 8        |
+#| Valid | Accuracy                           | 72.145   | 1        | 86.266   | 8        |
+#| Valid | Loss                               | 0.232    | 8        | 0.712    | 1        |
+#| Valid | Precision @ Threshold(0.5) [Macro] | 36.399   | 1        | 38.870   | 8        |
+#| Valid | Recall @ Threshold(0.5) [Macro]    | 59.460   | 1        | 96.314   | 8        |
+
+
+

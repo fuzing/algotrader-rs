@@ -5,7 +5,15 @@
 //
 
 use burn::{
-    module::{Module, ModuleDisplay, Content, DisplaySettings, Initializer, Param},
+    module::{
+        Module, ModuleDisplay, Content, DisplaySettings, Initializer, Param,
+    },
+    nn::{
+        conv::{
+            Conv2dConfig, Conv2d,
+        },
+        PaddingConfig2d,
+    },
     config::Config,
     prelude::*,
     tensor::{Distribution},
@@ -23,6 +31,9 @@ pub struct EmbedderConfig {
 pub struct Embedder {
     pub sequence_length: usize,
     pub token_size: usize,
+
+    // convolution
+    conv: Conv2d,
 
     // [batch_size, class_token]
     class_tokens: Param<Tensor<3>>,
@@ -50,6 +61,18 @@ impl Embedder {
         token_size: usize,
     ) -> Self {
 
+        // TODO - get this in here somehow (hard coded at 4 channels * 15 values *
+        let patch_size = 60;
+
+        let conv = Conv2dConfig::new(
+            [1,1],
+            [patch_size, patch_size],
+        )
+            .with_stride([patch_size, patch_size])
+            .with_padding(PaddingConfig2d::Valid)
+            .init(device);
+
+
         // only 1 class token (will be expanded/duplicated in model)
         let class_tokens = Param::from_tensor(
             Tensor::random([1, 1, token_size], Distribution::default(), device)
@@ -61,6 +84,7 @@ impl Embedder {
         );
 
         Self {
+            conv,
             sequence_length,
             token_size,
             class_tokens,
@@ -68,11 +92,19 @@ impl Embedder {
         }
     }
 
-    pub fn forward(&self, tokens: Tensor<3>) -> Tensor<3> {
-        let [batch_size, sequence_length, token_size] = tokens.dims();
+    pub fn forward(&self, tokens: Tensor<1>) -> Tensor<3> {
+        // TODO - get this in here somehow
+        let batch_size = 64;
+        // let [batch_size, sequence_length, token_size] = tokens.dims();
 
-        // prepend input tokens with the class tokens
+        // expand the class tokens
         let class_tokens = self.class_tokens.val().expand([batch_size as i32, -1, -1]);
+
+        // perform convolution
+        let patch_embeddings = self.conv.forward(tokens);
+
+
+        // prepend the class tokens
         let tokens_with_class = Tensor::cat(vec![class_tokens, tokens], 1);
 
         // add the positional encoding

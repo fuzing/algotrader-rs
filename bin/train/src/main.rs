@@ -183,14 +183,17 @@ async fn train(
 
     let spec = LobTransDataSpec::from_file(&spec_path).expect(&format!("Failed to load spec {}", &spec_path.to_str().unwrap()));
 
+    // TODO - test with 3x token_size because o
     // a reasonable heuristic for feedforward size is 4 x token_size
-    let output_feed_forward_size = spec.token_size * 4;
+    let transformer_feed_forward_size = spec.token_size * 4;
 
     let full_dataset = LobTransDataset::new(dataset_path, spec.sequence_length, spec.token_size, args.gain_threshold, args.loss_threshold);
     let config = ExperimentConfig::new(
 
         EmbedderConfig::new(spec.sequence_length, spec.token_size),
-        TransformerEncoderConfig::new(spec.token_size, output_feed_forward_size, args.transformer_heads, args.transformer_layers)
+
+        // TODO - test with variations of norm_first
+        TransformerEncoderConfig::new(spec.token_size, transformer_feed_forward_size, args.transformer_heads, args.transformer_layers)
             .with_norm_first(true)
             // .with_quiet_softmax(true)
             .with_dropout(args.dropout),
