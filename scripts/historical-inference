@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # best profit 11-04 to 11-08 is $85.50
 cargo run --bin historical-inference -- \
-  --start-date=2024-09-02 --end-date=2024-09-06 \
+  --start-date=2024-09-09 --end-date=2024-09-13 \
   --spec-file=/run/media/peter/genetics/algotrader/data/KHC-spec.json \
   --artifacts-folder=/run/media/peter/genetics/algotrader/data/KHC-artifacts \
  'KHC-XNAS.ITCH-2024-01-01 00:00:00 UTC-2024-12-31 23:59:59 UTC-mbo.dbn.zst'
 
 #  --start-date=2024-09-09 --end-date=2024-09-13 \
-
+#  --start-date=2024-09-02 --end-date=2024-09-06 \
 
 #cargo run --bin historical-inference -- \
 #  --start-date=2025-08-11 --end-date=2025-08-15 \

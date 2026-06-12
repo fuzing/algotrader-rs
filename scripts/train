@@ -71,5 +71,16 @@ cargo run --bin train -- \
 
 # Training Results
 # Heads, Layers = (16,16)
+#| Split | Metric                             | Min.     | Epoch    | Max.     | Epoch    |
+#|-------|------------------------------------|----------|----------|----------|----------|
+#| Train | Accuracy                           | 69.493   | 1        | 91.275   | 8        |
+#| Train | Learning Rate                      | 2.273e-6 | 8        | 9.600e-6 | 1        |
+#| Train | Loss                               | 0.161    | 8        | 0.759    | 1        |
+#| Train | Precision @ Threshold(0.5) [Macro] | 36.973   | 1        | 40.389   | 8        |
+#| Train | Recall @ Threshold(0.5) [Macro]    | 63.448   | 1        | 98.351   | 8        |
+#| Valid | Accuracy                           | 69.995   | 1        | 91.009   | 8        |
+#| Valid | Loss                               | 0.150    | 8        | 0.516    | 1        |
+#| Valid | Precision @ Threshold(0.5) [Macro] | 37.472   | 1        | 40.095   | 8        |
+#| Valid | Recall @ Threshold(0.5) [Macro]    | 81.372   | 1        | 98.815   | 8        |
 # In band profit ($a) for 1 week
 
