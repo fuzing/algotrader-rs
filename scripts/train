@@ -12,12 +12,12 @@ cargo run --bin train -- \
   --spec-file=${NAME}-spec.json \
   --dataset-file=${NAME}-train-shuffled \
   --batch-size=64 \
-  --num-epochs=8 \
+  --num-epochs=2 \
   --dropout=0.1 \
   --shuffle-seed=42 \
   --transformer-heads=4 \
   --transformer-layers=2 \
-  --loss-weights=50.0,1.0,50.0 \
+  --loss-weights=1.0,1.0,1.0 \
   --gain-threshold=0.05 \
   --loss-threshold=0.05 \
   --artifacts-folder=/run/media/peter/genetics/algotrader/data/${NAME}-artifacts
@@ -73,5 +73,28 @@ cargo run --bin train -- \
 #| Valid | Precision @ Threshold(0.5) [Macro] | 36.399   | 1        | 38.870   | 8        |
 #| Valid | Recall @ Threshold(0.5) [Macro]    | 59.460   | 1        | 96.314   | 8        |
 
+#| Split | Metric                             | Min.     | Epoch    | Max.     | Epoch    |
+#|-------|------------------------------------|----------|----------|----------|----------|
+#| Train | Accuracy                           | 94.873   | 1        | 96.755   | 8        |
+#| Train | Learning Rate                      | 4.547e-6 | 8        | 1.351e-5 | 1        |
+#| Train | Loss                               | 0.108    | 8        | 0.207    | 1        |
+#| Train | Precision @ Threshold(0.5) [Macro] | 60.572   | 8        | NaN      | 1        |
+#| Train | Recall @ Threshold(0.5) [Macro]    | 46.433   | 1        | 64.775   | 8        |
+#| Valid | Accuracy                           | 96.856   | 1        | 97.191   | 8        |
+#| Valid | Loss                               | 0.090    | 8        | 0.141    | 1        |
+#| Valid | Precision @ Threshold(0.5) [Macro] | 55.082   | 7        | 96.856   | 1        |
+#| Valid | Recall @ Threshold(0.5) [Macro]    | 48.934   | 1        | 73.870   | 8        |
+
+#| Split | Metric                             | Min.     | Epoch    | Max.     | Epoch    |
+#|-------|------------------------------------|----------|----------|----------|----------|
+#| Train | Accuracy                           | 94.791   | 1        | 96.890   | 8        |
+#| Train | Learning Rate                      | 4.547e-6 | 8        | 1.351e-5 | 1        |
+#| Train | Loss                               | 0.101    | 8        | 0.206    | 1        |
+#| Train | Precision @ Threshold(0.5) [Macro] | 64.668   | 8        | NaN      | 1        |
+#| Train | Recall @ Threshold(0.5) [Macro]    | 45.783   | 1        | 65.069   | 8        |
+#| Valid | Accuracy                           | 96.856   | 1        | 97.386   | 8        |
+#| Valid | Loss                               | 0.084    | 8        | 0.140    | 1        |
+#| Valid | Precision @ Threshold(0.5) [Macro] | 54.521   | 8        | 96.856   | 1        |
+#| Valid | Recall @ Threshold(0.5) [Macro]    | 48.934   | 1        | 76.287   | 8        |
 
 

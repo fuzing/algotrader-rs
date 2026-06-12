@@ -268,6 +268,8 @@ async fn train(
         StoppingCondition::NoImprovementSince { n_epochs: 1 }
     );
 
+
+
     // Initialize learner
     let training = SupervisedTraining::new(artifact_path, dataloader_train, dataloader_test)
         .metric_train(CudaMetric::new())
@@ -301,7 +303,6 @@ async fn train(
             result.model.into_record(),
             format!("{}/model", artifact_path.to_string_lossy()).into(),
         )?;
-
 
     Ok(())
 }

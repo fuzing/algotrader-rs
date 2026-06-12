@@ -65,7 +65,7 @@ impl Embedder {
         let patch_size = 60;
 
         let conv = Conv2dConfig::new(
-            [1,1],
+            [4,token_size],                 // input/output channel size
             [patch_size, patch_size],
         )
             .with_stride([patch_size, patch_size])
@@ -92,20 +92,27 @@ impl Embedder {
         }
     }
 
-    pub fn forward(&self, tokens: Tensor<1>) -> Tensor<3> {
+    pub fn forward(&self, tokens: Tensor<3>) -> Tensor<3> {
         // TODO - get this in here somehow
-        let batch_size = 64;
+        // let batch_size = 64;
+        let [batch_size, sequence_length, token_size] = tokens.dims();
         // let [batch_size, sequence_length, token_size] = tokens.dims();
+        //
+        //
+        // // perform convolution
+        // let patch_embeddings = self.conv.forward(tokens);
+        // let flattened = patch_embeddings.flatten(2,-1);
+        // // transpose is performed with a permute in Burn AI
+        // let transposed = flattened.permute([0,2,1]);
 
-        // expand the class tokens
+
+        // // expand the class tokens
         let class_tokens = self.class_tokens.val().expand([batch_size as i32, -1, -1]);
-
-        // perform convolution
-        let patch_embeddings = self.conv.forward(tokens);
 
 
         // prepend the class tokens
         let tokens_with_class = Tensor::cat(vec![class_tokens, tokens], 1);
+        // let tokens_with_class = Tensor::cat(vec![class_tokens, transposed], 1);
 
         // add the positional encoding
         let tokens_with_class_and_positional_encoding = tokens_with_class.add(self.positional_embeddings.val());

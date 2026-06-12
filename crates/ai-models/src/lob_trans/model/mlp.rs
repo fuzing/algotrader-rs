@@ -67,7 +67,8 @@ impl MLP {
             .init(&device);
         let hidden_layer = LinearConfig::new(input_dim, hidden_dim).init(device);
         let activation = Relu::new();
-        let output_layer = LinearConfig::new(hidden_dim, output_dim).init(device);
+        // let output_layer = LinearConfig::new(hidden_dim, output_dim).init(device);
+        let output_layer = LinearConfig::new(input_dim, output_dim).init(device);
 
         Self {
             input_dim,
@@ -83,8 +84,8 @@ impl MLP {
 
     pub fn forward(&self, input: Tensor<3>) -> Tensor<3> {
         let x = self.layer_norm.forward(input);
-        let x = self.hidden_layer.forward(x);
-        let x = self.activation.forward(x);
+        // let x = self.hidden_layer.forward(x);
+        // let x = self.activation.forward(x);
         let x = self.output_layer.forward(x);
         x
     }
