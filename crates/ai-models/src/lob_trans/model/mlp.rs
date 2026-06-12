@@ -67,7 +67,6 @@ impl MLP {
             .init(&device);
         let hidden_layer = LinearConfig::new(input_dim, hidden_dim).init(device);
         let activation = Relu::new();
-        // let output_layer = LinearConfig::new(hidden_dim, output_dim).init(device);
         let output_layer = LinearConfig::new(input_dim, output_dim).init(device);
 
         Self {

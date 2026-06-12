@@ -21,6 +21,7 @@ pub struct ExperimentConfig {
     pub mlp: MLPConfig,
     pub optimizer: AdamConfig,
     pub batch_size: usize,
+    pub device_seed: u64,
     pub shuffle_seed: u64,
     pub num_epochs: usize,
 }

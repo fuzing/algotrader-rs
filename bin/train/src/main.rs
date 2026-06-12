@@ -190,15 +190,18 @@ async fn train(
     let output_mlp_hidden_size = spec.token_size * 4;
 
     let full_dataset = LobTransDataset::new(dataset_path, spec.sequence_length, spec.token_size, args.gain_threshold, args.loss_threshold);
+
+    let d_model = spec.token_size / 2;
+
     let config = ExperimentConfig::new(
 
-        EmbedderConfig::new(spec.sequence_length, spec.token_size, spec.token_size),
+        EmbedderConfig::new(spec.sequence_length, spec.token_size, d_model),
 
         // TODO - test with variations of norm_first
-        TransformerEncoderConfig::new(spec.token_size, transformer_feed_forward_size, args.transformer_heads, args.transformer_layers)
+        TransformerEncoderConfig::new(d_model, transformer_feed_forward_size, args.transformer_heads, args.transformer_layers)
             .with_norm_first(true)
             // .with_quiet_softmax(true)
-            .with_dropout(args.dropout),
+            .with_dropout(args.transformer_dropout),
             /*.with_activation(ActivationConfig::SwiGlu(SwiGluConfig::new())),*/
 
         // TODO - change number of hidden?
@@ -209,7 +212,7 @@ async fn train(
         //             batch_first=True,
         //             dropout=0.1 if num_lstm_layers > 1 else 0.0
         //         )
-        LstmConfig::new(spec.token_size, 64, false)
+        LstmConfig::new(d_model, 64, false)
             .with_batch_first(true),
 
         // TODO - check / change??
@@ -217,10 +220,11 @@ async fn train(
         //             nn.LayerNorm(lstm_hidden_dim),
         //             nn.Linear(lstm_hidden_dim, num_classes)
         //         )
-        MLPConfig::new(spec.token_size, output_mlp_hidden_size, 3),
+        MLPConfig::new(d_model, output_mlp_hidden_size, 3),
 
         AdamConfig::new().with_weight_decay(Some(WeightDecayConfig::new(5e-5))),
         args.batch_size,         // batch size
+        args.device_seed,         // shuffle seed
         args.shuffle_seed,         // shuffle seed
         args.num_epochs,          // number of epochs
     );
@@ -228,6 +232,7 @@ async fn train(
     create_artifact_dir(artifact_path);
 
     let mut device = select_device();
+    device.seed(args.device_seed);
     device
         .configure(DeviceConfig::default().float_dtype(ElemType::dtype()))?;
 
@@ -378,13 +383,16 @@ struct Args {
     dataset_file: String,
 
     #[arg(long)]
-    dropout: f64,
+    transformer_dropout: f64,
 
     #[arg(long)]
     batch_size: usize,
 
     #[arg(long)]
     num_epochs: usize,
+
+    #[arg(long)]
+    device_seed: u64,
 
     #[arg(long)]
     shuffle_seed: u64,
