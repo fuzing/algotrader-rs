@@ -15,8 +15,8 @@ cargo run --bin train -- \
   --num-epochs=8 \
   --dropout=0.1 \
   --shuffle-seed=42 \
-  --transformer-heads=8 \
-  --transformer-layers=4 \
+  --transformer-heads=4 \
+  --transformer-layers=2 \
   --loss-weights=129.931,0.335,163.375 \
   --gain-threshold=0.05 \
   --loss-threshold=0.05 \
