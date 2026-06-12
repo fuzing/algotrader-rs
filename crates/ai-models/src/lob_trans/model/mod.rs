@@ -5,6 +5,7 @@
 
 pub mod mlp;
 pub mod embedder;
+mod multi_layer_lstm;
 
 use std::io::Write;
 use super::data::batcher::{

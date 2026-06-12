@@ -12,11 +12,11 @@ cargo run --bin train -- \
   --spec-file=${NAME}-spec.json \
   --dataset-file=${NAME}-train-shuffled \
   --batch-size=64 \
-  --num-epochs=2 \
+  --num-epochs=4 \
   --device-seed=42 \
   --shuffle-seed=42 \
-  --transformer-heads=4 \
-  --transformer-layers=2 \
+  --transformer-heads=8 \
+  --transformer-layers=4 \
   --transformer-dropout=0.1 \
   --lstm-layers=4 \
   --lstm-hidden-size=32 \
