@@ -30,8 +30,7 @@ use burn::{
     },
     train::{RegressionOutput, ClassificationOutput, InferenceStep, TrainOutput, TrainStep},
 };
-
-
+use burn::nn::LstmState;
 use self::mlp::{MLPConfig, MLP};
 use self::embedder::{EmbedderConfig, Embedder};
 
@@ -135,9 +134,11 @@ impl LobTransModel {
 
         // through the lstm layers
         let mut x = x;
+        let mut prev_state: Option<LstmState<2>> = None;
         for layer in self.lstm.iter() {
-            let (result, f) = layer.forward(x, None);
+            let (result, state) = layer.forward(x, prev_state);
             x = result;
+            prev_state = Some(state);
         }
 
         // eprintln!("LSTM output shape {}", x.shape());
@@ -196,9 +197,11 @@ impl LobTransModel {
 
         // through the lstm layers
         let mut x = x;
+        let mut prev_state: Option<LstmState<2>> = None;
         for layer in self.lstm.iter() {
-            let (result, _) = layer.forward(x, None);
+            let (result, state) = layer.forward(x, prev_state);
             x = result;
+            prev_state = Some(state);
         }
 
         // through the output linear layer
