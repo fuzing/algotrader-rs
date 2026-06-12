@@ -69,6 +69,8 @@ use ai_models::lob_trans::{
     model::{
         LobTransModelConfig,
         LobTransModel,
+        embedder::EmbedderConfig,
+        mlp::MLPConfig
     },
     training::ExperimentConfig,
 };
@@ -186,13 +188,16 @@ async fn train(
 
     let full_dataset = LobTransDataset::new(dataset_path, spec.sequence_length, spec.token_size, args.gain_threshold, args.loss_threshold);
     let config = ExperimentConfig::new(
-        // don't use the args passed to the program, use the 4x version from above
-        // TransformerEncoderConfig::new(spec.token_size, args.output_feed_forward_size, args.transformer_heads, args.transformer_layers)
+
+        EmbedderConfig::new(spec.sequence_length, spec.token_size),
         TransformerEncoderConfig::new(spec.token_size, output_feed_forward_size, args.transformer_heads, args.transformer_layers)
             .with_norm_first(true)
             // .with_quiet_softmax(true)
             .with_dropout(args.dropout),
             /*.with_activation(ActivationConfig::SwiGlu(SwiGluConfig::new())),*/
+
+        MLPConfig::new(spec.token_size, 1024, 3),
+
         AdamConfig::new().with_weight_decay(Some(WeightDecayConfig::new(5e-5))),
         args.batch_size,         // batch size
         args.shuffle_seed,         // shuffle seed
@@ -234,8 +239,11 @@ async fn train(
     let model = LobTransModelConfig::new(
         spec.sequence_length,
         spec.token_size,
-        config.transformer.clone(),
         LobTransDataset::num_classes(),
+
+        config.embedder.clone(),
+        config.transformer.clone(),
+        config.mlp.clone(),
     )
         .with_loss_weights(args.loss_weights.clone())
         .init(&strategy.main_device().clone().autodiff());
@@ -254,7 +262,7 @@ async fn train(
         Aggregate::Mean,
         Direction::Lowest,
         Split::Valid,
-        StoppingCondition::NoImprovementSince { n_epochs: 2 }
+        StoppingCondition::NoImprovementSince { n_epochs: 1 }
     );
 
     // Initialize learner
@@ -276,7 +284,7 @@ async fn train(
         .metric_train_numeric(LearningRateMetric::new())
         .with_file_checkpointer(CompactRecorder::new())
         .with_training_strategy(strategy.into())
-        // .early_stopping(early_stopping)
+        .early_stopping(early_stopping)
         .num_epochs(config.num_epochs)
         .summary();
 
@@ -372,9 +380,6 @@ struct Args {
 
     #[arg(long)]
     transformer_layers: usize,
-
-    #[arg(long)]
-    output_feed_forward_size: usize,
 
     #[arg(long)]
     artifacts_folder: String,

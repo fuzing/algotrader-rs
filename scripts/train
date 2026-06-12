@@ -15,72 +15,18 @@ cargo run --bin train -- \
   --num-epochs=8 \
   --dropout=0.1 \
   --shuffle-seed=42 \
-  --transformer-heads=16 \
-  --transformer-layers=16 \
-  --output-feed-forward-size=960 \
-  --loss-weights=53.024,1.038,56.968 \
+  --transformer-heads=8 \
+  --transformer-layers=4 \
+  --loss-weights=129.931,0.335,163.375 \
   --gain-threshold=0.05 \
   --loss-threshold=0.05 \
   --artifacts-folder=/run/media/peter/genetics/algotrader/data/${NAME}-artifacts
 
-#  --loss-weights=7.442,0.694,7.124 \
-#  --loss-weights=1500.0,1.0,1500.0 \
-#  --loss-weights=1.0,25.0,1.0 \
-
-
 # KHC
-#Total samples: 860897
-#Absolute => Gains: (15112).  Neutrals (829549).  Losses (16236)
-#Percentage => Gains: (1.755%).  Neutrals (96.359%).  Losses (1.886%)
-#Inverse Frequency Weights Matrix: [17.675,0.346,18.989]
-#Simplified Inverse Frequency Weights Matrix: [53.024,1.038,56.968]
-#Log Scaled Ln - Inverse Frequency Weights Matrix: [3.989,0.712,4.060]
-#Log Scaled Log10 - Inverse Frequency Weights Matrix: [2.084,1.672,2.085]
-
-
-# Training Results
-# Heads, Layers = (8,4)
-#| Split | Metric                             | Min.     | Epoch    | Max.     | Epoch    |
-#|-------|------------------------------------|----------|----------|----------|----------|
-#| Train | Accuracy                           | 68.167   | 1        | 79.385   | 5        |
-#| Train | Learning Rate                      | 2.938e-6 | 5        | 9.600e-6 | 1        |
-#| Train | Loss                               | 0.423    | 5        | 0.880    | 1        |
-#| Train | Precision @ Threshold(0.5) [Macro] | 36.806   | 1        | 37.684   | 5        |
-#| Train | Recall @ Threshold(0.5) [Macro]    | 47.851   | 1        | 89.105   | 5        |
-#| Valid | Accuracy                           | 63.046   | 1        | 78.486   | 4        |
-#| Valid | Loss                               | 0.377    | 5        | 0.740    | 1        |
-#| Valid | Precision @ Threshold(0.5) [Macro] | 36.473   | 1        | 37.458   | 4        |
-#| Valid | Recall @ Threshold(0.5) [Macro]    | 64.657   | 1        | 91.886   | 5        |
-# In band profit ($462.00) for 1 week
-
-
-# Training Results
-# Heads, Layers = (12,12)
-#| Split | Metric                             | Min.     | Epoch    | Max.     | Epoch    |
-#|-------|------------------------------------|----------|----------|----------|----------|
-#| Train | Accuracy                           | 68.996   | 1        | 87.141   | 5        |
-#| Train | Learning Rate                      | 2.938e-6 | 5        | 9.600e-6 | 1        |
-#| Train | Loss                               | 0.242    | 5        | 0.792    | 1        |
-#| Train | Precision @ Threshold(0.5) [Macro] | 36.218   | 1        | 38.061   | 5        |
-#| Train | Recall @ Threshold(0.5) [Macro]    | 68.164   | 1        | 97.481   | 5        |
-#| Valid | Accuracy                           | 70.952   | 1        | 87.272   | 5        |
-#| Valid | Loss                               | 0.219    | 5        | 0.547    | 1        |
-#| Valid | Precision @ Threshold(0.5) [Macro] | 36.854   | 1        | 38.004   | 5        |
-#| Valid | Recall @ Threshold(0.5) [Macro]    | 85.863   | 1        | 98.210   | 5        |
-# In band profit ($444) for 1 week
-
-# Training Results
-# Heads, Layers = (16,16)
-#| Split | Metric                             | Min.     | Epoch    | Max.     | Epoch    |
-#|-------|------------------------------------|----------|----------|----------|----------|
-#| Train | Accuracy                           | 69.493   | 1        | 91.275   | 8        |
-#| Train | Learning Rate                      | 2.273e-6 | 8        | 9.600e-6 | 1        |
-#| Train | Loss                               | 0.161    | 8        | 0.759    | 1        |
-#| Train | Precision @ Threshold(0.5) [Macro] | 36.973   | 1        | 40.389   | 8        |
-#| Train | Recall @ Threshold(0.5) [Macro]    | 63.448   | 1        | 98.351   | 8        |
-#| Valid | Accuracy                           | 69.995   | 1        | 91.009   | 8        |
-#| Valid | Loss                               | 0.150    | 8        | 0.516    | 1        |
-#| Valid | Precision @ Threshold(0.5) [Macro] | 37.472   | 1        | 40.095   | 8        |
-#| Valid | Recall @ Threshold(0.5) [Macro]    | 81.372   | 1        | 98.815   | 8        |
-# In band profit ($a) for 1 week
-
+#Total samples: 215165
+#Absolute => Gains: (439).  Neutrals (214174).  Losses (552)
+#Percentage => Gains: (0.204%).  Neutrals (99.539%).  Losses (0.257%)
+#Inverse Frequency Weights Matrix: [129.931,0.335,163.375]
+#Simplified Inverse Frequency Weights Matrix: [389.792,1.005,490.125]
+#Log Scaled Ln - Inverse Frequency Weights Matrix: [5.968,0.695,6.197]
+#Log Scaled Log10 - Inverse Frequency Weights Matrix: [2.094,1.662,2.095]
