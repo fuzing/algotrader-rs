@@ -60,7 +60,7 @@ pub struct LobTransModel {
 
     embedder: Embedder,
     transformer: TransformerEncoder,
-    lstm: Lstm,
+    lstm: Vec<Lstm>,
     output: MLP,
 }
 
@@ -70,7 +70,9 @@ impl LobTransModelConfig {
     pub fn init(&self, device: &Device) -> LobTransModel {
         let embedder = self.embedder.init(&device);
         let transformer = self.transformer.init(device);
-        let lstm = self.lstm.init(&device);
+        let lstm = (0..6).map(|index| {
+            self.lstm.init(&device)
+        }).collect::<Vec<_>>();
         let output = self.mlp.init(device);
 
         LobTransModel {
@@ -100,23 +102,25 @@ impl LobTransModel {
         let tokens = item.tokens.to_device(device);
         let labels = item.labels.to_device(device);
 
-
-        let embeddings = self.embedder.forward(tokens);
+        // formulate the embedding tokens
+        let x = self.embedder.forward(tokens);
 
         // through the transformer
-        let encoded = self
+        let x = self
             .transformer
-            .forward(TransformerEncoderInput::new(embeddings));
+            .forward(TransformerEncoderInput::new(x));
 
         // we are only interested in the class token from the transformer output
         // let encoded_class = encoded.slice([0..batch_size, 0..1, 0..token_size]);
-        let encoded_class = encoded.slice([0..batch_size, 0..1]);
+        let x = x.slice([0..batch_size, 0..1]);
+
+        // let (x, lstm_state) = self.lstm[0].forward(x, None);
 
         // through the output linear layer
-        let output = self.output.forward(encoded_class);
+        let x = self.output.forward(x);
 
         // classify, using only the class token
-        let output_classification = output
+        let output_classification = x
             // .slice([0..batch_size, 0..1, 0..d_model])
             .reshape([batch_size, self.n_classes]);
 
@@ -146,22 +150,26 @@ impl LobTransModel {
         // Move tensors to the correct device
         let tokens = item.tokens.to_device(device);
 
-        let embeddings = self.embedder.forward(tokens);
+        // generate the embedding vectors
+        let x = self.embedder.forward(tokens);
 
         // through the transformer
-        let encoded = self
+        let x = self
             .transformer
-            .forward(TransformerEncoderInput::new(embeddings));
+            .forward(TransformerEncoderInput::new(x));
 
         // we are only interested in the class token from the transformer output
         // let encoded_class = encoded.slice([0..batch_size, 0..1, 0..token_size]);
-        let encoded_class = encoded.slice([0..batch_size, 0..1]);
+        let x = x.slice([0..batch_size, 0..1]);
+
+        // through the lstm
+        // let (x, lstm_state) = self.lstm[0].forward(encoded_class, None);
 
         // through the output linear layer
-        let output = self.output.forward(encoded_class);
+        let x = self.output.forward(x);
 
         // classify, using only the class token
-        let output_classification = output
+        let output_classification = x
             // .slice([0..batch_size, 0..1, 0..d_model])
             .reshape([batch_size, self.n_classes]);
 

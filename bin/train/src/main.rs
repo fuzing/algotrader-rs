@@ -187,6 +187,7 @@ async fn train(
     // TODO - test with 3x token_size because o
     // a reasonable heuristic for feedforward size is 4 x token_size
     let transformer_feed_forward_size = spec.token_size * 4;
+    let output_mlp_hidden_size = spec.token_size * 4;
 
     let full_dataset = LobTransDataset::new(dataset_path, spec.sequence_length, spec.token_size, args.gain_threshold, args.loss_threshold);
     let config = ExperimentConfig::new(
@@ -216,7 +217,7 @@ async fn train(
         //             nn.LayerNorm(lstm_hidden_dim),
         //             nn.Linear(lstm_hidden_dim, num_classes)
         //         )
-        MLPConfig::new(spec.token_size, spec.token_size * 4, 3),
+        MLPConfig::new(spec.token_size, output_mlp_hidden_size, 3),
 
         AdamConfig::new().with_weight_decay(Some(WeightDecayConfig::new(5e-5))),
         args.batch_size,         // batch size

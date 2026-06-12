@@ -17,43 +17,16 @@ cargo run --bin train -- \
   --shuffle-seed=42 \
   --transformer-heads=4 \
   --transformer-layers=2 \
-  --loss-weights=1.0,1.0,1.0 \
-  --gain-threshold=0.05 \
-  --loss-threshold=0.05 \
+  --loss-weights=652.167,0.334,484.718 \
+  --gain-threshold=0.08 \
+  --loss-threshold=0.08 \
   --artifacts-folder=/run/media/peter/genetics/algotrader/data/${NAME}-artifacts
 
 # KHC
-#Total samples: 215165
-#Absolute => Gains: (439).  Neutrals (214174).  Losses (552)
-#Percentage => Gains: (0.204%).  Neutrals (99.539%).  Losses (0.257%)
-#Inverse Frequency Weights Matrix: [129.931,0.335,163.375]
-#Simplified Inverse Frequency Weights Matrix: [389.792,1.005,490.125]
-#Log Scaled Ln - Inverse Frequency Weights Matrix: [5.968,0.695,6.197]
-#Log Scaled Log10 - Inverse Frequency Weights Matrix: [2.094,1.662,2.095]
-
-# 1.0, 1.0, 1.0
-#| Split | Metric                             | Min.     | Epoch    | Max.     | Epoch    |
-#|-------|------------------------------------|----------|----------|----------|----------|
-#| Train | Accuracy                           | 93.417   | 1        | 96.637   | 2        |
-#| Train | Learning Rate                      | 1.458e-5 | 2        | 1.911e-5 | 1        |
-#| Train | Loss                               | 0.149    | 2        | 0.222    | 1        |
-#| Train | Precision @ Threshold(0.5) [Macro] | 90.340   | 2        | 93.208   | 1        |
-#| Train | Recall @ Threshold(0.5) [Macro]    | 45.892   | 1        | 48.720   | 2        |
-#| Valid | Accuracy                           | 96.856   | 1        | 96.856   | 2        |
-#| Valid | Loss                               | 0.136    | 2        | 0.144    | 1        |
-#| Valid | Precision @ Threshold(0.5) [Macro] | 87.847   | 2        | 96.856   | 1        |
-#| Valid | Recall @ Threshold(0.5) [Macro]    | 48.934   | 1        | 49.608   | 2        |
-
-
-# 129.931, 0.335, 163.375
-#| Split | Metric                             | Min.     | Epoch    | Max.     | Epoch    |
-#|-------|------------------------------------|----------|----------|----------|----------|
-#| Train | Accuracy                           | 18.994   | 1        | 30.582   | 2        |
-#| Train | Learning Rate                      | 1.458e-5 | 2        | 1.911e-5 | 1        |
-#| Train | Loss                               | 0.758    | 2        | 0.928    | 1        |
-#| Train | Precision @ Threshold(0.5) [Macro] | 33.310   | 1        | 34.979   | 2        |
-#| Train | Recall @ Threshold(0.5) [Macro]    | 43.974   | 1        | 56.370   | 2        |
-#| Valid | Accuracy                           | 25.325   | 1        | 29.954   | 2        |
-#| Valid | Loss                               | 0.687    | 2        | 0.793    | 1        |
-#| Valid | Precision @ Threshold(0.5) [Macro] | 35.020   | 1        | 35.053   | 2        |
-#| Valid | Recall @ Threshold(0.5) [Macro]    | 52.549   | 1        | 62.981   | 2        |
+#Total samples: 215215
+#Absolute => Gains: (148).  Neutrals (214957).  Losses (110)
+#Percentage => Gains: (0.069%).  Neutrals (99.880%).  Losses (0.051%)
+#Inverse Frequency Weights Matrix: [652.167,0.334,484.718]
+#Simplified Inverse Frequency Weights Matrix: [1956.500,1.001,1454.155]
+#Log Scaled Ln - Inverse Frequency Weights Matrix: [7.579,0.694,7.283]
+#Log Scaled Log10 - Inverse Frequency Weights Matrix: [2.096,1.661,2.095]

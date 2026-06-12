@@ -6,7 +6,7 @@ echo "Extracting Data"
 cargo run --bin extractor --  \
   --prediction-intervals=128 \
   --patch-intervals=4 --patch-stride=4 \
-  --holding-time-seconds=10 \
+  --holding-time-seconds=5 \
   --lob-levels=15 --pretty \
   --start-date=2024-09-10 --end-date=2024-09-10 \
   --output-data=/run/media/peter/genetics/algotrader/data/${NAME}-train \
@@ -16,8 +16,8 @@ cargo run --bin extractor --  \
 
 echo "data file stats"
 cargo run --bin data-file-stats --  \
-  --gain-threshold=0.06 \
-  --loss-threshold=0.06 \
+  --gain-threshold=0.08 \
+  --loss-threshold=0.08 \
   --input=/run/media/peter/genetics/algotrader/data/${NAME}-train
 
 echo "Shuffling Data"
