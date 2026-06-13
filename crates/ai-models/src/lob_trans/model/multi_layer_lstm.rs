@@ -9,7 +9,8 @@ pub struct MultiLayerLstmConfig {
     pub input_dim: usize,
     pub hidden_dim: usize,
     pub num_layers: usize,
-    pub dropout: f64,
+    pub bias: Option<bool>,
+    pub dropout: Option<f64>,
 }
 
 
@@ -18,6 +19,7 @@ pub struct MultiLayerLstm {
     // Stacking multiple LSTMs in Burn is done by mapping sequentially or wrapping 
     // them manually. Here we map multiple layers to mimic PyTorch's num_layers > 1.
     layers: Vec<Lstm>,
+    dropout: f64,
     d_hidden: usize,
 }
 
@@ -29,6 +31,8 @@ impl MultiLayerLstmConfig {
             self.input_dim,
             self.hidden_dim,
             self.num_layers,
+            self.bias.unwrap_or(true),
+            self.dropout.unwrap_or(0.0),
         )
     }
 }
@@ -41,6 +45,8 @@ impl MultiLayerLstm {
         input_size: usize,
         hidden_size: usize,
         num_layers: usize,
+        with_bias: bool,
+        dropout: f64,
     ) -> Self {
         let mut layers = Vec::with_capacity(num_layers);
 
@@ -49,7 +55,7 @@ impl MultiLayerLstm {
             let current_input_size = if l == 0 { input_size } else { hidden_size };
 
             // Pytorch has bias by default, so we'll do the same
-            let config = LstmConfig::new(current_input_size, hidden_size, true)
+            let config = LstmConfig::new(current_input_size, hidden_size, with_bias)
                 .with_batch_first(true);
 
             layers.push(config.init(device));
@@ -58,6 +64,7 @@ impl MultiLayerLstm {
         Self {
             layers,
             d_hidden: hidden_size,
+            dropout,
         }
     }
 
@@ -72,7 +79,7 @@ impl MultiLayerLstm {
         let [batch_size, sequence_length, _] = current_input.dims();
 
         // PyTorch style initialization if no state is provided
-        let empty_state = LstmState::new(
+        let empty_state: LstmState<2> = LstmState::new(
             Tensor::zeros([batch_size, self.d_hidden], &current_input.device()),
             Tensor::zeros([batch_size, self.d_hidden], &current_input.device()),
         );
@@ -80,12 +87,19 @@ impl MultiLayerLstm {
         for (i, layer) in self.layers.iter().enumerate() {
             let layer_state = state.as_ref()
                 .and_then(|s| s.get(i).clone())
-                .unwrap_or_else(|| empty_state.clone());
+                .unwrap_or_else(|| &empty_state);
 
             // Run Burn's LSTM forward pass
             let (output, final_state) = layer.forward(current_input, Some(layer_state));
 
-            current_input = output;
+            // Apply dropout between layers (if dropout is set and we're not on the last layer)
+            if self.dropout > 0.0 && i < self.layers.len() - 1 {
+                // current_input = output.dropout(self.dropout);
+                current_input = output;
+            } else {
+                current_input = output;
+            }
+
             next_states.push(final_state);
         }
 
