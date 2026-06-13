@@ -2,6 +2,16 @@ use burn::{
     nn::lstm::{Lstm, LstmConfig, LstmState},
     prelude::*,
 };
+use crate::lob_trans::model::mlp::{MLPConfig, MLP};
+
+#[derive(Config, Debug)]
+pub struct MultiLayerLstmConfig {
+    pub input_dim: usize,
+    pub hidden_dim: usize,
+    pub num_layers: usize,
+    pub dropout: f64,
+}
+
 
 #[derive(Module, Debug)]
 pub struct MultiLayerLstm {
@@ -11,12 +21,26 @@ pub struct MultiLayerLstm {
     d_hidden: usize,
 }
 
+
+impl MultiLayerLstmConfig {
+    pub fn init(&self, device: &Device) -> MultiLayerLstm {
+        MultiLayerLstm::new(
+            device,
+            self.input_dim,
+            self.hidden_dim,
+            self.num_layers,
+        )
+    }
+}
+
+
+
 impl MultiLayerLstm {
     pub fn new(
+        device: &Device,
         input_size: usize,
         hidden_size: usize,
         num_layers: usize,
-        device: &Device,
     ) -> Self {
         let mut layers = Vec::with_capacity(num_layers);
 
@@ -24,8 +48,8 @@ impl MultiLayerLstm {
             // Layer 1 takes the original input size, subsequent layers take hidden_size
             let current_input_size = if l == 0 { input_size } else { hidden_size };
 
-            // TODO - false for no bias - should we do this
-            let config = LstmConfig::new(current_input_size, hidden_size, false)
+            // Pytorch has bias by default, so we'll do the same
+            let config = LstmConfig::new(current_input_size, hidden_size, true)
                 .with_batch_first(true);
 
             layers.push(config.init(device));
