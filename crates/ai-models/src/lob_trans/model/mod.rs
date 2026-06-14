@@ -5,7 +5,7 @@
 
 pub mod mlp;
 pub mod embedder;
-mod multi_layer_lstm;
+pub mod multi_layer_lstm;
 
 use std::io::Write;
 use super::data::batcher::{
@@ -31,9 +31,9 @@ use burn::{
     },
     train::{RegressionOutput, ClassificationOutput, InferenceStep, TrainOutput, TrainStep},
 };
-use burn::nn::LstmState;
 use self::mlp::{MLPConfig, MLP};
 use self::embedder::{EmbedderConfig, Embedder};
+use self::multi_layer_lstm::{MultiLayerLstmConfig, MultiLayerLstm};
 
 
 // Define the model configuration
@@ -48,7 +48,8 @@ pub struct LobTransModelConfig {
 
     embedder: EmbedderConfig,
     transformer: TransformerEncoderConfig,
-    lstm: LstmConfig,
+    // lstm: LstmConfig,
+    lstm: MultiLayerLstmConfig,
     mlp: MLPConfig,
 }
 
@@ -64,7 +65,8 @@ pub struct LobTransModel {
 
     embedder: Embedder,
     transformer: TransformerEncoder,
-    lstm: Vec<Lstm>,
+    // lstm: Vec<Lstm>,
+    lstm: MultiLayerLstm,
     output: MLP,
 }
 
@@ -74,17 +76,7 @@ impl LobTransModelConfig {
     pub fn init(&self, device: &Device) -> LobTransModel {
         let embedder = self.embedder.init(&device);
         let transformer = self.transformer.init(device);
-        let lstm = (0..self.lstm_layers).map(|index| {
-            // if index == 0 {
-            //     LstmConfig::new(self.token_size, self.lstm_hidden_size, false)
-            //         .with_batch_first(true).init(device)
-            // }
-            // else {
-            //     LstmConfig::new(self.lstm_hidden_size, self.lstm_hidden_size, false)
-            //         .with_batch_first(true).init(device)                
-            // }
-            self.lstm.init(&device)
-        }).collect::<Vec<_>>();
+        let lstm = self.lstm.init(&device);
         let output = self.mlp.init(device);
 
         LobTransModel {
@@ -132,22 +124,22 @@ impl LobTransModel {
         let x = x.slice([0..batch_size, 0..1]);
 
         // eprintln!("LSTM input shape {}", x.shape());
-
-        // through the lstm layers
-        let mut x = x;
-        let mut prev_state: Option<LstmState<2>> = None;
-        for layer in self.lstm.iter() {
-            let (result, state) = layer.forward(x, prev_state);
-            x = result;
-            prev_state = Some(state);
-        }
+        let (x, _new_lstm_state) = self.lstm.forward(x, None);
 
         // eprintln!("LSTM output shape {}", x.shape());
 
-        // through the output linear layer
+        // th        // through the lstm layers
+        // let mut x = x;
+        // let mut prev_state: Option<LstmState<2>> = None;
+        // for layer in self.lstm.iter() {
+        //     let (result, state) = layer.forward(x, prev_state);
+        //     x = result;
+        //     prev_state = Some(state);
+        // }rough the output linear layer
         let x = self.output.forward(x);
 
-        // eprintln!("MLP output shape {}", x.shape());
+        // eprintln!("MLP output shape {}", x.shape());                        states[i].cell.clone(),
+
         // eprintln!("MLP output {}", x);
 
         // classify, using only the class token
@@ -197,13 +189,7 @@ impl LobTransModel {
         let x = x.slice([0..batch_size, 0..1]);
 
         // through the lstm layers
-        let mut x = x;
-        let mut prev_state: Option<LstmState<2>> = None;
-        for layer in self.lstm.iter() {
-            let (result, state) = layer.forward(x, prev_state);
-            x = result;
-            prev_state = Some(state);
-        }
+        let (x, _new_lstm_state) = self.lstm.forward(x, None);
 
         // through the output linear layer
         let x = self.output.forward(x);

@@ -73,38 +73,82 @@ impl MultiLayerLstm {
         input: Tensor<3>, // Shape: [batch_size, seq_length, input_size]
         state: Option<Vec<LstmState<2>>>,
     ) -> (Tensor<3>, Vec<LstmState<2>>) {
+        // let mut current_input = input;
+        // let mut next_states = Vec::new();
+        //
+        // let [batch_size, sequence_length, _] = current_input.dims();
+        //
+        // // PyTorch style initialization if no state is provided
+        // let empty_state: LstmState<2> = LstmState::new(
+        //     Tensor::zeros([batch_size, self.d_hidden], &current_input.device()),
+        //     Tensor::zeros([batch_size, self.d_hidden], &current_input.device()),
+        // );
+        //
+        // for (i, layer) in self.layers.iter().enumerate() {
+        //     let layer_state = state.as_ref()
+        //         .and_then(|s| s.get(i).clone())
+        //         .unwrap_or_else(|| &empty_state);
+        //
+        //     // Run Burn's LSTM forward pass
+        //     let (output, final_state) = layer.forward(current_input, Some(
+        //         // layer_state
+        //         LstmState::new(
+        //             layer_state.cell.clone(),
+        //             layer_state.hidden.clone(),
+        //         )
+        //     ));
+        //
+        //     // Apply dropout between layers (if dropout is set and we're not on the last layer)
+        //     if self.dropout > 0.0 && i < self.layers.len() - 1 {
+        //         // current_input = output.dropout(self.dropout);
+        //         current_input = output;
+        //     } else {
+        //         current_input = output;
+        //     }
+        //
+        //     next_states.push(final_state);
+        // }
+        //
+        // // Return the final output after all layers and the states for all layers
+        // (current_input, next_states)
+
+        let [batch_size, seq_length, _] = input.dims();
+        let device = input.device();
+
+        let num_layers = self.layers.len();
         let mut current_input = input;
-        let mut next_states = Vec::new();
+        let mut next_states = Vec::with_capacity(num_layers);
 
-        let [batch_size, sequence_length, _] = current_input.dims();
+        // Match PyTorch's default: create zero states if none are provided
+        let mut states = state.unwrap_or_else(|| {
+            (0..num_layers)
+                .map(|_| {
+                    let h = Tensor::zeros([batch_size, self.d_hidden], &device);
+                    let c = Tensor::zeros([batch_size, self.d_hidden], &device);
+                    LstmState::new(h, c)
+                })
+                .collect()
+        });
 
-        // PyTorch style initialization if no state is provided
-        let empty_state: LstmState<2> = LstmState::new(
-            Tensor::zeros([batch_size, self.d_hidden], &current_input.device()),
-            Tensor::zeros([batch_size, self.d_hidden], &current_input.device()),
-        );
+        for i in 0..num_layers {
+            // Forward pass for the current layer
+            let (output, layer_state) =
+                self.layers[i].forward(current_input, Some(
+                    // states[i].clone()
+                    LstmState::new(
+                        states[i].cell.clone(),
+                        states[i].hidden.clone(),
+                    )
+                ));
 
-        for (i, layer) in self.layers.iter().enumerate() {
-            let layer_state = state.as_ref()
-                .and_then(|s| s.get(i).clone())
-                .unwrap_or_else(|| &empty_state);
-
-            // Run Burn's LSTM forward pass
-            let (output, final_state) = layer.forward(current_input, Some(layer_state));
-
-            // Apply dropout between layers (if dropout is set and we're not on the last layer)
-            if self.dropout > 0.0 && i < self.layers.len() - 1 {
-                // current_input = output.dropout(self.dropout);
-                current_input = output;
-            } else {
-                current_input = output;
-            }
-
-            next_states.push(final_state);
+            // TODO - handle dropout???
+            // Output of this layer becomes input for the next
+            current_input = output;
+            next_states.push(layer_state);
         }
 
-        // Return the final output after all layers and the states for all layers
         (current_input, next_states)
+
     }
 }
 

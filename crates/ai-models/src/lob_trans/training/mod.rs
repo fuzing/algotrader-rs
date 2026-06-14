@@ -8,6 +8,7 @@ use burn::nn::LstmConfig;
 use super::model::{
     embedder::EmbedderConfig,
     mlp::MLPConfig,
+    multi_layer_lstm::MultiLayerLstmConfig,
 };
 
 
@@ -17,7 +18,8 @@ use super::model::{
 pub struct ExperimentConfig {
     pub embedder: EmbedderConfig,
     pub transformer: TransformerEncoderConfig,
-    pub lstm: LstmConfig,
+    // pub lstm: LstmConfig,
+    pub lstm: MultiLayerLstmConfig,
     pub mlp: MLPConfig,
     pub optimizer: AdamConfig,
     pub batch_size: usize,

@@ -71,7 +71,8 @@ use ai_models::lob_trans::{
         LobTransModelConfig,
         LobTransModel,
         embedder::EmbedderConfig,
-        mlp::MLPConfig
+        mlp::MLPConfig,
+        multi_layer_lstm::MultiLayerLstmConfig,
     },
     training::ExperimentConfig,
 };
@@ -212,8 +213,10 @@ async fn train(
         //             batch_first=True,
         //             dropout=0.1 if num_lstm_layers > 1 else 0.0
         //         )
-        LstmConfig::new(transformer_d_model, transformer_d_model, false)
-            .with_batch_first(true),
+        // LstmConfig::new(transformer_d_model, transformer_d_model, false)
+        //     .with_batch_first(true),
+        MultiLayerLstmConfig::new(transformer_d_model, transformer_d_model, 4)
+            .with_dropout(Some(0.1)),
 
         // TODO - check / change??
         //        self.mlp_head = nn.Sequential(
