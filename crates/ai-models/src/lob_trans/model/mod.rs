@@ -13,23 +13,15 @@ use super::data::batcher::{
     LobTransTrainingBatch,
 };
 use burn::{
-    module::Param,
     nn::{
-        // Embedding, EmbeddingConfig,
-        Linear, LinearConfig,
-        attention::SeqLengthOption,
-        PositionalEncoding, PositionalEncodingConfig,
         loss::CrossEntropyLossConfig,
         transformer::{TransformerEncoder, TransformerEncoderConfig, TransformerEncoderInput},
-        conv::{Conv2dConfig, Conv2d},
-        lstm::{LstmConfig, Lstm},
     },
     prelude::*,
     tensor::{
-        Distribution,
         activation::softmax
     },
-    train::{RegressionOutput, ClassificationOutput, InferenceStep, TrainOutput, TrainStep},
+    train::{ClassificationOutput, InferenceStep, TrainOutput, TrainStep},
 };
 use self::mlp::{MLPConfig, MLP};
 use self::embedder::{EmbedderConfig, Embedder};
@@ -100,7 +92,7 @@ impl LobTransModel {
     // Defines forward pass for training
     pub fn forward(&self, item: LobTransTrainingBatch) -> ClassificationOutput {
         // Get batch and sequence length, and the device
-        let [batch_size, _sequence_length, _token_size] = item.tokens.dims();
+        let [batch_size, sequence_length, _token_size] = item.tokens.dims();
         let device = &self.transformer.devices()[0];
 
         //
@@ -108,37 +100,39 @@ impl LobTransModel {
         let tokens = item.tokens.to_device(device);
         let labels = item.labels.to_device(device);
 
+
+        eprintln!("Input tokens shape {}", tokens.shape());
+
+
         // formulate the embedding tokens
         let x = self.embedder.forward(tokens);
 
-        // eprintln!("Transformer embeddings shape {}", x.shape());
+        eprintln!("Transformer embeddings shape {}", x.shape());
 
         // through the transformer
         let x = self
             .transformer
             .forward(TransformerEncoderInput::new(x));
 
-        // eprintln!("Transformer output shape {}", x.shape());
+        eprintln!("Transformer output shape {}", x.shape());
 
         // we are only interested in the class token from the transformer output
-        let x = x.slice([0..batch_size, 0..1]);
+        // let x = x.slice([0..batch_size, 0..1]);
 
-        // eprintln!("LSTM input shape {}", x.shape());
+        eprintln!("LSTM input shape {}", x.shape());
         let (x, _new_lstm_state) = self.lstm.forward(x, None);
 
-        // eprintln!("LSTM output shape {}", x.shape());
+        eprintln!("LSTM output shape {}", x.shape());
 
-        // th        // through the lstm layers
-        // let mut x = x;
-        // let mut prev_state: Option<LstmState<2>> = None;
-        // for layer in self.lstm.iter() {
-        //     let (result, state) = layer.forward(x, prev_state);
-        //     x = result;
-        //     prev_state = Some(state);
-        // }rough the output linear layer
+        // isolate the last lstm vector state for classification
+        let x = x.slice([0..batch_size, sequence_length..sequence_length + 1]);
+        eprintln!("LSTM last element isolation shape {}", x.shape());
+
+
+        // output MLP
         let x = self.output.forward(x);
 
-        // eprintln!("MLP output shape {}", x.shape());                        states[i].cell.clone(),
+        eprintln!("MLP output shape {}", x.shape());
 
         // eprintln!("MLP output {}", x);
 
@@ -147,9 +141,9 @@ impl LobTransModel {
             // .slice([0..batch_size, 0..1, 0..d_model])
             .reshape([batch_size, self.n_classes]);
 
-        // eprintln!("Classification shape {}", x.shape());
+        eprintln!("Classification shape {}", x.shape());
         // eprintln!("Classification {}", x);
-        // panic!("yep");
+        panic!("yep");
 
         let loss = CrossEntropyLossConfig::new()
             .with_weights(self.loss_weights.clone())
@@ -181,15 +175,16 @@ impl LobTransModel {
         let x = self.embedder.forward(tokens);
 
         // through the transformer
-        let x = self
-            .transformer
-            .forward(TransformerEncoderInput::new(x));
+        let x = self.transformer.forward(TransformerEncoderInput::new(x));
 
         // we are only interested in the class token from the transformer output
-        let x = x.slice([0..batch_size, 0..1]);
+        // let x = x.slice([0..batch_size, 0..1]);
 
         // through the lstm layers
         let (x, _new_lstm_state) = self.lstm.forward(x, None);
+
+        // isolate the last lstm vector state for classification
+        let x = x.slice([0..batch_size, sequence_length..sequence_length + 1]);
 
         // through the output linear layer
         let x = self.output.forward(x);
