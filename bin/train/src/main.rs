@@ -194,7 +194,7 @@ async fn train(
 
     let transformer_d_model = spec.token_size * 2;
 
-    let lstm_output_dim = transformer_d_model / 2;
+    let lstm_output_dim = transformer_d_model; // / 2;
 
     let config = ExperimentConfig::new(
 
@@ -207,7 +207,8 @@ async fn train(
             .with_dropout(args.transformer_dropout),
 
 
-        MultiLayerLstmConfig::new(transformer_d_model, lstm_output_dim, 4)
+        MultiLayerLstmConfig::new(transformer_d_model, lstm_output_dim, 2)
+            .with_bias(Some(true))
             .with_dropout(Some(0.1)),
 
         MLPConfig::new(lstm_output_dim, output_mlp_hidden_size, 3),

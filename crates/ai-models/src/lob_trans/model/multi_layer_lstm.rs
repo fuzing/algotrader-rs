@@ -20,6 +20,7 @@ pub struct MultiLayerLstm {
     // them manually. Here we map multiple layers to mimic PyTorch's num_layers > 1.
     layers: Vec<Lstm>,
     dropout: f64,
+    d_input: usize,
     d_hidden: usize,
 }
 
@@ -63,6 +64,7 @@ impl MultiLayerLstm {
 
         Self {
             layers,
+            d_input: input_size,
             d_hidden: hidden_size,
             dropout,
         }
@@ -115,6 +117,7 @@ impl MultiLayerLstm {
         let [batch_size, seq_length, _] = input.dims();
         let device = input.device();
 
+        // eprintln!("Num LSTM layers: {} - ({}, {})", self.layers.len(), self.d_input, self.d_hidden);
         let num_layers = self.layers.len();
         let mut current_input = input;
         let mut next_states = Vec::with_capacity(num_layers);
@@ -125,7 +128,7 @@ impl MultiLayerLstm {
                 .map(|_| {
                     let h = Tensor::zeros([batch_size, self.d_hidden], &device);
                     let c = Tensor::zeros([batch_size, self.d_hidden], &device);
-                    LstmState::new(h, c)
+                    LstmState::new(c, h)
                 })
                 .collect()
         });

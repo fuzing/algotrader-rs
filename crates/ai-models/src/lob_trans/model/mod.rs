@@ -117,7 +117,7 @@ impl LobTransModel {
         // we are only interested in the class token from the transformer output
         // let x = x.slice([0..batch_size, 0..1]);
 
-        eprintln!("LSTM input shape {}", x.shape());
+        // eprintln!("LSTM input shape {}", x.shape());
         let (x, _new_lstm_state) = self.lstm.forward(x, None);
 
         // eprintln!("LSTM output shape {}", x.shape());
