@@ -207,7 +207,7 @@ async fn train(
             .with_dropout(args.transformer_dropout),
 
 
-        MultiLayerLstmConfig::new(transformer_d_model, lstm_output_dim, 2)
+        MultiLayerLstmConfig::new(transformer_d_model, lstm_output_dim, 4)
             .with_bias(Some(true))
             .with_dropout(Some(0.1)),
 
