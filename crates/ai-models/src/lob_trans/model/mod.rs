@@ -108,9 +108,7 @@ impl LobTransModel {
         // eprintln!("Transformer embeddings shape {}", x.shape());
 
         // through the transformer
-        let x = self
-            .transformer
-            .forward(TransformerEncoderInput::new(x));
+        let x = self.transformer.forward(TransformerEncoderInput::new(x));
 
         // eprintln!("Transformer output shape {}", x.shape());
 
