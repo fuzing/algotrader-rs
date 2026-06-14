@@ -98,7 +98,7 @@ impl Embedder {
         let x = x.add(self.positional_embeddings.val());
 
         // divide by 2 to normalize
-        let x = x.div_scalar(2.0);
+        // let x = x.div_scalar(2.0);
 
         // and return that
         x

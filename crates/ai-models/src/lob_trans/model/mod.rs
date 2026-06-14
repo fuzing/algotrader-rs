@@ -118,7 +118,7 @@ impl LobTransModel {
         let x = x.slice([0..batch_size, 0..1]);
 
         // eprintln!("LSTM input shape {}", x.shape());
-        let (x, _new_lstm_state) = self.lstm.forward(x, None);
+        // let (x, _new_lstm_state) = self.lstm.forward(x, None);
 
         // eprintln!("LSTM output shape {}", x.shape());
 
@@ -178,7 +178,7 @@ impl LobTransModel {
         let x = x.slice([0..batch_size, 0..1]);
 
         // through the lstm layers
-        let (x, _new_lstm_state) = self.lstm.forward(x, None);
+        // let (x, _new_lstm_state) = self.lstm.forward(x, None);
 
         // isolate the last lstm vector state for classification
         // let x = x.slice([0..batch_size, sequence_length..sequence_length + 1]);
