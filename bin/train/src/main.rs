@@ -194,7 +194,7 @@ async fn train(
 
     let transformer_d_model = spec.token_size * 2;
 
-    let lstm_output_dim = transformer_d_model; // / 2;
+    let lstm_output_dim = transformer_d_model;
 
     let config = ExperimentConfig::new(
 
@@ -209,7 +209,7 @@ async fn train(
 
         MultiLayerLstmConfig::new(transformer_d_model, lstm_output_dim, 4)
             .with_bias(Some(true))
-            .with_dropout(Some(0.1)),
+            .with_dropout(Some(args.lstm_dropout)),
 
         MLPConfig::new(lstm_output_dim, output_mlp_hidden_size, 3),
 
@@ -378,9 +378,6 @@ struct Args {
     dataset_file: String,
 
     #[arg(long)]
-    transformer_dropout: f64,
-
-    #[arg(long)]
     batch_size: usize,
 
     #[arg(long)]
@@ -408,10 +405,16 @@ struct Args {
     transformer_layers: usize,
 
     #[arg(long)]
+    transformer_dropout: f64,
+
+    #[arg(long)]
     lstm_layers: usize,
 
     #[arg(long)]
     lstm_hidden_size: usize,
+
+    #[arg(long)]
+    lstm_dropout: f64,
 
     #[arg(long)]
     artifacts_folder: String,

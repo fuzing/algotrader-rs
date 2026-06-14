@@ -20,6 +20,7 @@ cargo run --bin train -- \
   --transformer-dropout=0.1 \
   --lstm-layers=4 \
   --lstm-hidden-size=32 \
+  --lstm-dropout=0.1 \
   --loss-weights=652.167,0.334,484.718 \
   --gain-threshold=0.08 \
   --loss-threshold=0.08 \

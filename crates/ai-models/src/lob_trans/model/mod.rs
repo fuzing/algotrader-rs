@@ -115,7 +115,7 @@ impl LobTransModel {
         // eprintln!("Transformer output shape {}", x.shape());
 
         // we are only interested in the class token from the transformer output
-        // let x = x.slice([0..batch_size, 0..1]);
+        let x = x.slice([0..batch_size, 0..1]);
 
         // eprintln!("LSTM input shape {}", x.shape());
         let (x, _new_lstm_state) = self.lstm.forward(x, None);
@@ -123,7 +123,7 @@ impl LobTransModel {
         // eprintln!("LSTM output shape {}", x.shape());
 
         // isolate the last lstm vector state for classification
-        let x = x.slice([0..batch_size, sequence_length..sequence_length + 1]);
+        // let x = x.slice([0..batch_size, sequence_length..sequence_length + 1]);
         // eprintln!("LSTM last element isolation shape {}", x.shape());
 
 
@@ -175,13 +175,13 @@ impl LobTransModel {
         let x = self.transformer.forward(TransformerEncoderInput::new(x));
 
         // we are only interested in the class token from the transformer output
-        // let x = x.slice([0..batch_size, 0..1]);
+        let x = x.slice([0..batch_size, 0..1]);
 
         // through the lstm layers
         let (x, _new_lstm_state) = self.lstm.forward(x, None);
 
         // isolate the last lstm vector state for classification
-        let x = x.slice([0..batch_size, sequence_length..sequence_length + 1]);
+        // let x = x.slice([0..batch_size, sequence_length..sequence_length + 1]);
 
         // through the output linear layer
         let x = self.output.forward(x);
