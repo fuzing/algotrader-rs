@@ -100,21 +100,19 @@ impl LobTransModel {
         let tokens = item.tokens.to_device(device);
         let labels = item.labels.to_device(device);
 
-
-        eprintln!("Input tokens shape {}", tokens.shape());
-
+        // eprintln!("Input tokens shape {}", tokens.shape());
 
         // formulate the embedding tokens
         let x = self.embedder.forward(tokens);
 
-        eprintln!("Transformer embeddings shape {}", x.shape());
+        // eprintln!("Transformer embeddings shape {}", x.shape());
 
         // through the transformer
         let x = self
             .transformer
             .forward(TransformerEncoderInput::new(x));
 
-        eprintln!("Transformer output shape {}", x.shape());
+        // eprintln!("Transformer output shape {}", x.shape());
 
         // we are only interested in the class token from the transformer output
         // let x = x.slice([0..batch_size, 0..1]);
@@ -122,18 +120,17 @@ impl LobTransModel {
         eprintln!("LSTM input shape {}", x.shape());
         let (x, _new_lstm_state) = self.lstm.forward(x, None);
 
-        eprintln!("LSTM output shape {}", x.shape());
+        // eprintln!("LSTM output shape {}", x.shape());
 
         // isolate the last lstm vector state for classification
         let x = x.slice([0..batch_size, sequence_length..sequence_length + 1]);
-        eprintln!("LSTM last element isolation shape {}", x.shape());
+        // eprintln!("LSTM last element isolation shape {}", x.shape());
 
 
         // output MLP
         let x = self.output.forward(x);
 
-        eprintln!("MLP output shape {}", x.shape());
-
+        // eprintln!("MLP output shape {}", x.shape());
         // eprintln!("MLP output {}", x);
 
         // classify, using only the class token
@@ -141,9 +138,9 @@ impl LobTransModel {
             // .slice([0..batch_size, 0..1, 0..d_model])
             .reshape([batch_size, self.n_classes]);
 
-        eprintln!("Classification shape {}", x.shape());
+        // eprintln!("Classification shape {}", x.shape());
         // eprintln!("Classification {}", x);
-        panic!("yep");
+        // panic!("yep");
 
         let loss = CrossEntropyLossConfig::new()
             .with_weights(self.loss_weights.clone())

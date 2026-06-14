@@ -194,6 +194,8 @@ async fn train(
 
     let transformer_d_model = spec.token_size * 2;
 
+    let lstm_output_dim = transformer_d_model / 2;
+
     let config = ExperimentConfig::new(
 
         EmbedderConfig::new(spec.sequence_length, spec.token_size, transformer_d_model),
@@ -203,31 +205,16 @@ async fn train(
             .with_norm_first(true)
             // .with_quiet_softmax(true)
             .with_dropout(args.transformer_dropout),
-        /*.with_activation(ActivationConfig::SwiGlu(SwiGluConfig::new())),*/
 
-        // TODO - change number of hidden?
-        //        self.lstm = nn.LSTM(
-        //             input_size=d_model,
-        //             hidden_size=lstm_hidden_dim,
-        //             num_layers=num_lstm_layers,
-        //             batch_first=True,
-        //             dropout=0.1 if num_lstm_layers > 1 else 0.0
-        //         )
-        // LstmConfig::new(transformer_d_model, transformer_d_model, false)
-        //     .with_batch_first(true),
-        MultiLayerLstmConfig::new(transformer_d_model, transformer_d_model, 4)
+
+        MultiLayerLstmConfig::new(transformer_d_model, lstm_output_dim, 4)
             .with_dropout(Some(0.1)),
 
-        // TODO - check / change??
-        //        self.mlp_head = nn.Sequential(
-        //             nn.LayerNorm(lstm_hidden_dim),
-        //             nn.Linear(lstm_hidden_dim, num_classes)
-        //         )
-        MLPConfig::new(transformer_d_model, output_mlp_hidden_size, 3),
+        MLPConfig::new(lstm_output_dim, output_mlp_hidden_size, 3),
 
         AdamConfig::new().with_weight_decay(Some(WeightDecayConfig::new(5e-5))),
         args.batch_size,         // batch size
-        args.device_seed,         // shuffle seed
+        args.device_seed,         // seed to initialize device
         args.shuffle_seed,         // shuffle seed
         args.num_epochs,          // number of epochs
         args.lstm_layers,
