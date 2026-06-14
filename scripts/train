@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-NAME=KHC
-#NAME=COLM
+#NAME=KHC
+NAME=COLM
 
 #
 # Originally we started with 8 heads and 4 layers
@@ -16,47 +16,16 @@ cargo run --bin train -- \
   --device-seed=42 \
   --shuffle-seed=42 \
   --transformer-heads=8 \
-  --transformer-layers=4 \
+  --transformer-layers=6 \
   --transformer-dropout=0.1 \
   --lstm-layers=4 \
   --lstm-hidden-size=32 \
   --lstm-dropout=0.1 \
-  --loss-weights=652.167,0.334,484.718 \
+  --loss-weights=652.167,0.334,484.718,, \
   --gain-threshold=0.08 \
   --loss-threshold=0.08 \
   --artifacts-folder=/run/media/peter/genetics/algotrader/data/${NAME}-artifacts
 
-# KHC
-#Total samples: 215215
-#Absolute => Gains: (148).  Neutrals (214957).  Losses (110)
-#Percentage => Gains: (0.069%).  Neutrals (99.880%).  Losses (0.051%)
-#Inverse Frequency Weights Matrix: [652.167,0.334,484.718]
-#Simplified Inverse Frequency Weights Matrix: [1956.500,1.001,1454.155]
-#Log Scaled Ln - Inverse Frequency Weights Matrix: [7.579,0.694,7.283]
-#Log Scaled Log10 - Inverse Frequency Weights Matrix: [2.096,1.661,2.095]
+# COLM
 
-
-#| Split | Metric                             | Min.     | Epoch    | Max.     | Epoch    |
-#|-------|------------------------------------|----------|----------|----------|----------|
-#| Train | Accuracy                           | 98.703   | 1        | 99.082   | 2        |
-#| Train | Learning Rate                      | 1.458e-5 | 2        | 1.911e-5 | 1        |
-#| Train | Loss                               | 0.159    | 2        | 0.269    | 1        |
-#| Train | Precision @ Threshold(0.5) [Macro] | 50.166   | 2        | 76.553   | 1        |
-#| Train | Recall @ Threshold(0.5) [Macro]    | 94.590   | 1        | 96.635   | 2        |
-#| Valid | Accuracy                           | 99.424   | 2        | 99.898   | 1        |
-#| Valid | Loss                               | 0.103    | 2        | 0.173    | 1        |
-#| Valid | Precision @ Threshold(0.5) [Macro] | 48.197   | 2        | 49.991   | 1        |
-#| Valid | Recall @ Threshold(0.5) [Macro]    | 95.908   | 1        | 98.352   | 2        |
-
-#| Split | Metric                             | Min.     | Epoch    | Max.     | Epoch    |
-#|-------|------------------------------------|----------|----------|----------|----------|
-#| Train | Accuracy                           | 98.755   | 1        | 99.095   | 2        |
-#| Train | Learning Rate                      | 1.458e-5 | 2        | 1.911e-5 | 1        |
-#| Train | Loss                               | 0.159    | 2        | 0.270    | 1        |
-#| Train | Precision @ Threshold(0.5) [Macro] | 50.676   | 2        | 76.963   | 1        |
-#| Train | Recall @ Threshold(0.5) [Macro]    | 94.701   | 1        | 96.612   | 2        |
-#| Valid | Accuracy                           | 99.575   | 2        | 99.898   | 1        |
-#| Valid | Loss                               | 0.116    | 2        | 0.178    | 1        |
-#| Valid | Precision @ Threshold(0.5) [Macro] | 49.281   | 2        | 49.965   | 1        |
-#| Valid | Recall @ Threshold(0.5) [Macro]    | 97.214   | 1        | 98.088   | 2        |
 
